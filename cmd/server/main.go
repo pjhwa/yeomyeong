@@ -1,5 +1,5 @@
 // Command server boots the YEOMYEONG process: env config, game loop,
-// SIGINT/SIGTERM shutdown. Net listeners are not started in this PR.
+// Telnet listener, SIGINT/SIGTERM shutdown. WebSocket is issue #12.
 package main
 
 import (
@@ -12,6 +12,7 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/config"
 	"github.com/pjhwa/yeomyeong/internal/engine"
+	ynet "github.com/pjhwa/yeomyeong/internal/net"
 	"github.com/pjhwa/yeomyeong/internal/persist"
 )
 
@@ -49,12 +50,24 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 		"account_store", driver,
 		"log_level", cfg.LogLevel.String(),
 	)
-	// internal/net is issue #4 / #12. The process must still boot and idle.
-	// Auth hashing stays in persist; the loop never sees a password (D-012).
-	log.Info("net listeners not started")
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	loop := engine.New(log)
-	loop.Run(ctx)
+	loopDone := make(chan struct{})
+	go func() {
+		defer close(loopDone)
+		loop.Run(ctx)
+	}()
+
+	srv := ynet.NewServer(cfg.TelnetAddr, loop, store, log)
+	err = srv.Serve(ctx)
+	cancel()
+	<-loopDone
+	if err != nil {
+		return err
+	}
 	log.Info("yeomyeong stopped")
 	return nil
 }
