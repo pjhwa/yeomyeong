@@ -1,0 +1,627 @@
+# 달빛골 — M1 starting village. Spawn: dalbitgol:gate.
+# Forty rooms. Exits are walkable from the gate.
+
+- id: dalbitgol:gate
+  name:
+    ko: "달빛골 마을문"
+    en: "Dalbitgol Gate"
+  description:
+    ko: >
+      늦여름 해가 마을문 윗도리에 걸려 있다. 문설주에서 꺾쇠 하나가 빠져
+      있고, 그 구멍에 손가락을 넣으면 녹가루가 묻는다. 매미 소리가 담 너머
+      보리밭에서 밀려온다.
+  exits:
+    north: dalbitgol:gate-road
+  flags: [town]
+  ambient:
+    - ko: "흙먼지를 일으키며 수레가 문턱을 넘는다."
+
+- id: dalbitgol:gate-road
+  name:
+    ko: "마을문 안길"
+    en: "Inside the Gate"
+  description:
+    ko: >
+      문 안 흙길에 수레바퀴 자국이 두 줄로 파여 있다. 한쪽 자국 위에 고무신
+      끈이 끊어져 널브러졌고, 발바닥에 자갈이 배긴다. 자전거 벨이 한 번
+      울리고 그친다.
+  exits:
+    south: dalbitgol:gate
+    north: dalbitgol:back-alley
+    west: dalbitgol:ditch
+    east: dalbitgol:gendarme-post
+  flags: [town]
+
+- id: dalbitgol:gendarme-post
+  name:
+    ko: "달빛골 주재소"
+    en: "Village Post"
+  description:
+    ko: >
+      주재소 창턱에 통행증 스탬프 잉크가 아직 젖어 있다. 먹물과 구두약
+      냄새가 문턱에서 섞이고, 벽시계는 정각보다 몇 분 빠르다. 나무 의자
+      등받이만 윤이 나 있다.
+  exits:
+    west: dalbitgol:gate-road
+    north: dalbitgol:south-street
+  flags: [town, indoor]
+  heat_modifier: 1.3
+  ambient:
+    - ko: "누가 창가에서 통행증을 말리며 손을 턴다."
+
+- id: dalbitgol:ditch
+  name:
+    ko: "개천 도랑"
+    en: "Drainage Ditch"
+  description:
+    ko: >
+      개천으로 빠지는 도랑에 기름막이 얇게 떠 있다. 함석 바가지가 진흙에
+      반쯤 박혀 있고, 파리 소리가 물결보다 크다. 볕이 닿는 곳은 따뜻하고
+      그늘은 미끈하다.
+  exits:
+    east: dalbitgol:gate-road
+    north: dalbitgol:creek-bridge
+
+- id: dalbitgol:creek-bridge
+  name:
+    ko: "시냇돌다리"
+    en: "Creek Bridge"
+  description:
+    ko: >
+      돌다리는 넓적한 판석 네 장뿐이고, 가운데 장이 밟을 때마다 움푹
+      내려앉는다. 밑에서 시냇물이 돌뿌리를 두드리는 소리가 구두 밑창까지
+      올라온다. 난간 대신 꽂힌 나무말뚝에 젖은 새끼줄이 감겨 있다.
+  exits:
+    south: dalbitgol:ditch
+    north: dalbitgol:creek
+    east: dalbitgol:back-alley
+
+- id: dalbitgol:creek
+  name:
+    ko: "달빛골 시내"
+    en: "Village Creek"
+  description:
+    ko: >
+      시냇물은 얕고 바닥 자갈이 들여다보인다. 물가에 걸린 밧줄이 철분을
+      먹은 듯 붉고, 손을 담그면 찬물 끝에 쇠맛이 남는다. 버드나무 그늘에서
+      모기 소리가 가늘다.
+  exits:
+    south: dalbitgol:creek-bridge
+    north: dalbitgol:creek-bend
+    east: dalbitgol:printshop
+
+- id: dalbitgol:creek-bend
+  name:
+    ko: "시내 굽이"
+    en: "Creek Bend"
+  description:
+    ko: >
+      시내가 꺾이는 자리에 빨래돌이 반질반질하다. 돌 위에 남은 잿물 자국이
+      미끄럽고, 비누 거품이 풀에 걸려 있다. 물비린내 대신 잿내만 가깝다.
+  exits:
+    south: dalbitgol:creek
+    north: dalbitgol:mill
+    east: dalbitgol:smithy-yard
+
+- id: dalbitgol:mill
+  name:
+    ko: "물레방앗간"
+    en: "Water Mill"
+  description:
+    ko: >
+      물레방앗간 맷돌은 멈춰 있고, 곡식 넣는 통의 나무못이 금이 가 있다. 겨
+      냄새가 마룻바닥에 눌러 붙어 코를 막는다. 물레는 한 칸씩 헛돌며 축을
+      긁는 소리를 낸다.
+  exits:
+    south: dalbitgol:creek-bend
+    north: dalbitgol:west-field
+    east: dalbitgol:west-lane
+  flags: [indoor]
+
+- id: dalbitgol:west-field
+  name:
+    ko: "서쪽 밭"
+    en: "West Field"
+  description:
+    ko: >
+      서쪽 밭은 아직 베지 않은 조가 허리까지 차 있다. 허수아비의 밀짚모자가
+      한쪽으로 기울고, 바람에 지푸라기가 뺨을 스친다. 멀리서 개 짖는 소리가
+      한 번 끊긴다.
+  exits:
+    south: dalbitgol:mill
+    north: dalbitgol:barley-field
+    east: dalbitgol:north-street
+    west: dalbitgol:threshing-floor
+  heat_modifier: 0.5
+
+- id: dalbitgol:threshing-floor
+  name:
+    ko: "타작마당"
+    en: "Threshing Floor"
+  description:
+    ko: >
+      타작마당의 흙은 단단하고 껍질 가루가 하얗다. 자루가 갈라진 도리깨가
+      담에 기대어 있고, 손을 대면 껍질이 땀에 붙는다. 마른 곡식 내가 볕과
+      함께 등덜미를 지진다.
+  exits:
+    east: dalbitgol:west-field
+
+- id: dalbitgol:barley-field
+  name:
+    ko: "보리밭"
+    en: "Barley Field"
+  description:
+    ko: >
+      보리이삭이 늦여름 햇살을 받아 누렇게 눕는다. 이랑 사이에 잊힌 낫이
+      녹슨 채로 박혀 있고, 날을 건드리면 따뜻하다. 풀벌레 소리가 발밑에서
+      끊기지 않는다.
+  exits:
+    south: dalbitgol:west-field
+    east: dalbitgol:north-field
+  heat_modifier: 0.5
+
+- id: dalbitgol:north-field
+  name:
+    ko: "북쪽 들판"
+    en: "North Field"
+  description:
+    ko: >
+      북쪽 들판의 물꼬 널빤지가 한쪽으로 틀어져 있다. 진흙이 발목까지
+      따뜻하고, 고인 물에 개구리밥이 떠 있다. 논두렁에서 무엇인가 물속으로
+      뛰어드는 소리가 난다.
+  exits:
+    west: dalbitgol:barley-field
+    east: dalbitgol:shrine-path
+    south: dalbitgol:north-street
+
+- id: dalbitgol:north-street
+  name:
+    ko: "북쪽 길"
+    en: "North Street"
+  description:
+    ko: >
+      북쪽 길은 장터보다 한 뼘 높고, 이정석의 글자 한 획이 깎여 나갔다.
+      돌 위에 앉은 열이 종아리에 배어 오른다. 소 목의 방울이 멀리서 운다.
+  exits:
+    west: dalbitgol:west-field
+    east: dalbitgol:well-path
+    south: dalbitgol:west-lane
+    north: dalbitgol:north-field
+  flags: [town]
+
+- id: dalbitgol:well-path
+  name:
+    ko: "우물길"
+    en: "Well Path"
+  description:
+    ko: >
+      우물길은 돌이 한쪽으로 기울고, 밟을 때마다 녹물 자국이 신발에 묻는다.
+      흙에서 쇠내가 올라와 숨을 짧게 만든다. 길섶 풀은 유난히 누르스름하다.
+  exits:
+    west: dalbitgol:north-street
+    east: dalbitgol:well
+    south: dalbitgol:smithy
+    north: dalbitgol:shrine-path
+  flags: [town]
+
+- id: dalbitgol:well
+  name:
+    ko: "마을 우물"
+    en: "Village Well"
+  description:
+    ko: >
+      우물 두레박 줄이 검게 젖어 있다. 물을 한 모금 머금으면 혀끝에 쇠맛이
+      남고, 주막 쪽에서 라디오 정각이 올 때 그 맛이 더 진하다. 돌란의 이끼는
+      미끈하고 차갑다.
+  exits:
+    west: dalbitgol:well-path
+    south: dalbitgol:market
+  flags: [town]
+  foreshadow: [FS-011, FS-015]
+
+- id: dalbitgol:shrine-path
+  name:
+    ko: "사당 오솔길"
+    en: "Shrine Path"
+  description:
+    ko: >
+      소나무 바늘이 오솔길을 덮어 발밑에서 바스락거린다. 금줄이 끊어진 채
+      나뭇가지에 걸려 있고, 송진 냄새가 덥다. 그늘은 장터보다 한 켜 서늘하다.
+  exits:
+    west: dalbitgol:north-field
+    east: dalbitgol:shrine
+    south: dalbitgol:well-path
+
+- id: dalbitgol:shrine
+  name:
+    ko: "산신당"
+    en: "Village Shrine"
+  description:
+    ko: >
+      산신당 제단 위에 녹슨 못이 다섯 개 나란하다. 사발 안쪽은 비 온 뒤처럼
+      붉은 막이 씌어 있고, 손가락으로 훑으면 쇳가루가 묻는다. 향은 꺼진 지
+      오래라 재만 남았다. 처마 끝에서 철사 조각이 바람에 부딪힌다.
+  exits:
+    west: dalbitgol:shrine-path
+  flags: [town]
+  heat_modifier: 0.6
+  foreshadow: [FS-009, FS-015]
+
+- id: dalbitgol:west-lane
+  name:
+    ko: "서쪽 골목"
+    en: "West Lane"
+  description:
+    ko: >
+      서쪽 골목 담에 금 간 물단지가 기대어 있다. 단지 아가리에 거미줄이 쳐
+      있고, 깨진 테두리로 바람이 스친다. 그늘진 흙은 축축하고, 방앗간 축
+      긁는 소리가 한 박자 늦게 들린다.
+  exits:
+    west: dalbitgol:mill
+    east: dalbitgol:smithy
+    south: dalbitgol:smithy-yard
+    north: dalbitgol:north-street
+  flags: [town]
+
+- id: dalbitgol:smithy
+  name:
+    ko: "대장간"
+    en: "Smithy"
+  description:
+    ko: >
+      대장간 모루 곁에 삼발이 의자가 비어 있다. 자리만 반질하고, 등받이
+      가죽끈은 아직 따뜻하지 않다. 식은 석탄재 냄새가 문턱에 낮게 깔리고,
+      집게가 벽에 걸려 가끔 쇠를 친다.
+  exits:
+    west: dalbitgol:west-lane
+    east: dalbitgol:market
+    south: dalbitgol:print-alley
+    north: dalbitgol:well-path
+  flags: [town, indoor]
+
+- id: dalbitgol:smithy-yard
+  name:
+    ko: "대장간 뒷마당"
+    en: "Smithy Yard"
+  description:
+    ko: >
+      뒷마당 식힘통에 쇳가루 막이 떠 있다. 물방울이 통 가장자리를 두드리고,
+      손을 담그면 기름기가 남는다. 볕에 마른 가죽 앞치마가 말뚝에 널려 있다.
+  exits:
+    west: dalbitgol:creek-bend
+    east: dalbitgol:print-alley
+    south: dalbitgol:printshop
+    north: dalbitgol:west-lane
+  flags: [town]
+
+- id: dalbitgol:market
+  name:
+    ko: "달빛골 장터"
+    en: "Dalbitgol Market"
+  description:
+    ko: >
+      장터 어귀 게시판에 관아 고시문이 겹쳐 붙었고, 맨 앞장 모퉁이만 손가락
+      넓이로 찢겨 있다. 그 아래 한벽일보에는 같은 활자가 한 줄에서 두 번
+      어긋나 있다. 좌판 저울추가 나무판을 치는 소리가 고르고, 참기름 단내가
+      코끝을 스친다.
+  exits:
+    west: dalbitgol:smithy
+    east: dalbitgol:east-street
+    south: dalbitgol:inn
+    north: dalbitgol:well
+  flags: [safe, town, market]
+  market: dalbitgol
+  heat_modifier: 0.8
+  ambient:
+    - ko: "등사기 전단을 돌리는 아이가 게시판 앞을 지나친다."
+    - ko: "광주리를 고쳐 메는 손이 저울 옆을 스친다."
+  foreshadow: [FS-001, FS-014]
+
+- id: dalbitgol:east-street
+  name:
+    ko: "동쪽 큰길"
+    en: "East Street"
+  description:
+    ko: >
+      동쪽 큰길 전신주에서 철사가 낮게 웅웅거린다. 기둥 밑동에 박힌 못에
+      찢어진 전보 봉투가 꽂혀 있고, 풀 자국이 아직 끈적하다. 수레가 자갈을
+      가르는 소리가 창고 쪽에서 가까워진다.
+  exits:
+    west: dalbitgol:market
+    east: dalbitgol:warehouse-lane
+    south: dalbitgol:inn-yard
+  flags: [town]
+
+- id: dalbitgol:warehouse-lane
+  name:
+    ko: "창고골목"
+    en: "Warehouse Lane"
+  description:
+    ko: >
+      골목 담에 만석상회 광목 덮개가 늘어져 있다. 봉랍 인장이 한쪽 모서리에
+      찍혀 있고, 만지면 밀랍이 손톱에 남는다. 겨 냄새와 쌀가루가 숨을 짧게
+      만든다.
+  exits:
+    west: dalbitgol:east-street
+    east: dalbitgol:warehouse
+    south: dalbitgol:packing-shed
+  flags: [town]
+
+- id: dalbitgol:warehouse
+  name:
+    ko: "만석상회 창고"
+    en: "Warehouse"
+  description:
+    ko: >
+      창고 안 짚단 밑이 한 켜 떠 있어 손바닥이 허공에 빠진다. 그 틈에 찻잔
+      받침 패가 하나 끼어 있고, 가장자리가 차갑다. 선반에는 장부가 두 권
+      겹쳐 있는데 위쪽만 관아 도장이 젖어 있다. 쌀겨 냄새가 지붕까지 차고,
+      서까래가 가끔 짧게 운다.
+  exits:
+    west: dalbitgol:warehouse-lane
+    south: dalbitgol:station-yard
+  flags: [town, indoor]
+  foreshadow: [FS-016, FS-020]
+
+- id: dalbitgol:inn
+  name:
+    ko: "달빛골 주막"
+    en: "Inn"
+  description:
+    ko: >
+      주막 안 선반 라디오가 시민 쇠노래를 낮게 흘린다. 창가 상에 북해통신
+      도장이 찍힌 전보용지가 한 장 말려 있고, 잉크가 손가락에 묻을 만큼 덜
+      말랐다. 된장국 끓는 냄새가 마루를 덮고, 라디오 진동이 마루에서
+      발바닥으로 올라온다.
+  exits:
+    west: dalbitgol:print-alley
+    east: dalbitgol:inn-yard
+    south: dalbitgol:cafe-baekya
+    north: dalbitgol:market
+  flags: [safe, town, indoor]
+  ambient:
+    - ko: "누가 라디오 다이얼을 살짝 돌렸다가 도로 놓는다."
+  foreshadow: [FS-011, FS-018]
+
+- id: dalbitgol:inn-yard
+  name:
+    ko: "주막 마당"
+    en: "Inn Yard"
+  description:
+    ko: >
+      주막 마당 빨랫줄에 흰 수건 한 장만 널려 있다. 가장자리가 아직 축축하고,
+      비누 거품 냄새가 남아 있다. 우물 쪽 바가지에서 물방울이 흙을 찍는다.
+  exits:
+    west: dalbitgol:inn
+    east: dalbitgol:packing-shed
+    south: dalbitgol:cafe-back
+    north: dalbitgol:east-street
+  flags: [town]
+
+- id: dalbitgol:print-alley
+  name:
+    ko: "인쇄골목"
+    en: "Print Alley"
+  description:
+    ko: >
+      인쇄골목 흙에 잉크 발자국이 한 줄 찍혀 있다. 등사기 원지 냄새가 골목을
+      막고, 발자국을 따라가면 활판소 쪽으로 짙어진다. 담장에서 고양이 발톱이
+      긁히는 소리가 난다.
+  exits:
+    west: dalbitgol:smithy-yard
+    east: dalbitgol:inn
+    south: dalbitgol:type-yard
+    north: dalbitgol:smithy
+  flags: [town]
+
+- id: dalbitgol:printshop
+  name:
+    ko: "활판소"
+    en: "Print Shop"
+  description:
+    ko: >
+      활판소 상자 안에 닳은 활자가 한 줌 따로 모아져 있다. 휴지통에는 잉크
+      묻은 영수증이 구겨져 있고, 관아 직인이 번져 있다. 식자대가 한 칸
+      삐뚤고, 납 냄새와 기름 냄새가 목구멍을 조인다. 교정쇄를 넘기는 종이
+      소리가 창밖보다 가깝다.
+  exits:
+    west: dalbitgol:creek
+    east: dalbitgol:type-yard
+    south: dalbitgol:back-alley
+    north: dalbitgol:smithy-yard
+  flags: [town, indoor]
+  foreshadow: [FS-001, FS-003]
+
+- id: dalbitgol:type-yard
+  name:
+    ko: "식자 마당"
+    en: "Type Yard"
+  description:
+    ko: >
+      식자 마당의 교정쇄 압착기가 젖은 원지를 물고 있다. 잉크가 덜 마른
+      글자가 손가락에 옮겨 묻고, 납 활자가 쟁반에서 달그락거린다. 볕이 원지를
+      말리는 냄새가 달콤하다.
+  exits:
+    west: dalbitgol:printshop
+    east: dalbitgol:cafe-baekya
+    north: dalbitgol:print-alley
+    south: dalbitgol:south-street
+  flags: [town]
+
+- id: dalbitgol:cafe-baekya
+  name:
+    ko: "다방 백야"
+    en: "Café Baekya"
+  description:
+    ko: >
+      다방 백야의 흰 등은 셔터 안쪽, 문이 닫힌 것처럼 보이는 자리에만 켜져
+      있다. 창가 접시들은 차 얼룩이 없고, 동전만 매일 같은 자리에 놓여 식어
+      있다. 볶은 보리차 단내가 마루에 낮고, 잔받침이 쟁반에 부딪히는 소리가
+      드물다.
+  exits:
+    west: dalbitgol:type-yard
+    east: dalbitgol:cafe-back
+    south: dalbitgol:school-lane
+    north: dalbitgol:inn
+  flags: [safe, town, indoor]
+  ambient:
+    - ko: "앞치마 끈을 매는 소리가 카운터 뒤에서 난다."
+  foreshadow: [FS-005, FS-006]
+
+- id: dalbitgol:cafe-back
+  name:
+    ko: "백야 뒷칸"
+    en: "Café Back"
+  description:
+    ko: >
+      뒷칸 덧문은 빗장이 안에서 채워져 있다. 문턱 아래 접시 하나가 엎어져
+      있고, 뒤집으면 바닥이 흠 없이 깨끗하다. 식어 가는 풍로가 작게 쉰다.
+      그늘이 앞칸보다 한 줌 서늘하다.
+  exits:
+    west: dalbitgol:cafe-baekya
+    east: dalbitgol:east-alley
+    south: dalbitgol:school
+    north: dalbitgol:inn-yard
+  flags: [town, indoor]
+
+- id: dalbitgol:east-alley
+  name:
+    ko: "동쪽 뒷골목"
+    en: "East Alley"
+  description:
+    ko: >
+      동쪽 뒷골목 하수구에 비녀 하나가 걸쳐 있다. 쇠끝이 차갑고, 하수 냄새가
+      비 온 뒤처럼 가깝다. 담장 너머로 다방 잔 소리가 한 번 들린다.
+  exits:
+    west: dalbitgol:cafe-back
+    east: dalbitgol:station
+    south: dalbitgol:school-yard
+    north: dalbitgol:packing-shed
+  flags: [town]
+
+- id: dalbitgol:station
+  name:
+    ko: "달빛골 정거장"
+    en: "Station"
+  description:
+    ko: >
+      정거장 분견대 쪽문에 출근 카드가 두 장 겹쳐 꽂혀 있다. 안쪽 책상에는
+      별명만 적힌 먹지 명부가 한 장 펼쳐져 있고, 석탄가루가 손가락에 묻는다.
+      석탄 냄새가 승강장에서 밀려오고, 먼 선로에서 기적 소리가 한 번 끊긴다.
+  exits:
+    west: dalbitgol:east-alley
+    north: dalbitgol:station-yard
+  flags: [town]
+  heat_modifier: 1.2
+  ambient:
+    - ko: "개찰 쪽문이 쇠로 한 번 닫힌다."
+  foreshadow: [FS-002, FS-017]
+
+- id: dalbitgol:station-yard
+  name:
+    ko: "정거장 화차장"
+    en: "Station Yard"
+  description:
+    ko: >
+      화차장 나무상자에 한벽행이라고 먹으로 찍힌 글자가 희미하다. 석탄가루가
+      구두코를 덮고, 만지면 번들거린다. 줄이 화물 덮개를 당기는 소리가 짧게
+      난다.
+  exits:
+    west: dalbitgol:packing-shed
+    south: dalbitgol:station
+    north: dalbitgol:warehouse
+  flags: [town]
+
+- id: dalbitgol:packing-shed
+  name:
+    ko: "만석상회 포장간"
+    en: "Packing Shed"
+  description:
+    ko: >
+      포장간 수레 바닥이 한 켜 떠 있다. 만석상회 도장이 찍힌 가마니가 그
+      위를 덮고, 겨 냄새가 눈을 찌른다. 새끼줄이 팽팽해질 때마다 나무 바퀴가
+      운다.
+  exits:
+    west: dalbitgol:inn-yard
+    east: dalbitgol:station-yard
+    south: dalbitgol:east-alley
+    north: dalbitgol:warehouse-lane
+  flags: [town, indoor]
+  market: dalbitgol
+
+- id: dalbitgol:school-lane
+  name:
+    ko: "서당길"
+    en: "School Lane"
+  description:
+    ko: >
+      서당길 말뚝에 석판이 기대어 있다. 분필 가루가 손가락에 묻어 희고,
+      글자는 비에 번져 읽히지 않는다. 아이들 고무신 소리가 마당 쪽에서
+      들리다 그친다.
+  exits:
+    west: dalbitgol:south-street
+    east: dalbitgol:school
+    north: dalbitgol:cafe-baekya
+  flags: [town]
+
+- id: dalbitgol:school
+  name:
+    ko: "서당"
+    en: "School"
+  description:
+    ko: >
+      서당 창가에 접시 하나가 엎어져 있다. 뒤집지 않은 채로 먼지만 쌓였다.
+      서랍 안에는 바늘 다섯 개가 그려진 빛바랜 도안이 있고, 선 끝마다
+      배기라고 작게 적혀 있다. 분필 가루가 콧등을 간질이고, 마룻장이
+      발밑에서 짧게 운다.
+  exits:
+    west: dalbitgol:school-lane
+    east: dalbitgol:school-yard
+    north: dalbitgol:cafe-back
+  flags: [safe, town, indoor]
+  foreshadow: [FS-007, FS-008]
+
+- id: dalbitgol:school-yard
+  name:
+    ko: "서당 마당"
+    en: "School Yard"
+  description:
+    ko: >
+      서당 마당 흙에 줄넘기 자국이 원으로 남아 있다. 줄은 한가운데가 닳아
+      끊어질 듯하고, 먼지가 혀에 앉는다. 담장 너머 매미가 한 박자 쉬었다
+      운다.
+  exits:
+    west: dalbitgol:school
+    north: dalbitgol:east-alley
+  flags: [town]
+
+- id: dalbitgol:back-alley
+  name:
+    ko: "장터 뒷골목"
+    en: "Market Back Alley"
+  description:
+    ko: >
+      장터 뒷골목 똥장군 뚜껑이 반쯤 열려 있다. 파리 소리가 뚜껑 가장자리에서
+      끊이지 않고, 석회 냄새가 코를 찌른다. 담장 밑 그늘은 한낮에도 축축하다.
+  exits:
+    west: dalbitgol:creek-bridge
+    east: dalbitgol:south-street
+    south: dalbitgol:gate-road
+    north: dalbitgol:printshop
+  flags: [town]
+
+- id: dalbitgol:south-street
+  name:
+    ko: "남쪽 큰길"
+    en: "South Street"
+  description:
+    ko: >
+      남쪽 큰길에 공용 자전거 펌프가 말뚝에 묶여 있다. 가죽 패킹이 갈라져
+      공기를 넣으면 쉰 소리가 난다. 자갈이 햇빛에 뜨겁고, 주재소 시계
+      종소리가 한 박자 늦게 밀려온다.
+  exits:
+    west: dalbitgol:back-alley
+    east: dalbitgol:school-lane
+    south: dalbitgol:gendarme-post
+    north: dalbitgol:type-yard
+  flags: [town]
