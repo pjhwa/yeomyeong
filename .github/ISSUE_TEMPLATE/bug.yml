@@ -1,0 +1,86 @@
+name: Bug
+description: Report a defect in server, client, tools, or content.
+title: "fix: "
+labels:
+  - type:bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Security reports go through [SECURITY.md](../../SECURITY.md), not here.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - engine
+        - gameplay
+        - economy
+        - narrative
+        - content
+        - ai-npc
+        - client
+        - qa
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Suggested owner
+      options:
+        - ENGINE
+        - GAMEPLAY
+        - ECONOMY
+        - NARRATIVE
+        - WORLD
+        - AINPC
+        - CLIENT
+        - QA
+        - LEAD
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Actual behavior, including error text or a terminal transcript.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Numbered steps. Include client (telnet / web), commands, and relevant YAML ids.
+      placeholder: |
+        1. Connect with `telnet localhost 4000`
+        2. Log in as ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: milestone
+    attributes:
+      label: First seen in
+      placeholder: M0 / commit SHA / PR number
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Non-negotiable check
+      description: Tick if this bug is itself a principle violation.
+      options:
+        - label: World state mutated outside the single game-loop goroutine
+        - label: Level / class / XP-bar concept introduced
+        - label: Major obstacle has fewer than three solutions (force / craft / social)
+        - label: Real person, real organization, or another work's proper noun
+        - label: Room / NPC / item hardcoded in source instead of YAML
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Logs, screenshots, or a failing test.

@@ -1,0 +1,65 @@
+# Forbidden proper nouns — PLAN.md §2.1
+# Real historical persons (Korean independence era and adjacent)
+안중근
+유관순
+김구
+윤봉길
+이봉창
+윤동주
+한용운
+신채호
+김좌진
+홍범도
+이승만
+김일성
+Ahn Jung-geun
+Kim Gu
+Kim Koo
+Yu Gwan-sun
+Yun Bong-gil
+
+# Real organizations
+독립협회
+의열단
+광복군
+대한민국임시정부
+임시정부
+조선총독부
+일본제국
+Imperial Japan
+Japanese Empire
+Provisional Government of Korea
+
+# Real place names used as political entities (the setting uses 달내 / 한벽성 / 달빛골)
+경성
+경성부
+조선총독
+조선총독부
+
+# Other works' proper nouns (starter set; QA extends this)
+간달프
+모르도르
+호빗
+호그와트
+해리포터
+원피스
+나루토
+엘든링
+아르다
+미드레스
+곤도르
+리버티시티
+스톰윈드
+Gandalf
+Mordor
+Hogwarts
+Harry Potter
+Azeroth
+Midkemia
+Ankh-Morpork
+Discworld
+Eorzea
+Tamriel
+Whiterun
+Gondor
+Aethermoor

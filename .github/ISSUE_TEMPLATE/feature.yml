@@ -1,0 +1,97 @@
+name: Feature
+description: Propose or track a planned system change. Must fit PLAN.md.
+title: "feat: "
+labels:
+  - type:feat
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Features that are not in [PLAN.md](../../PLAN.md) are not implemented.
+        Park them conceptually and wait for a commissioner review — do not start a branch.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - engine
+        - gameplay
+        - economy
+        - narrative
+        - content
+        - ai-npc
+        - client
+        - qa
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Owner
+      options:
+        - ENGINE
+        - GAMEPLAY
+        - ECONOMY
+        - NARRATIVE
+        - WORLD
+        - AINPC
+        - CLIENT
+        - QA
+        - LEAD
+    validations:
+      required: true
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Milestone
+      options:
+        - M0
+        - M1
+        - M2
+        - M3
+        - M4
+        - M5
+        - M6
+        - later (not in current roadmap)
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Player-facing problem, or the PLAN.md section this implements.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: Concrete deliverable. Name packages, YAML files, or interface docs.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance
+      description: Measurable done-when. Quote PLAN.md §5 if this is a milestone slice.
+    validations:
+      required: true
+  - type: textarea
+    id: interfaces
+    attributes:
+      label: Interface contracts
+      description: List any of EVENT-BUS / WIRE-PROTOCOL / CONTENT-SCHEMA / DIALOGUE-API / SKILL-TABLE that must be agreed before code.
+      placeholder: None. / WIRE-PROTOCOL.md §login must be drafted first.
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Non-negotiable principles
+      description: Confirm the design does not violate them.
+      options:
+        - label: World state is written only by the single game-loop goroutine
+        - label: No level, class, or XP-bar is introduced
+        - label: Any new major obstacle has force / craft / social solutions
+        - label: No real people, real organizations, or foreign proper nouns
+        - label: New rooms / NPCs / items will live in YAML
+    validations:
+      required: true

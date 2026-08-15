@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Design question for LEAD
+    url: https://github.com/pjhwa/yeomyeong/issues/new?labels=needs-decision,type:design
+    about: Interface or ownership disputes. Do not start a PR until this is resolved.
+  - name: PLAN.md (source of truth)
+    url: https://github.com/pjhwa/yeomyeong/blob/main/PLAN.md
+    about: Read the master plan before proposing work that is not already on the roadmap.
