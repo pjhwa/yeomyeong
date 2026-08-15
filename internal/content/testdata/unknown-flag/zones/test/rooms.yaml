@@ -1,0 +1,4 @@
+- id: test:start
+  name: "시작"
+  description: "알 수 없는 깃발이 있다."
+  flags: [safe, haunted]

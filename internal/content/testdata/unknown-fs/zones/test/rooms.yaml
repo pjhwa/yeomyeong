@@ -1,0 +1,4 @@
+- id: test:start
+  name: "시작"
+  description: "원장에 없는 복선이 붙어 있다."
+  foreshadow: [FS-999]

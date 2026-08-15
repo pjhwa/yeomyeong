@@ -1,0 +1,5 @@
+- id: test:start
+  name: "시작"
+  description: "문이 북쪽을 가리킨다."
+  exits:
+    north: test:nowhere
