@@ -1,0 +1,86 @@
+# EVENT-BUS
+
+ENGINE ↔ GAMEPLAY / ECONOMY / AINPC. M0 is roster + say only.  
+Later systems subscribe to the same bus; they do not grow their own world writers.
+
+Related: [WIRE-PROTOCOL.md](WIRE-PROTOCOL.md), PLAN.md §4.2.
+
+## Single-writer
+
+The game-loop goroutine is the **only** goroutine that:
+
+- inserts / removes players on the in-memory roster
+- reads the roster to decide who receives a `say`
+- changes any future world field (rooms, heat, prices, …)
+
+Connection goroutines, persist workers, and LLM workers **never** take a
+mutex on world data — because world data has no mutex. They send a
+`Command` in and receive `Event`s out.
+
+```
+conn goroutine ──Command──▶ game loop ──Event──▶ per-conn outbound buffer
+                     ▲
+                     └── persist / auth happens BEFORE EnterWorld
+```
+
+## Commands (M0)
+
+Enqueued by adapters (`internal/net`). Value types, no shared pointers into
+the world.
+
+| Name | Fields | Who enqueues | Loop effect |
+|---|---|---|---|
+| `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry; emit `Sys` to all: `"<name> 님이 자리에 앉았습니다."` |
+| `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn |
+| `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Delete roster entry; emit `Sys` to remaining: `"<name> 님이 자리를 떴습니다."` |
+
+Auth create/login is **not** a loop command. Hashing and store I/O run in
+the connection goroutine (or a persist worker). Only a successful auth
+produces `EnterWorld`.
+
+Unknown `ConnID` on `Say` / `LeaveWorld`: no-op (already gone).
+
+## Events (M0)
+
+| Name | Fields | Delivery |
+|---|---|---|
+| `Text` | `ConnID` (target), `Channel` (`say`\|`sys`), `From`, `Body` | That connection's outbound buffer |
+| `Drop` | `ConnID` | Adapter closes the socket after flush |
+
+The loop never writes to a socket. It only appends to an outbound queue
+the adapter drains.
+
+## Tick
+
+Period: **100ms**. M0 tick work:
+
+1. Drain the command channel (bounded; see below).
+2. No combat, weather, NPC, or price work yet.
+
+If the drain exceeds the tick budget, log a warning and continue. Do not
+spawn extra loop goroutines.
+
+## Channel contract
+
+- Command queue: buffered (`256`). A full queue: the adapter treats it as
+  `rate_limited` / drops the command. The adapter must not block the
+  caller for more than a short send timeout.
+- Per-connection outbound: buffered (`64`). Overflow drops the oldest
+  event and logs. The loop does not block on a slow client.
+
+## Invariants tests must lock in
+
+1. `go test -race` is clean with many goroutines calling `Submit`.
+2. Roster maps are not accessed from test helpers except through the loop
+   (or a test-only snapshot method that **copies** under the loop's own
+   tick — a `Snapshot()` command/request, never a naked map read).
+3. No `sync.Mutex` / `RWMutex` on `World`, `Roster`, or player structs.
+
+## Reserved for later milestones
+
+Do not implement these in M0; names are reserved so GAMEPLAY/ECONOMY do
+not invent parallel buses:
+
+- `Move`, `Observe`, `UseSkill`, `CombatIntent`
+- `PriceTick`, `HeatTick`, `WeatherTick`
+- `DialogueRequest` / `DialogueResult` (AINPC workers → loop)

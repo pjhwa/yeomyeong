@@ -163,3 +163,74 @@ Format:
 - Consequences: Topics include `korean-history` and `alternate-history` as
   specified. World text itself still obeys §2.1 — topics are catalog metadata,
   not in-game nouns.
+
+## D-012 — Auth I/O stays off the game loop
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: Account create/login needs argon2id and (later) Postgres. Those
+  must not stall the 100ms tick. World state is only the in-memory roster.
+- Decision: Connection goroutines (or a persist worker) hash passwords and
+  call `AccountStore`. Only a successful auth enqueues `EnterWorld`.
+  `Say` / `LeaveWorld` are the other M0 commands. See EVENT-BUS.md.
+- Consequences: The loop package has no import of `database/sql` or argon2.
+  Persist is not world state and may use its own mutexes.
+
+## D-013 — M0 world is a roster, not rooms
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: M0 done-when is “two clients connect and talk.” Rooms are M1.
+- Decision: The only in-memory world data in M0 is the logged-in roster.
+  `say` broadcasts to everyone on that roster. No room graph, no YAML
+  content, no hardcoded plaza.
+- Consequences: WORLD is idle. ENGINE must not invent a “void room” entity
+  that later collides with the YAML loader.
+
+## D-014 — In-memory AccountStore when DATABASE_URL is empty
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: CI and unit tests cannot depend on a live Postgres.
+- Decision: `AccountStore` is an interface. Empty `DATABASE_URL` selects
+  the in-memory implementation. Postgres is implemented in the persist
+  issue and used only when the URL is set.
+- Consequences: Default `docker compose` / local `go run` without a URL
+  still satisfies M0. Data vanishes on process exit — acceptable until M1.
+
+## D-015 — Module path and process config
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: First `go.mod` must not churn.
+- Decision: Module is `github.com/pjhwa/yeomyeong`. Env:
+  `YEOMYEONG_TELNET_ADDR` (`:4000`), `YEOMYEONG_WS_ADDR` (`:8080`),
+  `DATABASE_URL`, `YEOMYEONG_LOG_LEVEL` (`info`).
+- Consequences: Import paths and Docker image names follow the module.
+
+## D-016 — M0 prompts are Korean literals
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §7.7 wants i18n keys from M1. Inventing a key system
+  in M0 would delay the skeleton.
+- Decision: Telnet prompts and system lines are Korean string literals.
+  M1 replaces them with keyed text. No English-only player-facing path.
+- Consequences: Tests assert on the Korean strings in WIRE-PROTOCOL.md.
+
+## D-017 — Username and password rules
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: Need a stable validation rule before persist lands.
+- Decision: Username 2–16 runes, Hangul syllables / letters / digits / `_`,
+  uniqueness is Unicode simple-fold. Password 8–72 bytes. Login failures
+  always return `bad_credentials` (no user enumeration).
+- Consequences: Content names (NPC ids) are a different namespace and
+  unused in M0.
