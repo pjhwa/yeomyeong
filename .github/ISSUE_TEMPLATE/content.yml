@@ -1,0 +1,84 @@
+name: Content
+description: Room, NPC, item, quest, lore, or persona work. YAML only.
+title: "content: "
+labels:
+  - type:content
+  - area:content
+body:
+  - type: markdown
+    attributes:
+      value: |
+        WORLD writes YAML. NARRATIVE owns quests and the foreshadow ledger.
+        Do not put rooms, NPCs, or items in Go source.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - room
+        - npc
+        - item
+        - quest
+        - lore
+        - persona
+        - newspaper / rumor
+        - foreshadow entry
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Owner
+      options:
+        - WORLD
+        - NARRATIVE
+        - QA
+      default: 0
+    validations:
+      required: true
+  - type: input
+    id: zone
+    attributes:
+      label: Zone or path
+      placeholder: content/zones/dalbitgol/
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What to add or change
+      description: Player-facing intent. Quote the relevant STORY-BIBLE beat if this is narrative.
+    validations:
+      required: true
+  - type: textarea
+    id: style
+    attributes:
+      label: Style notes
+      description: 2–4 sentences, at least two senses, period vocabulary. No dense Sino-Korean.
+      placeholder: Smell of dried pollack and hemp. Sound of the scissors of the taffy seller.
+  - type: textarea
+    id: solutions
+    attributes:
+      label: Three solutions (if this is an obstacle)
+      description: Force / craft / social. Leave blank for pure flavor rooms.
+      placeholder: |
+        Force: ...
+        Craft: ...
+        Social: ...
+  - type: input
+    id: foreshadow
+    attributes:
+      label: Foreshadow IDs
+      description: Existing or new IDs to register in docs/FORESHADOW.md. Required if a clue is planted.
+      placeholder: FS-014
+  - type: checkboxes
+    id: guardrails
+    attributes:
+      label: Legal and ethical guardrails
+      options:
+        - label: No real historical person, organization, or place name
+        - label: No proper noun from another work of fiction
+        - label: No direct depiction of torture or massacre (implication and aftermath only)
+        - label: No hatred directed at a real-world nation or people
+    validations:
+      required: true

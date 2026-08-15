@@ -1,0 +1,50 @@
+# Binaries
+/bin/
+/dist/
+/server
+/yeomyeong
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Tests and coverage
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Go
+vendor/
+
+# Node / web client
+web/node_modules/
+web/dist/
+web/build/
+web/.vite/
+web/.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local tooling
+.golangci-lint-cache/
+tmp/
+*.log
