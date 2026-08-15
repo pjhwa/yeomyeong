@@ -232,7 +232,7 @@ already faintly iron. Mentorship: 청람 선생, his past only in fragments.
 |---|---|---|
 | **I-1 장터의 그늘** | `dalbitgol:market` | Gendarmerie checkpoint. Torn 관아 notice. A 한벽일보 with a typesetting error on the same board (FS-001, FS-014). |
 | **I-2 사라진 보부상** | `dalbitgol:warehouse`, road east | Peddler **강포** is missing. He was a Circle courier (FS-016). Residue, not a body scene. |
-| **I-3 틀린 활자** | `dalbitgol:printshop`, `hanbyeok:newsroom` back-issue | The error is a cipher in 한도규's hand (FS-001, FS-022). |
+| **I-3 틀린 활자** | `dalbitgol:printshop`, `hanbyeok:newsroom` back-issue | The error is a cipher in 한도규's hand (FS-001). |
 | **I-4 백야의 등** | `dalbitgol:cafe-baekya` | Guests who never order. 서월향 is 백야, unrevealed (FS-005, FS-006). |
 | **I-5 서당의 파편** | `dalbitgol:school` | 청람 flinches at 쇠말뚝. A plate he will not explain (FS-007, FS-008). |
 | **I-6 우물의 쇠내** | `dalbitgol:well`, `dalbitgol:shrine` | 곱단 tastes the hymn in the water (FS-011, FS-015). |
@@ -329,7 +329,7 @@ a scheduled recovery. AINPC writes persona cards from this section and
      saw him by the station the night he claimed to be at the press
      (`dalbitgol:cafe-baekya`, FS-002).
   2. *Object* — Gendarmerie receipt in the ink waste; extra slug of the
-     cipher character in his stick (`dalbitgol:printshop`, FS-003, FS-022).
+     cipher character in his stick (`dalbitgol:printshop`, FS-001, FS-003).
   3. *Newspaper* — 한벽일보 substitution pattern encodes Circle sites;
      errors pause on his "sick" days (`dalbitgol:market` board and
      `hanbyeok:newsroom` archive, FS-001).
