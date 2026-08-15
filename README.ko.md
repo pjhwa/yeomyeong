@@ -13,7 +13,7 @@ Go로 구축. [DikuMUD](https://dikumud.com) (1990)에서 영감을 받았고, �
 [![Build](https://img.shields.io/github/actions/workflow/status/pjhwa/yeomyeong/ci.yml?branch=main)](https://github.com/pjhwa/yeomyeong/actions)
 [![Go](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Roadmap](https://img.shields.io/badge/milestone-M0-lightgrey)](#로드맵)
+[![Roadmap](https://img.shields.io/badge/milestone-M0%20done-success)](#로드맵)
 
 **[English README](README.md)** · **[데모 플레이](#)** · **[Discord](#)**
 
@@ -21,7 +21,7 @@ Go로 구축. [DikuMUD](https://dikumud.com) (1990)에서 영감을 받았고, �
 
 ---
 
-> **⚠️ 상태: 초기 개발 (M0).** 아래에 적힌 세계는 설계 목표이며 아직 구현된 상태가 아니다.
+> **⚠️ 상태: M0 골격이 동작한다.** 아래에 적힌 세계는 설계 목표(M1+)다.
 > 현재 범위는 [로드맵](#로드맵)을 본다.
 
 <!-- TODO(M1): replace with asciinema demo GIF — 30s: market → haggle → checkpoint → deliver -->
@@ -114,7 +114,7 @@ I/O는 시뮬을 막지 않는다. DB 기록과 LLM 호출은 비동기 워커�
 
 ## 로드맵
 
-- [ ] **M0** — 서버 골격, WS/텔넷, 계정
+- [x] **M0** — 서버 골격, WS/텔넷, 계정
 - [ ] **M1** — YAML 월드 로더, 이동, 시작 마을 (방 40)
 - [ ] **M2** — 숙련: 성장 곡선, 총량 상한, 장비
 - [ ] **M3** — 살아있는 경제: 채집 → 제작 → 지역 교역
