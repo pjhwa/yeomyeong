@@ -387,3 +387,16 @@ Format:
   The whole-server channel is reserved for M5 (전신망, paid).
 - Consequences: M0 two-client smoke that assumed global say must sit in
   the same room (spawn) — still passes if both stay at the gate.
+
+## D-031 — M1 accepted
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §5 M1 done-when: a new user walks 달빛골 and reads
+  descriptions. Style guide, schema, loader, look/move, 40 rooms, QA walk.
+- Decision: M1 is complete. Promote `dev` → `main`, then reset `dev` to
+  that tip (D-027). Next work is M2 (skills). Do not start M2 until this
+  decision is on `main`.
+- Consequences: CONTENT-STYLE is binding for all later zones. Spawn stays
+  `dalbitgol:gate`. YAML rooms remain the only room source.
