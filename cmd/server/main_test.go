@@ -3,12 +3,17 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
+	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/pjhwa/yeomyeong/internal/config"
+	"github.com/pjhwa/yeomyeong/internal/content"
 )
 
 func TestRunIdlesAndStops(t *testing.T) {
@@ -43,6 +48,39 @@ func TestRunIdlesAndStops(t *testing.T) {
 	}
 	if !bytes.Contains([]byte(got), []byte("ws listening")) {
 		t.Fatalf("want ws listening log, got %q", got)
+	}
+	if !bytes.Contains([]byte(got), []byte("no content")) {
+		t.Fatalf("want no content log, got %q", got)
+	}
+}
+
+func TestRunFailsOnInvalidZones(t *testing.T) {
+	dir := t.TempDir()
+	zone := filepath.Join(dir, "content", "zones", "dalbitgol")
+	if err := os.MkdirAll(zone, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(zone, "rooms.yaml"), []byte("[]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	t.Setenv(config.EnvDatabase, "")
+	t.Setenv(config.EnvTelnetAddr, "127.0.0.1:0")
+	t.Setenv(config.EnvWSAddr, "127.0.0.1:0")
+	err := run(context.Background(), slog.New(slog.NewTextHandler(io.Discard, nil)), config.Load())
+	if !errors.Is(err, content.ErrSpawnMissing) {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestLoadWorldZonesNotDir(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "zones"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	if _, err := loadWorld(log, dir); err == nil {
+		t.Fatal("want error when zones is a file")
 	}
 }
 

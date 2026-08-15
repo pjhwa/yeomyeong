@@ -190,7 +190,12 @@ func (l *Loop) enter(c EnterWorld) {
 		return
 	}
 	l.ensureOut(c.ConnID)
-	l.world.roster[c.ConnID] = Player(c)
+	l.world.roster[c.ConnID] = Player{
+		ConnID:    c.ConnID,
+		AccountID: c.AccountID,
+		Username:  c.Username,
+		Session:   c.Session,
+	}
 	l.broadcastSys(c.Username + " 님이 자리에 앉았습니다.")
 }
 

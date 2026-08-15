@@ -1,0 +1,33 @@
+# Cycle start<->yard, one-way shop->cliff. Mixed i18n. test: zone only.
+- id: test:start
+  name: "시작 마당"
+  description: "흙마당이 넓다. 장대 문이 북쪽에 열려 있다."
+  exits: {north: test:yard, east: test:shop}
+  flags: [safe, town]
+  ambient:
+    - "바람이 문을 흔든다."
+    - {ko: "먼 곳에서 개가 짖는다.", en: "A dog barks far off."}
+- id: test:yard
+  name: {ko: "안마당", en: "Inner Yard"}
+  description:
+    ko: "우물이 가운데 있다. 돌담이 낮게 둘러 있다."
+    en: "A well sits in the middle."
+  exits: {south: test:start, up: test:loft}
+  flags: [town]
+  market: test
+  foreshadow: [FS-014]
+  heat_modifier: 0.8
+- id: test:loft
+  name: "다락"
+  description: "먼지가 쌓인 다락이다. 사다리가 아래로 이어진다."
+  exits: {down: test:yard}
+  flags: [indoor, dark]
+- id: test:shop
+  name: "가게"
+  description: "좁은 가게다. 문은 서쪽과 남쪽으로 열린다."
+  exits: {west: test:start, south: test:cliff}
+  flags: [market, town]
+  heat_modifier: 0
+- id: test:cliff
+  name: "벼랑"
+  description: "아래로 골짜기가 보인다. 되돌아갈 길은 없다."
