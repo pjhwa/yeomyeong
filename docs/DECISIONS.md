@@ -234,3 +234,107 @@ Format:
   always return `bad_credentials` (no user enumeration).
 - Consequences: Content names (NPC ids) are a different namespace and
   unused in M0.
+
+## D-018 — Close issues on merge-to-dev
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: GitHub auto-closes `Closes #N` only when the PR lands on the
+  default branch (`main`). Work PRs target `dev` (D-004).
+- Decision: LEAD closes the issue when the implementing PR is squash-merged
+  to `dev`, and cites the PR. Milestone promote `dev` → `main` is separate.
+- Consequences: Issue state tracks `dev`, not `main`.
+
+## D-019 — Occupation administration is 관아; the tower is 한벽 철탑
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md's sample room used 총독부. NARRATIVE dodged it as too
+  close to a real institution (issue #14 / PR #16).
+- Decision: In-world occupation offices are **관아**. The intake valve is
+  **한벽 철탑**. WORLD must not introduce 총독부 as a proper noun.
+- Consequences: M1 room prose follows this. The PLAN.md YAML example is
+  historical; new files do not copy that word.
+
+## D-020 — 분맥 is a server-wide binary fail state
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: NARRATIVE asked whether 분맥 should be a sliding aftermath.
+- Decision: Completing the primer cauterizes the five blood-points
+  (server-wide). Stopping it allows reverse flow. Aftermath is wells,
+  silent radio, empty masthead — never a massacre scene.
+- Consequences: M5–M6 raid design treats the primer cutoff as a binary
+  gate, not a damage slider.
+
+## D-021 — Game loop handles commands immediately and also drains on tick
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: EVENT-BUS.md listed drain as tick work. Immediate handle lowers
+  say latency without a second writer (PR #17).
+- Decision: The loop `select`s on the command channel *and* drains the
+  queue on each 100ms tick. Overrun logs a warning. Still one writer.
+- Consequences: Adapters must not assume a full tick of delay.
+
+## D-022 — argon2id parameters (OWASP 2024 interactive)
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: RFC 9106's 64 MiB option made `-race` hashes too slow.
+- Decision: time=2, memory=19456 KiB (19 MiB), threads=1, key=32, salt=16.
+  Stored as a PHC string. Verify uses the stored params.
+- Consequences: Retuning later does not need a second hash algorithm.
+
+## D-023 — WebSocket library and origin policy
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: M0 has no browser client.
+- Decision: `github.com/gorilla/websocket` v1.5.3. `CheckOrigin` allows all
+  until CLIENT exists (M6). Revisit then.
+- Consequences: A hostile page can open `/ws` against a local demo. Acceptable
+  for M0; not acceptable once a public demo is advertised.
+
+## D-024 — AccountStore.Exists is Telnet glue only
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: WIRE-PROTOCOL Telnet must ask “새로 만드시겠습니까?” for unknown
+  names. `Authenticate` must not enumerate.
+- Decision: `Exists` is on `AccountStore` for the create prompt. Login
+  failures remain a single `bad_credentials`.
+- Consequences: WebSocket create/login stay as distinct `auth.create` /
+  `auth.login` types and do not need `Exists`.
+
+## D-025 — Supporting face 메스너 주사; zone prefixes reserved
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: NARRATIVE added a handler so 류겐 is not the mole (PR #16).
+- Decision: **메스너 주사** is a supporting face, not one of the eight.
+  Blood-point prefixes 먹골갱 / 재안암 / 가랑포 / 흰재보 / 잠수성 are
+  reserved. WORLD may rename rooms; prefixes stay.
+- Consequences: AINPC persona cards for the eight do not absorb the handler.
+  한도규 disposal set (spare-and-use / spare-untrusted / exile / Circle
+  execution) is accepted.
+
+## D-026 — M0 accepted
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §5 done-when: two clients connect at once and talk.
+  §9.5 gates that apply before M3/M4.
+- Decision: M0 is complete on `dev` and is promoted to `main`. Next work
+  is M1. Do not start M1 systems until this decision is on `main`.
+- Consequences: Rooms, i18n keys, and YAML loaders may begin. Foreshadow
+  `foreshadow:` keys may be attached to rooms from FS-001–020.
