@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/config"
 	"github.com/pjhwa/yeomyeong/internal/engine"
+	"github.com/pjhwa/yeomyeong/internal/persist"
 )
 
 func main() {
@@ -28,13 +30,27 @@ func main() {
 }
 
 func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
+	store, err := persist.Open(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	if c, ok := store.(io.Closer); ok {
+		defer func() { _ = c.Close() }()
+	}
+
+	driver := "memory"
+	if _, ok := store.(*persist.Postgres); ok {
+		driver = "postgres"
+	}
 	log.Info("yeomyeong starting",
 		"telnet", cfg.TelnetAddr,
 		"ws", cfg.WSAddr,
 		"database", cfg.DatabaseURL != "",
+		"account_store", driver,
 		"log_level", cfg.LogLevel.String(),
 	)
 	// internal/net is issue #4 / #12. The process must still boot and idle.
+	// Auth hashing stays in persist; the loop never sees a password (D-012).
 	log.Info("net listeners not started")
 
 	loop := engine.New(log)

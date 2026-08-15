@@ -11,6 +11,7 @@ import (
 )
 
 func TestRunIdlesAndStops(t *testing.T) {
+	t.Setenv(config.EnvDatabase, "")
 	var buf bytes.Buffer
 	log := slog.New(slog.NewTextHandler(&buf, nil))
 	ctx, cancel := context.WithCancel(context.Background())
