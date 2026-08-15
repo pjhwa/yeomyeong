@@ -338,3 +338,52 @@ Format:
   is M1. Do not start M1 systems until this decision is on `main`.
 - Consequences: Rooms, i18n keys, and YAML loaders may begin. Foreshadow
   `foreshadow:` keys may be attached to rooms from FS-001–020.
+
+## D-027 — Realign `dev` to `main` after the M0 squash-promote
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: Promoting `dev` → `main` as one squash (PR #24) plus
+  `delete_branch_on_merge` deleted `dev` and left the old tip unreachable.
+- Decision: Recreate `dev` at `main` (`308aa2b`) before any M1 work.
+  Future milestone promotes still squash to `main`, then immediately reset
+  `dev` to the new `main` tip.
+- Consequences: Do not open M1 PRs against a pre-promote `dev`.
+
+## D-028 — Spawn room is `dalbitgol:gate`
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: M1 needs a single spawn. The market is a story beat (I-1), not
+  a spawn — new users should walk into it.
+- Decision: `EnterWorld` always places the player in `dalbitgol:gate`.
+  Missing spawn is a boot failure.
+- Consequences: WORLD must write that room. ENGINE must not invent a
+  fallback plaza in Go.
+
+## D-029 — i18n: `ko` required, `en` falls back to `ko`
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §7.7 wants keys from M1. Full English room prose for
+  40 rooms would delay the village.
+- Decision: `internal/text` holds system-message keys. Room YAML uses
+  localized strings (`ko` required, `en` optional). Missing `en` uses `ko`.
+  Default locale is `ko`.
+- Consequences: M0 Korean literals move onto keys without wording changes.
+  WORLD is not blocked on English.
+
+## D-030 — `say` is room-scoped from M1
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: Global say made M0 talk easy. A walkable village with global
+  chat would leak position-free shouting into later heat/stealth design.
+- Decision: `Say` delivers only to roster entries with the same `RoomID`.
+  The whole-server channel is reserved for M5 (전신망, paid).
+- Consequences: M0 two-client smoke that assumed global say must sit in
+  the same room (spawn) — still passes if both stay at the gate.
