@@ -5,14 +5,18 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/fs"
 	"log/slog"
 	stdnet "net"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 func TestTwoClientsExchangeSay(t *testing.T) {
@@ -102,7 +106,7 @@ func TestUnknownCommandEmptyAndRateLimit(t *testing.T) {
 	loginNew(t, c, "갑을", "password1")
 
 	c.send(t, "")
-	c.send(t, "look")
+	c.send(t, "xyzzy")
 	if !strings.Contains(c.readUntil(t, "모르는 말입니다. say / quit"), "모르는 말입니다. say / quit") {
 		t.Fatal("missing help line")
 	}
@@ -172,6 +176,62 @@ func TestReadLineCRLFAndIAC(t *testing.T) {
 	}
 }
 
+func TestLookMoveAndNoExit(t *testing.T) {
+	addr, loop := startServer(t)
+
+	a := dial(t, addr)
+	b := dial(t, addr)
+	loginNew(t, a, "갑을", "password1")
+	loginNew(t, b, "병정", "password2")
+	waitRoster(t, loop, 2)
+
+	a.send(t, "look")
+	got := a.readUntil(t, "여기: 병정")
+	if !strings.Contains(got, "시작 마당") || !strings.Contains(got, "흙마당이 넓다.") {
+		t.Fatalf("look missing name/desc: %q", got)
+	}
+	if !strings.Contains(got, "출구: 북쪽(안마당)") {
+		t.Fatalf("look missing exits: %q", got)
+	}
+
+	a.send(t, "s")
+	if !strings.Contains(a.readUntil(t, "그쪽으로는 갈 수 없습니다."), "그쪽으로는 갈 수 없습니다.") {
+		t.Fatal("missing no_exit")
+	}
+
+	a.send(t, "n")
+	if !strings.Contains(a.readUntil(t, "우물이 가운데 있다."), "우물이 가운데 있다.") {
+		t.Fatal("n did not move")
+	}
+	b.send(t, "보다")
+	got = b.readUntil(t, "출구: 북쪽(안마당)")
+	if strings.Contains(got, "여기:") || strings.Contains(b.buf, "여기:") {
+		t.Fatal("yard walker must not appear in start who")
+	}
+
+	a.send(t, "가다 남")
+	got = a.readUntil(t, "여기: 병정")
+	if !strings.Contains(got, "시작 마당") {
+		t.Fatalf("return missing name: %q", got)
+	}
+
+	a.send(t, "go north")
+	if !strings.Contains(a.readUntil(t, "우물이 가운데 있다."), "우물이 가운데 있다.") {
+		t.Fatal("go north failed")
+	}
+	a.send(t, "남")
+	if !strings.Contains(a.readUntil(t, "흙마당이 넓다."), "흙마당이 넓다.") {
+		t.Fatal("남 failed")
+	}
+
+	snap := waitRoster(t, loop, 2)
+	for _, p := range snap.Players {
+		if p.Username == "갑을" && p.RoomID != "test:start" {
+			t.Fatalf("adapter must not write RoomID; 갑을=%+v", p)
+		}
+	}
+}
+
 func TestSplitCmdAndFormat(t *testing.T) {
 	v, r := splitCmd("  말  안녕 세계  ")
 	if v != "말" || r != "안녕 세계" {
@@ -188,6 +248,29 @@ func TestSplitCmdAndFormat(t *testing.T) {
 	sys := formatText(engine.Text{Channel: engine.ChannelSys, Body: "자리에 앉았습니다."})
 	if sys != "자리에 앉았습니다." {
 		t.Fatalf("sys format: %q", sys)
+	}
+	lines := formatRoom(engine.Room{
+		Name:        "시작 마당",
+		Description: "흙마당이 넓다.",
+		Exits:       map[string]string{"north": "안마당", "east": "가게"},
+		Who:         []string{"병정"},
+	})
+	if len(lines) != 4 || lines[2] != "출구: 북쪽(안마당), 동쪽(가게)" || lines[3] != "여기: 병정" {
+		t.Fatalf("room format: %#v", lines)
+	}
+	if n := formatRoom(engine.Room{Name: "벼랑", Description: "끝."}); len(n) != 2 {
+		t.Fatalf("omit empty chrome: %#v", n)
+	}
+	if d, ok := parseTelnetDir("북"); !ok || d != "north" {
+		t.Fatalf("parse 북: %q %v", d, ok)
+	}
+	if !isLook("look", "look") || !isLook("l", "l") || !isLook("보다", "보다") || !isLook("살펴", "살펴") {
+		t.Fatal("look verbs")
+	}
+	for _, in := range []string{"s", "south", "e", "east", "w", "west", "u", "up", "d", "down", "아래"} {
+		if _, ok := parseTelnetDir(in); !ok {
+			t.Fatalf("parse %q", in)
+		}
 	}
 }
 
@@ -216,7 +299,7 @@ func startServer(t *testing.T) (addr string, loop *engine.Loop) {
 func startServerStore(t *testing.T) (string, *engine.Loop, *persist.Memory) {
 	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	loop := engine.New(log)
+	loop := engine.NewWithCatalog(log, testCatalog(t))
 	store := persist.NewMemory()
 	ctx, cancel := context.WithCancel(context.Background())
 	srv := NewServer("127.0.0.1:0", loop, store, log)
@@ -325,7 +408,7 @@ func loginNew(t *testing.T, c *testConn, name, pass string) {
 	c.readUntil(t, ">")
 }
 
-func waitRoster(t *testing.T, loop *engine.Loop, n int) {
+func waitRoster(t *testing.T, loop *engine.Loop, n int) engine.Snapshot {
 	t.Helper()
 	deadline := time.Now().Add(3 * time.Second)
 	var last engine.Snapshot
@@ -334,7 +417,7 @@ func waitRoster(t *testing.T, loop *engine.Loop, n int) {
 		snap, err := loop.Snapshot(ctx)
 		cancel()
 		if err == nil && len(snap.Players) == n {
-			return
+			return snap
 		}
 		if err == nil {
 			last = snap
@@ -342,6 +425,46 @@ func waitRoster(t *testing.T, loop *engine.Loop, n int) {
 		time.Sleep(20 * time.Millisecond)
 	}
 	t.Fatalf("roster want %d got %d (%+v)", n, len(last.Players), last.Players)
+	return last
+}
+
+func testCatalog(t *testing.T) *world.Catalog {
+	t.Helper()
+	cat, err := world.NewCatalog([]world.Room{
+		{
+			ID: "test:start", Name: world.Localized{KO: "시작 마당"},
+			Description: world.Localized{KO: "흙마당이 넓다."},
+			Exits:       map[string]string{"north": "test:yard"},
+		},
+		{
+			ID: "test:yard", Name: world.Localized{KO: "안마당"},
+			Description: world.Localized{KO: "우물이 가운데 있다."},
+			Exits:       map[string]string{"south": "test:start"},
+		},
+	}, "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cat
+}
+
+func TestAdaptersNeverWriteRoomID(t *testing.T) {
+	err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return err
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if bytes.Contains(b, []byte("RoomID")) {
+			t.Errorf("%s: adapters must not touch Player.RoomID", path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestFormatNoSayPrefixOnSys(t *testing.T) {

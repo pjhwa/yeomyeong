@@ -20,10 +20,21 @@ type EnterWorld struct {
 	Session   string
 }
 
-// Say broadcasts a line to every roster connection.
+// Say delivers a line to roster connections in the same room (D-030).
 type Say struct {
 	ConnID ConnID
 	Text   string
+}
+
+// Look asks the loop for the caller's current room card.
+type Look struct {
+	ConnID ConnID
+}
+
+// Move asks the loop to walk Dir (north/south/east/west/up/down).
+type Move struct {
+	ConnID ConnID
+	Dir    string
 }
 
 // LeaveWorld removes a player on quit or disconnect.
@@ -33,6 +44,8 @@ type LeaveWorld struct {
 
 func (EnterWorld) command() {}
 func (Say) command()        {}
+func (Look) command()       {}
+func (Move) command()       {}
 func (LeaveWorld) command() {}
 
 // Control requests served by the same queue so they observe FIFO order
