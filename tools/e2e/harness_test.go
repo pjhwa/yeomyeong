@@ -18,6 +18,7 @@ import (
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	ynet "github.com/pjhwa/yeomyeong/internal/net"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 const (
@@ -72,8 +73,21 @@ func (h *harness) failf(t *testing.T, format string, args ...any) {
 
 func startHarness(t *testing.T) *harness {
 	t.Helper()
+	// One-room fixture keeps M0 smokes independent of the village YAML.
+	cat, err := world.NewCatalog([]world.Room{{
+		ID: world.SpawnID, Name: world.Localized{KO: "문"},
+		Description: world.Localized{KO: "문."},
+	}}, world.SpawnID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return startHarnessWithCatalog(t, cat)
+}
+
+func startHarnessWithCatalog(t *testing.T, cat *world.Catalog) *harness {
+	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	loop := engine.New(log)
+	loop := engine.NewWithCatalog(log, cat)
 	store := persist.NewMemory()
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -241,6 +255,13 @@ func (c *telnetClient) expectLine(t *testing.T, want string) {
 
 func (c *telnetClient) createUser(t *testing.T, user, pass string) {
 	t.Helper()
+	_ = c.createUserUntilPrompt(t, user, pass)
+}
+
+// createUserUntilPrompt registers a new account and returns the bytes from
+// the seated line through the first command prompt (includes the spawn card).
+func (c *telnetClient) createUserUntilPrompt(t *testing.T, user, pass string) string {
+	t.Helper()
 	c.readUntil(t, "계정 이름:")
 	c.send(t, user)
 	c.readUntil(t, "암호:")
@@ -249,8 +270,9 @@ func (c *telnetClient) createUser(t *testing.T, user, pass string) {
 	c.send(t, "y")
 	c.readUntil(t, "암호:")
 	c.send(t, pass)
-	c.readUntil(t, user+" 님이 자리에 앉았습니다.")
-	c.readUntil(t, ">")
+	seated := c.readUntil(t, user+" 님이 자리에 앉았습니다.")
+	prompt := c.readUntil(t, ">")
+	return seated + prompt
 }
 
 type wsFrame struct {

@@ -1,6 +1,7 @@
 // Package engine implements the single-writer game loop (PLAN.md §4.2).
-// M0 world state is the logged-in roster only (D-013). Auth I/O stays off
-// this goroutine (D-012).
+// The loop is the only writer of Player.RoomID. The YAML catalog is
+// immutable and read-only (EVENT-BUS.md). Auth I/O stays off this
+// goroutine (D-012).
 package engine
 
 import (
@@ -8,7 +9,11 @@ import (
 	"fmt"
 	"log/slog"
 	"sort"
+	"strings"
 	"time"
+
+	"github.com/pjhwa/yeomyeong/internal/text"
+	yworld "github.com/pjhwa/yeomyeong/internal/world"
 )
 
 const (
@@ -26,19 +31,29 @@ type Loop struct {
 	cmds chan Command
 	log  *slog.Logger
 
+	// catalog is immutable after construction. nil means no rooms.
+	catalog *yworld.Catalog
+
 	// Owned exclusively by the Run goroutine.
 	world    world
 	outbound map[ConnID]chan Event
 }
 
-// New constructs an idle loop. Call Run from a single goroutine.
+// New constructs an idle loop with no room catalog. Call Run from a single goroutine.
 func New(log *slog.Logger) *Loop {
+	return NewWithCatalog(log, nil)
+}
+
+// NewWithCatalog constructs a loop that seats players at cat.Spawn() and
+// serves Look/Move from the immutable graph. cat may be nil.
+func NewWithCatalog(log *slog.Logger, cat *yworld.Catalog) *Loop {
 	if log == nil {
 		log = slog.Default()
 	}
 	return &Loop{
 		cmds:     make(chan Command, CommandQueueSize),
 		log:      log,
+		catalog:  cat,
 		world:    world{roster: make(map[ConnID]Player)},
 		outbound: make(map[ConnID]chan Event),
 	}
@@ -161,6 +176,10 @@ func (l *Loop) handle(cmd Command) {
 		l.enter(c)
 	case Say:
 		l.say(c)
+	case Look:
+		l.look(c)
+	case Move:
+		l.move(c)
 	case LeaveWorld:
 		l.leave(c)
 	case attachReq:
@@ -190,8 +209,22 @@ func (l *Loop) enter(c EnterWorld) {
 		return
 	}
 	l.ensureOut(c.ConnID)
-	l.world.roster[c.ConnID] = Player(c)
-	l.broadcastSys(c.Username + " 님이 자리에 앉았습니다.")
+	roomID := ""
+	if l.catalog != nil {
+		roomID = l.catalog.Spawn()
+	}
+	p := Player{
+		ConnID:    c.ConnID,
+		AccountID: c.AccountID,
+		Username:  c.Username,
+		Session:   c.Session,
+		RoomID:    roomID,
+	}
+	l.world.roster[c.ConnID] = p
+	l.sysInRoom(roomID, text.T(text.Default, text.SysSeated, c.Username))
+	if l.catalog != nil {
+		l.emit(l.roomCard(p))
+	}
 }
 
 func (l *Loop) say(c Say) {
@@ -199,9 +232,43 @@ func (l *Loop) say(c Say) {
 	if !ok {
 		return
 	}
-	for id := range l.world.roster {
+	for id, other := range l.world.roster {
+		if other.RoomID != p.RoomID {
+			continue
+		}
 		l.emit(Text{ConnID: id, Channel: ChannelSay, From: p.Username, Body: c.Text})
 	}
+}
+
+func (l *Loop) look(c Look) {
+	p, ok := l.world.roster[c.ConnID]
+	if !ok {
+		return
+	}
+	l.emit(l.roomCard(p))
+}
+
+func (l *Loop) move(c Move) {
+	p, ok := l.world.roster[c.ConnID]
+	if !ok {
+		return
+	}
+	dest, ok := "", false
+	if l.catalog != nil {
+		dest, ok = l.catalog.Exit(p.RoomID, c.Dir)
+	}
+	if !ok {
+		l.emit(Text{
+			ConnID:  p.ConnID,
+			Channel: ChannelSys,
+			Body:    text.T(text.Default, text.MoveNoExit),
+			Code:    text.CodeNoExit,
+		})
+		return
+	}
+	p.RoomID = dest
+	l.world.roster[c.ConnID] = p
+	l.emit(l.roomCard(p))
 }
 
 func (l *Loop) leave(c LeaveWorld) {
@@ -210,13 +277,54 @@ func (l *Loop) leave(c LeaveWorld) {
 		return
 	}
 	delete(l.world.roster, c.ConnID)
-	l.broadcastSys(p.Username + " 님이 자리를 떴습니다.")
+	l.sysInRoom(p.RoomID, text.T(text.Default, text.SysLeave, p.Username))
 }
 
-func (l *Loop) broadcastSys(body string) {
-	for id := range l.world.roster {
-		l.emit(Text{ConnID: id, Channel: ChannelSys, Body: body})
+func (l *Loop) sysInRoom(roomID, body string) {
+	for id, other := range l.world.roster {
+		if other.RoomID == roomID {
+			l.emit(Text{ConnID: id, Channel: ChannelSys, Body: body})
+		}
 	}
+}
+
+func (l *Loop) roomCard(viewer Player) Room {
+	who := l.whoElse(viewer)
+	card := Room{
+		ConnID: viewer.ConnID,
+		ID:     viewer.RoomID,
+		Exits:  map[string]string{},
+		Who:    who,
+	}
+	if l.catalog == nil {
+		return card
+	}
+	r, ok := l.catalog.Room(viewer.RoomID)
+	if !ok {
+		return card
+	}
+	card.Name = strings.TrimSpace(r.Name.Text(text.Default))
+	card.Description = strings.TrimSpace(r.Description.Text(text.Default))
+	for dir, destID := range r.Exits {
+		name := destID
+		if dest, ok := l.catalog.Room(destID); ok {
+			name = strings.TrimSpace(dest.Name.Text(text.Default))
+		}
+		card.Exits[dir] = name
+	}
+	return card
+}
+
+func (l *Loop) whoElse(viewer Player) []string {
+	who := make([]string, 0)
+	for _, other := range l.world.roster {
+		if other.ConnID == viewer.ConnID || other.RoomID != viewer.RoomID {
+			continue
+		}
+		who = append(who, other.Username)
+	}
+	sort.Strings(who)
+	return who
 }
 
 func (l *Loop) ensureOut(id ConnID) chan Event {

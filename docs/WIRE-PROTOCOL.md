@@ -1,8 +1,8 @@
 # WIRE-PROTOCOL
 
 ENGINE ↔ CLIENT. Agreed before implementation (PLAN.md §9.4).  
-M0 scope only. Additive changes bump `v` or add a type; do not reuse a type
-with a new shape.
+Additive changes add a type or an optional field; do not reuse a type
+with a new shape. `v` stays **1** through M1.
 
 Related: [EVENT-BUS.md](EVENT-BUS.md).
 
@@ -36,6 +36,8 @@ All client frames:
 | `auth.create` | `{ "username", "password" }` | New account, then enter world |
 | `auth.login` | `{ "username", "password" }` | Existing account, then enter world |
 | `cmd.say` | `{ "text" }` | After `auth.ok` |
+| `cmd.look` | `{}` | After `auth.ok` |
+| `cmd.move` | `{ "dir" }` | After `auth.ok`. `dir` is `north`/`south`/`east`/`west`/`up`/`down` |
 | `cmd.quit` | `{}` | Any time after connect |
 
 Username rules (server-enforced): 2–16 runes; Hangul syllables (`가`–`힣`),
@@ -52,8 +54,24 @@ Password: 8–72 bytes. Empty `text` on `cmd.say` is rejected.
 |---|---|---|
 | `auth.ok` | `{ "username", "session" }` | Entered the world. `session` is an opaque token (M0: unused for reconnect). |
 | `auth.err` | `{ "code", "message" }` | Create/login failed. Still at the auth gate. |
-| `text` | `{ "channel", "from", "text" }` | Player-visible line (`channel` is `say` or `sys`) |
+| `text` | `{ "channel", "from", "text" }` | Player-visible line (`channel` is `say`, `sys`, or `room`) |
+| `room` | `{ "id", "name", "description", "exits", "who" }` | Full room card after enter, look, or a successful move |
 | `sys` | `{ "code", "message" }` | Protocol/rate-limit/parse error |
+
+`room.exits` is a map of dir → destination **display name** (not id), so the
+client does not need the catalog. `room.who` is a list of other usernames
+in the room (not the viewer).
+
+Telnet renders a `room` event as:
+
+```
+<name>
+<description>
+출구: 북쪽(대장간), 동쪽(주막)
+여기: <other>, <other>
+```
+
+(omit the `여기` line when empty; omit `출구` when there are none.)
 
 `auth.err` / `sys` codes:
 
@@ -63,7 +81,9 @@ Password: 8–72 bytes. Empty `text` on `cmd.say` is rejected.
 | `bad_credentials` | login failed (do not distinguish unknown user vs bad password) |
 | `bad_username` | username fails the rune rules |
 | `bad_password` | password too short/long |
-| `not_authenticated` | `cmd.say` before `auth.ok` |
+| `not_authenticated` | `cmd.say` / `cmd.look` / `cmd.move` before `auth.ok` |
+| `no_exit` | `cmd.move` in a direction with no exit |
+| `bad_dir` | `cmd.move` with an unknown `dir` |
 | `bad_frame` | JSON/schema/`v` |
 | `rate_limited` | more than 20 commands in any rolling 1s |
 | `internal` | unexpected |
@@ -106,9 +126,23 @@ After the prompt:
 | input | command |
 |---|---|
 | `say <text>` / `말 <text>` | `Say` |
+| `look` / `보다` / `살펴` / `l` | `Look` |
+| `n` `s` `e` `w` `u` `d` | `Move` |
+| `북` `남` `동` `서` `위` `아래` | `Move` |
+| `north` `south` `east` `west` `up` `down` | `Move` |
+| `go <dir>` / `가다 <dir>` | `Move` |
 | `quit` / `종료` | `Quit` (close after a farewell line) |
 | empty line | ignore |
-| anything else | `sys` equivalent: `모르는 말입니다. say / quit` |
+| anything else | `sys` equivalent: keyed `cmd.unknown` (Korean wording unchanged from M0) |
+
+On a successful login the server emits the spawn room card (`dalbitgol:gate`)
+immediately after the seated line.
+
+Failed move (no exit):
+
+```
+그쪽으로는 갈 수 없습니다.
+```
 
 Broadcast format (every logged-in connection, including the speaker):
 
@@ -129,6 +163,5 @@ The game loop never sees the dropped command.
 
 ## What this document is not
 
-- Not a room protocol. M0 has no rooms.
 - Not a skill/combat/inventory schema.
 - Not an excuse to put rooms, NPCs, or items in Go source.

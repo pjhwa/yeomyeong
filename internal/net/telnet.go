@@ -19,30 +19,30 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/text"
 )
 
-// Korean prompts and system lines are WIRE-PROTOCOL / D-016 literals.
+// Korean auth prompts remain WIRE-PROTOCOL literals. Sys lines come from
+// internal/text (D-016 → D-029) without wording changes.
 const (
 	banner       = "여명 · YEOMYEONG"
 	promptName   = "계정 이름:"
 	promptPass   = "암호:"
 	promptCreate = "그 이름은 장부에 없습니다. 새로 만드시겠습니까? (y/n)"
 	msgBadCreds  = "이름이나 암호가 맞지 않습니다."
-	msgUnknown   = "모르는 말입니다. say / quit"
-	msgRateLimit = "rate_limited"
 	promptCmd    = ">"
 
-	maxLine     = 4096
-	cmdRate     = 20
-	cmdWindow   = time.Second
-	readIdle    = 5 * time.Minute
-	iac         = 255
-	iacSe       = 240
-	iacSb       = 250
-	iacWill     = 251
-	iacWont     = 252
-	iacDo       = 253
-	iacDont     = 254
+	maxLine   = 4096
+	cmdRate   = 20
+	cmdWindow = time.Second
+	readIdle  = 5 * time.Minute
+	iac       = 255
+	iacSe     = 240
+	iacSb     = 250
+	iacWill   = 251
+	iacWont   = 252
+	iacDo     = 253
+	iacDont   = 254
 )
 
 var connSeq atomic.Uint64
@@ -160,7 +160,7 @@ func (s *Server) handle(ctx context.Context, raw stdnet.Conn) {
 		Username:  acc.Username,
 		Session:   tok.Token,
 	}) {
-		_ = sess.writeLine(msgRateLimit)
+		_ = sess.writeLine(text.T(text.Default, text.SysRateLimit))
 		return
 	}
 	if err := sess.awaitSeated(ctx, out, acc.Username); err != nil {
@@ -264,7 +264,7 @@ func (s *session) auth(ctx context.Context) (persist.Account, persist.Session, e
 }
 
 func (s *session) awaitSeated(ctx context.Context, out <-chan engine.Event, username string) error {
-	want := username + " 님이 자리에 앉았습니다."
+	want := text.T(text.Default, text.SysSeated, username)
 	timer := time.NewTimer(5 * time.Second)
 	defer timer.Stop()
 	for {
@@ -277,12 +277,27 @@ func (s *session) awaitSeated(ctx context.Context, out <-chan engine.Event, user
 				return err
 			}
 			if tx, ok := ev.(engine.Text); ok && tx.Channel == engine.ChannelSys && tx.Body == want {
+				s.flushNow(out)
 				return nil
 			}
 		case <-timer.C:
 			return errors.New("enter world timeout")
 		case <-ctx.Done():
 			return ctx.Err()
+		}
+	}
+}
+
+func (s *session) flushNow(out <-chan engine.Event) {
+	for {
+		select {
+		case ev, ok := <-out:
+			if !ok {
+				return
+			}
+			_ = s.writeEvent(ev)
+		default:
+			return
 		}
 	}
 }
@@ -316,43 +331,69 @@ func (s *session) commands(ctx context.Context) {
 			continue
 		}
 		if !s.lim.allow(time.Now()) {
-			if err := s.writeLine(msgRateLimit); err != nil {
+			if err := s.writeLine(text.T(text.Default, text.SysRateLimit)); err != nil {
 				return
 			}
 			continue
 		}
-		verb, rest := splitCmd(line)
-		switch strings.ToLower(verb) {
-		case "say", "말":
-			if rest == "" {
-				if err := s.writeLine(msgUnknown); err != nil {
-					return
-				}
-				continue
-			}
-			if !s.loop.Submit(engine.Say{ConnID: s.id, Text: rest}) {
-				if err := s.writeLine(msgRateLimit); err != nil {
-					return
-				}
-			}
-		case "quit", "종료":
-			if s.user != "" {
-				_ = s.writeLine(s.user + " 님이 자리를 떴습니다.")
-			}
-			s.loop.Submit(engine.LeaveWorld{ConnID: s.id})
+		if err := s.dispatch(line); err != nil {
 			return
-		default:
-			if err := s.writeLine(msgUnknown); err != nil {
-				return
-			}
 		}
 	}
+}
+
+func (s *session) dispatch(line string) error {
+	verb, rest := splitCmd(line)
+	low := strings.ToLower(verb)
+	switch {
+	case low == "say" || verb == "말":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Say{ConnID: s.id, Text: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case isLook(low, verb):
+		if !s.loop.Submit(engine.Look{ConnID: s.id}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "go" || verb == "가다":
+		dir, ok := parseTelnetDir(rest)
+		if !ok {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "quit" || verb == "종료":
+		if s.user != "" {
+			_ = s.writeLine(text.T(text.Default, text.SysLeave, s.user))
+		}
+		s.loop.Submit(engine.LeaveWorld{ConnID: s.id})
+		return io.EOF
+	default:
+		if dir, ok := parseTelnetDir(verb); ok && rest == "" {
+			if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
+				return s.writeLine(text.T(text.Default, text.SysRateLimit))
+			}
+			return nil
+		}
+		return s.writeLine(text.T(text.Default, text.CmdUnknown))
+	}
+	return nil
 }
 
 func (s *session) writeEvent(ev engine.Event) error {
 	switch e := ev.(type) {
 	case engine.Text:
 		return s.writeLine(formatText(e))
+	case engine.Room:
+		for _, line := range formatRoom(e) {
+			if err := s.writeLine(line); err != nil {
+				return err
+			}
+		}
+		return nil
 	case engine.Drop:
 		return io.EOF
 	default:
@@ -378,6 +419,55 @@ func formatText(e engine.Text) string {
 		return "[말] " + e.From + ": " + e.Body
 	}
 	return e.Body
+}
+
+var exitOrder = []string{"north", "south", "east", "west", "up", "down"}
+
+func formatRoom(e engine.Room) []string {
+	lines := []string{e.Name, e.Description}
+	if s := formatExits(e.Exits); s != "" {
+		lines = append(lines, s)
+	}
+	if len(e.Who) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomHere, strings.Join(e.Who, ", ")))
+	}
+	return lines
+}
+
+func formatExits(exits map[string]string) string {
+	if len(exits) == 0 {
+		return ""
+	}
+	parts := make([]string, 0, len(exits))
+	for _, dir := range exitOrder {
+		name, ok := exits[dir]
+		if !ok {
+			continue
+		}
+		parts = append(parts, text.DirLabel(text.Default, dir)+"("+name+")")
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return text.T(text.Default, text.RoomExits, strings.Join(parts, ", "))
+}
+
+func isLook(low, verb string) bool {
+	return low == "look" || low == "l" || verb == "보다" || verb == "살펴"
+}
+
+var telnetDir = map[string]string{
+	"n": "north", "north": "north", "북": "north",
+	"s": "south", "south": "south", "남": "south",
+	"e": "east", "east": "east", "동": "east",
+	"w": "west", "west": "west", "서": "west",
+	"u": "up", "up": "up", "위": "up",
+	"d": "down", "down": "down", "아래": "down",
+}
+
+func parseTelnetDir(s string) (string, bool) {
+	d, ok := telnetDir[strings.ToLower(strings.TrimSpace(s))]
+	return d, ok
 }
 
 func splitCmd(line string) (verb, rest string) {

@@ -4,16 +4,20 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/pjhwa/yeomyeong/internal/config"
+	"github.com/pjhwa/yeomyeong/internal/content"
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	ynet "github.com/pjhwa/yeomyeong/internal/net"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 func main() {
@@ -30,6 +34,8 @@ func main() {
 	}
 }
 
+const contentRoot = "content"
+
 func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	store, err := persist.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -37,6 +43,11 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	}
 	if c, ok := store.(io.Closer); ok {
 		defer func() { _ = c.Close() }()
+	}
+
+	cat, err := loadWorld(log, contentRoot)
+	if err != nil {
+		return err
 	}
 
 	driver := "memory"
@@ -54,7 +65,7 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	loop := engine.New(log)
+	loop := engine.NewWithCatalog(log, cat)
 	loopDone := make(chan struct{})
 	go func() {
 		defer close(loopDone)
@@ -92,4 +103,28 @@ func serveListeners(ctx context.Context, log *slog.Logger, cfg config.Config, lo
 		}
 	}
 	return first
+}
+
+// loadWorld loads content/zones if that directory exists. Missing zones is
+// not a boot failure. Invalid zones are fatal. Real-tree spawn is
+// dalbitgol:gate (D-028). The catalog is attached to the loop.
+func loadWorld(log *slog.Logger, root string) (*world.Catalog, error) {
+	zones := filepath.Join(root, "zones")
+	st, err := os.Stat(zones)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Info("no content")
+			return nil, nil
+		}
+		return nil, fmt.Errorf("stat content zones: %w", err)
+	}
+	if !st.IsDir() {
+		return nil, fmt.Errorf("content zones %s is not a directory", zones)
+	}
+	cat, err := content.Load(root, world.SpawnID)
+	if err != nil {
+		return nil, fmt.Errorf("load content: %w", err)
+	}
+	log.Info("content loaded", "rooms", cat.Len(), "spawn", cat.Spawn())
+	return cat, nil
 }

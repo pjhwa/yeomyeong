@@ -1,7 +1,8 @@
 # EVENT-BUS
 
-ENGINE ↔ GAMEPLAY / ECONOMY / AINPC. M0 is roster + say only.  
-Later systems subscribe to the same bus; they do not grow their own world writers.
+ENGINE ↔ GAMEPLAY / ECONOMY / AINPC.  
+M1 adds rooms, look, and move. Later systems subscribe to the same bus;
+they do not grow their own world writers.
 
 Related: [WIRE-PROTOCOL.md](WIRE-PROTOCOL.md), PLAN.md §4.2.
 
@@ -11,7 +12,11 @@ The game-loop goroutine is the **only** goroutine that:
 
 - inserts / removes players on the in-memory roster
 - reads the roster to decide who receives a `say`
-- changes any future world field (rooms, heat, prices, …)
+- writes `Player.RoomID` (position)
+- changes any future world field (heat, prices, …)
+
+The **room catalog** loaded from YAML is immutable after boot. The loop
+reads it; it does not mutate room definitions. Positions are world state.
 
 Connection goroutines, persist workers, and LLM workers **never** take a
 mutex on world data — because world data has no mutex. They send a
@@ -23,16 +28,18 @@ conn goroutine ──Command──▶ game loop ──Event──▶ per-conn ou
                      └── persist / auth happens BEFORE EnterWorld
 ```
 
-## Commands (M0)
+## Commands (M0–M1)
 
 Enqueued by adapters (`internal/net`). Value types, no shared pointers into
 the world.
 
 | Name | Fields | Who enqueues | Loop effect |
 |---|---|---|---|
-| `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry; emit `Sys` to all: `"<name> 님이 자리에 앉았습니다."` |
-| `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn |
-| `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Delete roster entry; emit `Sys` to remaining: `"<name> 님이 자리를 떴습니다."` |
+| `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
+| `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
+| `Look` | `ConnID` | net | Emit `Room` card to that conn |
+| `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
+| `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Delete roster entry; emit `Sys` to remaining **in that room**: `"<name> 님이 자리를 떴습니다."` |
 
 Auth create/login is **not** a loop command. Hashing and store I/O run in
 the connection goroutine (or a persist worker). Only a successful auth
@@ -40,11 +47,12 @@ produces `EnterWorld`.
 
 Unknown `ConnID` on `Say` / `LeaveWorld`: no-op (already gone).
 
-## Events (M0)
+## Events (M0–M1)
 
 | Name | Fields | Delivery |
 |---|---|---|
-| `Text` | `ConnID` (target), `Channel` (`say`\|`sys`), `From`, `Body` | That connection's outbound buffer |
+| `Text` | `ConnID` (target), `Channel` (`say`\|`sys`\|`room`), `From`, `Body` | That connection's outbound buffer |
+| `Room` | `ConnID`, `ID`, `Name`, `Description`, `Exits` (dir→display name), `Who` | That connection; adapters format per WIRE-PROTOCOL |
 | `Drop` | `ConnID` | Adapter closes the socket after flush |
 
 The loop never writes to a socket. It only appends to an outbound queue
@@ -52,7 +60,7 @@ the adapter drains.
 
 ## Tick
 
-Period: **100ms**. M0 tick work:
+Period: **100ms**. M1 tick work:
 
 1. Drain the command channel (bounded; see below).
 2. No combat, weather, NPC, or price work yet.
@@ -78,9 +86,9 @@ spawn extra loop goroutines.
 
 ## Reserved for later milestones
 
-Do not implement these in M0; names are reserved so GAMEPLAY/ECONOMY do
+Do not implement these in M1; names are reserved so GAMEPLAY/ECONOMY do
 not invent parallel buses:
 
-- `Move`, `Observe`, `UseSkill`, `CombatIntent`
+- `UseSkill`, `CombatIntent`
 - `PriceTick`, `HeatTick`, `WeatherTick`
 - `DialogueRequest` / `DialogueResult` (AINPC workers → loop)

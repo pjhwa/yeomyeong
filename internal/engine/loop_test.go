@@ -13,6 +13,9 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/pjhwa/yeomyeong/internal/text"
+	yworld "github.com/pjhwa/yeomyeong/internal/world"
 )
 
 func TestConcurrentSubmitRosterOnlyChangesOnLoop(t *testing.T) {
@@ -204,11 +207,131 @@ func TestAttachDetachAndUnknownCommand(t *testing.T) {
 func TestEventTargets(t *testing.T) {
 	for i, ev := range []Event{
 		Text{ConnID: "c", Channel: ChannelSay, From: "u", Body: "x"},
+		Room{ConnID: "c", ID: "test:start"},
 		Drop{ConnID: "c"},
 	} {
 		if ev.Target() != "c" {
 			t.Fatalf("%d: Target()=%q", i, ev.Target())
 		}
+	}
+}
+
+func TestEnterSeatsAtSpawnAndLookShowsOthers(t *testing.T) {
+	l := startLoopWith(t, testCatalog(t))
+	outA := mustAttach(t, l, "a")
+	outB := mustAttach(t, l, "b")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s1"})
+	l.Submit(EnterWorld{ConnID: "b", AccountID: "2", Username: "을", Session: "s2"})
+	snap := mustSnapshot(t, l)
+	if len(snap.Players) != 2 {
+		t.Fatalf("roster: %+v", snap.Players)
+	}
+	for _, p := range snap.Players {
+		if p.RoomID != "test:start" {
+			t.Fatalf("want spawn test:start, got %+v", p)
+		}
+	}
+	if !hasText(drain(outA), ChannelSys, "", "갑 님이 자리에 앉았습니다.") {
+		t.Fatal("newcomer missing seated")
+	}
+	if findRoom(drain(outB)) == nil {
+		t.Fatal("second enter must emit a room card")
+	}
+	l.Submit(Look{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	card := findRoom(drain(outA))
+	if card == nil || card.Name != "시작 마당" || card.ID != "test:start" {
+		t.Fatalf("look card: %+v", card)
+	}
+	if len(card.Who) != 1 || card.Who[0] != "을" {
+		t.Fatalf("want 을 in who, got %v", card.Who)
+	}
+	if card.Exits["north"] != "안마당" {
+		t.Fatalf("exits: %v", card.Exits)
+	}
+}
+
+func TestMoveOnlyViaLoopAndNoExit(t *testing.T) {
+	l := startLoopWith(t, testCatalog(t))
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
+	if snap := mustSnapshot(t, l); snap.Players[0].RoomID != "test:start" {
+		t.Fatalf("spawn: %+v", snap.Players)
+	}
+	drain(out)
+	l.Submit(Move{ConnID: "a", Dir: "south"})
+	_ = mustSnapshot(t, l)
+	evs := drain(out)
+	if !hasText(evs, ChannelSys, "", "그쪽으로는 갈 수 없습니다.") {
+		t.Fatalf("want no_exit, got %#v", evs)
+	}
+	if code := textCode(evs, text.CodeNoExit); code == nil {
+		t.Fatal("no_exit must carry Code")
+	}
+	if snap := mustSnapshot(t, l); snap.Players[0].RoomID != "test:start" {
+		t.Fatalf("blocked move mutated RoomID: %+v", snap.Players)
+	}
+
+	l.Submit(Move{ConnID: "a", Dir: "north"})
+	snap := mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "test:yard" {
+		t.Fatalf("move: %+v", snap.Players)
+	}
+	snap.Players[0].RoomID = "hacked"
+	if again := mustSnapshot(t, l); again.Players[0].RoomID != "test:yard" {
+		t.Fatal("snapshot must copy; adapters cannot write RoomID")
+	}
+	card := findRoom(drain(out))
+	if card == nil || card.ID != "test:yard" || card.Name != "안마당" {
+		t.Fatalf("move card: %+v", card)
+	}
+
+	l.Submit(Look{ConnID: "ghost"})
+	l.Submit(Move{ConnID: "ghost", Dir: "north"})
+	if n := len(mustSnapshot(t, l).Players); n != 1 {
+		t.Fatalf("ghost cmds must no-op, roster=%d", n)
+	}
+}
+
+func TestSayDoesNotLeakToOtherRoom(t *testing.T) {
+	l := startLoopWith(t, testCatalog(t))
+	outA := mustAttach(t, l, "a")
+	outB := mustAttach(t, l, "b")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s1"})
+	l.Submit(EnterWorld{ConnID: "b", AccountID: "2", Username: "을", Session: "s2"})
+	l.Submit(Move{ConnID: "b", Dir: "north"})
+	_ = mustSnapshot(t, l)
+	drain(outA)
+	drain(outB)
+	l.Submit(Say{ConnID: "a", Text: "비밀"})
+	_ = mustSnapshot(t, l)
+	if !hasText(drain(outA), ChannelSay, "갑", "비밀") {
+		t.Fatal("speaker missed own say")
+	}
+	if hasText(drain(outB), ChannelSay, "갑", "비밀") {
+		t.Fatal("say leaked to another room")
+	}
+}
+
+func TestLeaveOnlyNotifiesSameRoom(t *testing.T) {
+	l := startLoopWith(t, testCatalog(t))
+	_ = mustAttach(t, l, "a")
+	outB := mustAttach(t, l, "b")
+	outC := mustAttach(t, l, "c")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s1"})
+	l.Submit(EnterWorld{ConnID: "b", AccountID: "2", Username: "을", Session: "s2"})
+	l.Submit(EnterWorld{ConnID: "c", AccountID: "3", Username: "병", Session: "s3"})
+	l.Submit(Move{ConnID: "c", Dir: "north"})
+	_ = mustSnapshot(t, l)
+	drain(outB)
+	drain(outC)
+	l.Submit(LeaveWorld{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	if !hasText(drain(outB), ChannelSys, "", "갑 님이 자리를 떴습니다.") {
+		t.Fatal("same-room peer missed leave")
+	}
+	if hasText(drain(outC), ChannelSys, "", "갑 님이 자리를 떴습니다.") {
+		t.Fatal("leave leaked to another room")
 	}
 }
 
@@ -272,7 +395,12 @@ func (bogusCmd) command() {}
 
 func startLoop(t *testing.T) *Loop {
 	t.Helper()
-	l := New(discardLog())
+	return startLoopWith(t, nil)
+}
+
+func startLoopWith(t *testing.T, cat *yworld.Catalog) *Loop {
+	t.Helper()
+	l := NewWithCatalog(discardLog(), cat)
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
@@ -288,6 +416,44 @@ func startLoop(t *testing.T) *Loop {
 		}
 	})
 	return l
+}
+
+func testCatalog(t *testing.T) *yworld.Catalog {
+	t.Helper()
+	cat, err := yworld.NewCatalog([]yworld.Room{
+		{
+			ID: "test:start", Name: yworld.Localized{KO: "시작 마당"},
+			Description: yworld.Localized{KO: "흙마당이 넓다."},
+			Exits:       map[string]string{"north": "test:yard"},
+		},
+		{
+			ID: "test:yard", Name: yworld.Localized{KO: "안마당"},
+			Description: yworld.Localized{KO: "우물이 가운데 있다."},
+			Exits:       map[string]string{"south": "test:start"},
+		},
+	}, "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cat
+}
+
+func findRoom(evs []Event) *Room {
+	for i := range evs {
+		if r, ok := evs[i].(Room); ok {
+			return &r
+		}
+	}
+	return nil
+}
+
+func textCode(evs []Event, code string) *Text {
+	for i := range evs {
+		if tx, ok := evs[i].(Text); ok && tx.Code == code {
+			return &tx
+		}
+	}
+	return nil
 }
 
 func mustAttach(t *testing.T, l *Loop, id ConnID) <-chan Event {
