@@ -100,6 +100,16 @@ func (p *Postgres) Create(ctx context.Context, username, password string) (Accou
 	return acc, err
 }
 
+// Exists reports whether username is registered (Unicode simple-fold).
+func (p *Postgres) Exists(ctx context.Context, username string) (bool, error) {
+	var ok bool
+	err := p.pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM accounts WHERE username_fold = $1)`,
+		foldUsername(username),
+	).Scan(&ok)
+	return ok, err
+}
+
 // Authenticate verifies username+password. Every failure is ErrBadCredentials.
 func (p *Postgres) Authenticate(ctx context.Context, username, password string) (Account, error) {
 	var acc Account

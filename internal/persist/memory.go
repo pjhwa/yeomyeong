@@ -62,6 +62,18 @@ func (m *Memory) Create(ctx context.Context, username, password string) (Account
 	return acc, nil
 }
 
+// Exists reports whether username is registered (Unicode simple-fold).
+func (m *Memory) Exists(ctx context.Context, username string) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	fold := foldUsername(username)
+	m.mu.Lock()
+	_, ok := m.byFold[fold]
+	m.mu.Unlock()
+	return ok, nil
+}
+
 // Authenticate verifies username+password. Every failure is ErrBadCredentials.
 func (m *Memory) Authenticate(ctx context.Context, username, password string) (Account, error) {
 	if err := ctx.Err(); err != nil {

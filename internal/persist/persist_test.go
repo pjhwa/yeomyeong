@@ -94,6 +94,12 @@ func testAccountStore(t *testing.T, s AccountStore) {
 	if got.ID != acc.ID || got.Username != "갑을" {
 		t.Fatalf("auth: %+v", got)
 	}
+	if ok, err := s.Exists(ctx, "갑을"); err != nil || !ok {
+		t.Fatalf("exists known: %v %v", ok, err)
+	}
+	if ok, err := s.Exists(ctx, "갑乙"); err != nil || ok {
+		t.Fatalf("exists missing: %v %v", ok, err)
+	}
 
 	if _, err := s.Create(ctx, "Player", "password1"); err != nil {
 		t.Fatal(err)
@@ -181,6 +187,9 @@ func TestMemoryCancelledContext(t *testing.T) {
 	}
 	if _, err := m.Authenticate(ctx, "ab", "password1"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("auth: %v", err)
+	}
+	if _, err := m.Exists(ctx, "ab"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("exists: %v", err)
 	}
 	if _, err := m.IssueSession(ctx, "x", time.Hour); !errors.Is(err, context.Canceled) {
 		t.Fatalf("issue: %v", err)

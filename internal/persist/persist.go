@@ -59,6 +59,10 @@ type Session struct {
 type AccountStore interface {
 	Create(ctx context.Context, username, password string) (Account, error)
 	Authenticate(ctx context.Context, username, password string) (Account, error)
+	// Exists reports whether username is registered (Unicode simple-fold).
+	// Telnet needs this to offer the create prompt (WIRE-PROTOCOL).
+	// Authenticate still never distinguishes unknown vs bad password.
+	Exists(ctx context.Context, username string) (bool, error)
 	IssueSession(ctx context.Context, accountID string, ttl time.Duration) (Session, error)
 	LookupSession(ctx context.Context, token string) (Session, error)
 	RevokeSession(ctx context.Context, token string) error
