@@ -13,7 +13,7 @@ Built in Go. Inspired by [DikuMUD](https://dikumud.com) (1990), sharing none of 
 [![Build](https://img.shields.io/github/actions/workflow/status/pjhwa/yeomyeong/ci.yml?branch=main)](https://github.com/pjhwa/yeomyeong/actions)
 [![Go](https://img.shields.io/badge/go-1.24%2B-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Roadmap](https://img.shields.io/badge/milestone-M0-lightgrey)](#roadmap)
+[![Roadmap](https://img.shields.io/badge/milestone-M0%20done-success)](#roadmap)
 
 **[한국어 README](README.ko.md)** · **[Play the demo](#)** · **[Discord](#)**
 
@@ -21,8 +21,8 @@ Built in Go. Inspired by [DikuMUD](https://dikumud.com) (1990), sharing none of 
 
 ---
 
-> **⚠️ Status: early development (M0).** The world described below is the design
-> target, not yet the shipped state. Follow the [roadmap](#roadmap) for what's live today.
+> **⚠️ Status: M0 skeleton is live.** The world described below is the design
+> target (M1+). Follow the [roadmap](#roadmap) for what's playable today.
 
 <!-- TODO(M1): replace with asciinema demo GIF — 30s: market → haggle → checkpoint → deliver -->
 <div align="center">
@@ -118,7 +118,7 @@ simulation; database writes and LLM calls are delegated to async workers.
 
 ## Roadmap
 
-- [ ] **M0** — Server skeleton, WS/Telnet, accounts
+- [x] **M0** — Server skeleton, WS/Telnet, accounts
 - [ ] **M1** — YAML world loader, movement, first village (40 rooms)
 - [ ] **M2** — Skill system: growth curves, total cap, equipment
 - [ ] **M3** — Living economy: gathering → crafting → regional trade

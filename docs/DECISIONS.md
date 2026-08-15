@@ -163,3 +163,178 @@ Format:
 - Consequences: Topics include `korean-history` and `alternate-history` as
   specified. World text itself still obeys §2.1 — topics are catalog metadata,
   not in-game nouns.
+
+## D-012 — Auth I/O stays off the game loop
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: Account create/login needs argon2id and (later) Postgres. Those
+  must not stall the 100ms tick. World state is only the in-memory roster.
+- Decision: Connection goroutines (or a persist worker) hash passwords and
+  call `AccountStore`. Only a successful auth enqueues `EnterWorld`.
+  `Say` / `LeaveWorld` are the other M0 commands. See EVENT-BUS.md.
+- Consequences: The loop package has no import of `database/sql` or argon2.
+  Persist is not world state and may use its own mutexes.
+
+## D-013 — M0 world is a roster, not rooms
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: M0 done-when is “two clients connect and talk.” Rooms are M1.
+- Decision: The only in-memory world data in M0 is the logged-in roster.
+  `say` broadcasts to everyone on that roster. No room graph, no YAML
+  content, no hardcoded plaza.
+- Consequences: WORLD is idle. ENGINE must not invent a “void room” entity
+  that later collides with the YAML loader.
+
+## D-014 — In-memory AccountStore when DATABASE_URL is empty
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: CI and unit tests cannot depend on a live Postgres.
+- Decision: `AccountStore` is an interface. Empty `DATABASE_URL` selects
+  the in-memory implementation. Postgres is implemented in the persist
+  issue and used only when the URL is set.
+- Consequences: Default `docker compose` / local `go run` without a URL
+  still satisfies M0. Data vanishes on process exit — acceptable until M1.
+
+## D-015 — Module path and process config
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: First `go.mod` must not churn.
+- Decision: Module is `github.com/pjhwa/yeomyeong`. Env:
+  `YEOMYEONG_TELNET_ADDR` (`:4000`), `YEOMYEONG_WS_ADDR` (`:8080`),
+  `DATABASE_URL`, `YEOMYEONG_LOG_LEVEL` (`info`).
+- Consequences: Import paths and Docker image names follow the module.
+
+## D-016 — M0 prompts are Korean literals
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §7.7 wants i18n keys from M1. Inventing a key system
+  in M0 would delay the skeleton.
+- Decision: Telnet prompts and system lines are Korean string literals.
+  M1 replaces them with keyed text. No English-only player-facing path.
+- Consequences: Tests assert on the Korean strings in WIRE-PROTOCOL.md.
+
+## D-017 — Username and password rules
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: Need a stable validation rule before persist lands.
+- Decision: Username 2–16 runes, Hangul syllables / letters / digits / `_`,
+  uniqueness is Unicode simple-fold. Password 8–72 bytes. Login failures
+  always return `bad_credentials` (no user enumeration).
+- Consequences: Content names (NPC ids) are a different namespace and
+  unused in M0.
+
+## D-018 — Close issues on merge-to-dev
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: GitHub auto-closes `Closes #N` only when the PR lands on the
+  default branch (`main`). Work PRs target `dev` (D-004).
+- Decision: LEAD closes the issue when the implementing PR is squash-merged
+  to `dev`, and cites the PR. Milestone promote `dev` → `main` is separate.
+- Consequences: Issue state tracks `dev`, not `main`.
+
+## D-019 — Occupation administration is 관아; the tower is 한벽 철탑
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md's sample room used 총독부. NARRATIVE dodged it as too
+  close to a real institution (issue #14 / PR #16).
+- Decision: In-world occupation offices are **관아**. The intake valve is
+  **한벽 철탑**. WORLD must not introduce 총독부 as a proper noun.
+- Consequences: M1 room prose follows this. The PLAN.md YAML example is
+  historical; new files do not copy that word.
+
+## D-020 — 분맥 is a server-wide binary fail state
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: NARRATIVE asked whether 분맥 should be a sliding aftermath.
+- Decision: Completing the primer cauterizes the five blood-points
+  (server-wide). Stopping it allows reverse flow. Aftermath is wells,
+  silent radio, empty masthead — never a massacre scene.
+- Consequences: M5–M6 raid design treats the primer cutoff as a binary
+  gate, not a damage slider.
+
+## D-021 — Game loop handles commands immediately and also drains on tick
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: EVENT-BUS.md listed drain as tick work. Immediate handle lowers
+  say latency without a second writer (PR #17).
+- Decision: The loop `select`s on the command channel *and* drains the
+  queue on each 100ms tick. Overrun logs a warning. Still one writer.
+- Consequences: Adapters must not assume a full tick of delay.
+
+## D-022 — argon2id parameters (OWASP 2024 interactive)
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: RFC 9106's 64 MiB option made `-race` hashes too slow.
+- Decision: time=2, memory=19456 KiB (19 MiB), threads=1, key=32, salt=16.
+  Stored as a PHC string. Verify uses the stored params.
+- Consequences: Retuning later does not need a second hash algorithm.
+
+## D-023 — WebSocket library and origin policy
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: M0 has no browser client.
+- Decision: `github.com/gorilla/websocket` v1.5.3. `CheckOrigin` allows all
+  until CLIENT exists (M6). Revisit then.
+- Consequences: A hostile page can open `/ws` against a local demo. Acceptable
+  for M0; not acceptable once a public demo is advertised.
+
+## D-024 — AccountStore.Exists is Telnet glue only
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: WIRE-PROTOCOL Telnet must ask “새로 만드시겠습니까?” for unknown
+  names. `Authenticate` must not enumerate.
+- Decision: `Exists` is on `AccountStore` for the create prompt. Login
+  failures remain a single `bad_credentials`.
+- Consequences: WebSocket create/login stay as distinct `auth.create` /
+  `auth.login` types and do not need `Exists`.
+
+## D-025 — Supporting face 메스너 주사; zone prefixes reserved
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: NARRATIVE added a handler so 류겐 is not the mole (PR #16).
+- Decision: **메스너 주사** is a supporting face, not one of the eight.
+  Blood-point prefixes 먹골갱 / 재안암 / 가랑포 / 흰재보 / 잠수성 are
+  reserved. WORLD may rename rooms; prefixes stay.
+- Consequences: AINPC persona cards for the eight do not absorb the handler.
+  한도규 disposal set (spare-and-use / spare-untrusted / exile / Circle
+  execution) is accepted.
+
+## D-026 — M0 accepted
+
+- Date: 2026-08-15
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §5 done-when: two clients connect at once and talk.
+  §9.5 gates that apply before M3/M4.
+- Decision: M0 is complete on `dev` and is promoted to `main`. Next work
+  is M1. Do not start M1 systems until this decision is on `main`.
+- Consequences: Rooms, i18n keys, and YAML loaders may begin. Foreshadow
+  `foreshadow:` keys may be attached to rooms from FS-001–020.
