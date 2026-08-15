@@ -18,8 +18,8 @@ const (
 	EnvLogLevel   = "YEOMYEONG_LOG_LEVEL"
 )
 
-// Config is the process configuration. DATABASE_URL is stored but unused
-// until persist lands; empty means the in-memory AccountStore (D-014).
+// Config is the process configuration. Empty DATABASE_URL selects the
+// in-memory AccountStore (D-014); a set URL selects PostgreSQL.
 type Config struct {
 	TelnetAddr  string
 	WSAddr      string

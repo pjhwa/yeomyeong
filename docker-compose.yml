@@ -1,0 +1,28 @@
+# Local Postgres 16 for persist. The game server service waits for the net PR.
+#
+#   DATABASE_URL=postgres://yeomyeong:yeomyeong@127.0.0.1:5432/yeomyeong?sslmode=disable
+#
+# Empty DATABASE_URL (the process default) selects the in-memory AccountStore (D-014).
+# First boot applies migrations/ via docker-entrypoint-initdb.d. OpenPostgres also
+# applies the same IF NOT EXISTS DDL so a URL pointed at an empty database works.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: yeomyeong
+      POSTGRES_PASSWORD: yeomyeong
+      POSTGRES_DB: yeomyeong
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yeomyeong -d yeomyeong"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
