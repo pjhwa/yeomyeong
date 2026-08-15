@@ -16,6 +16,7 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/text"
 )
 
 // WIRE-PROTOCOL frame types and sys/auth.err codes.
@@ -25,16 +26,20 @@ const (
 	typeAuthCreate = "auth.create"
 	typeAuthLogin  = "auth.login"
 	typeCmdSay     = "cmd.say"
+	typeCmdLook    = "cmd.look"
+	typeCmdMove    = "cmd.move"
 	typeCmdQuit    = "cmd.quit"
 	typeAuthOK     = "auth.ok"
 	typeAuthErr    = "auth.err"
 	typeText       = "text"
+	typeRoom       = "room"
 	typeSys        = "sys"
 
 	codeBadFrame    = "bad_frame"
 	codeRateLimited = "rate_limited"
 	codeNotAuth     = "not_authenticated"
 	codeInternal    = "internal"
+	codeBadDir      = "bad_dir"
 
 	maxPayload = 4096
 	maxFrame   = 8192
@@ -235,7 +240,7 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
 	}
 	switch f.Type {
-	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdQuit:
+	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdLook, typeCmdMove, typeCmdQuit:
 		if !s.lim.allow(time.Now()) {
 			return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 		}
@@ -249,6 +254,10 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.doAuth(ctx, false, f)
 	case typeCmdSay:
 		return s.doSay(f)
+	case typeCmdLook:
+		return s.doLook(f)
+	case typeCmdMove:
+		return s.doMove(f)
 	case typeCmdQuit:
 		return s.doQuit()
 	default:
@@ -333,12 +342,45 @@ func (s *wsSession) doSay(f inFrame) error {
 	return nil
 }
 
+func (s *wsSession) doLook(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	if !s.loop.Submit(engine.Look{ConnID: s.id}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doMove(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Dir string `json:"dir"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if _, ok := canonicalDir[p.Dir]; !ok {
+		return s.writeSys(f.ID, codeBadDir, codeBadDir)
+	}
+	if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: p.Dir}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+var canonicalDir = map[string]struct{}{
+	"north": {}, "south": {}, "east": {}, "west": {}, "up": {}, "down": {},
+}
+
 func (s *wsSession) doQuit() error {
 	if s.user != "" {
 		_ = s.writeJSON(typeText, "", map[string]string{
 			"channel": engine.ChannelSys,
 			"from":    "",
-			"text":    s.user + " 님이 자리를 떴습니다.",
+			"text":    text.T(text.Default, text.SysLeave, s.user),
 		})
 	}
 	s.loop.Submit(engine.LeaveWorld{ConnID: s.id})
@@ -364,10 +406,29 @@ func (s *wsSession) drain(ctx context.Context, out <-chan engine.Event) {
 func (s *wsSession) writeEvent(ev engine.Event) error {
 	switch e := ev.(type) {
 	case engine.Text:
+		if e.Code != "" {
+			return s.writeSys("", e.Code, e.Body)
+		}
 		return s.writeJSON(typeText, "", map[string]string{
 			"channel": e.Channel,
 			"from":    e.From,
 			"text":    e.Body,
+		})
+	case engine.Room:
+		exits := e.Exits
+		if exits == nil {
+			exits = map[string]string{}
+		}
+		who := e.Who
+		if who == nil {
+			who = []string{}
+		}
+		return s.writeJSON(typeRoom, "", map[string]any{
+			"id":          e.ID,
+			"name":        e.Name,
+			"description": e.Description,
+			"exits":       exits,
+			"who":         who,
 		})
 	case engine.Drop:
 		return io.EOF

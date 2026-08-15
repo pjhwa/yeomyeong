@@ -45,7 +45,8 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 		defer func() { _ = c.Close() }()
 	}
 
-	if _, err := loadWorld(log, contentRoot); err != nil {
+	cat, err := loadWorld(log, contentRoot)
+	if err != nil {
 		return err
 	}
 
@@ -64,7 +65,7 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	loop := engine.New(log)
+	loop := engine.NewWithCatalog(log, cat)
 	loopDone := make(chan struct{})
 	go func() {
 		defer close(loopDone)
@@ -105,8 +106,8 @@ func serveListeners(ctx context.Context, log *slog.Logger, cfg config.Config, lo
 }
 
 // loadWorld loads content/zones if that directory exists. Missing zones is
-// not a boot failure (M1 rooms land later). Invalid zones are fatal.
-// Real-tree spawn is dalbitgol:gate (D-028).
+// not a boot failure. Invalid zones are fatal. Real-tree spawn is
+// dalbitgol:gate (D-028). The catalog is attached to the loop.
 func loadWorld(log *slog.Logger, root string) (*world.Catalog, error) {
 	zones := filepath.Join(root, "zones")
 	st, err := os.Stat(zones)

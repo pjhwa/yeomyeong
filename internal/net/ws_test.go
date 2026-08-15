@@ -15,6 +15,7 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/text"
 )
 
 func TestMixedTelnetAndWSExchangeSay(t *testing.T) {
@@ -74,7 +75,7 @@ func TestWSBadFrameKeepsConnection(t *testing.T) {
 		t.Fatalf("bad v: %+v", got)
 	}
 
-	ws.send(t, "cmd.look", "u", map[string]any{})
+	ws.send(t, "cmd.dance", "u", map[string]any{})
 	got = ws.readType(t, typeSys)
 	if payloadString(t, got, "code") != codeBadFrame || got.ID != "u" {
 		t.Fatalf("unknown type: %+v", got)
@@ -173,6 +174,81 @@ func TestWSSayBeforeAuthRateLimitQuit(t *testing.T) {
 	d := dialWS(t, addr)
 	d.send(t, typeCmdQuit, "q", map[string]any{})
 	waitRoster(t, loop, 1)
+}
+
+func TestWSLookMoveAndNoExit(t *testing.T) {
+	_, loop, store := startServerStore(t)
+	addr := startWS(t, loop, store)
+
+	guest := dialWS(t, addr)
+	guest.send(t, typeCmdLook, "na", map[string]any{})
+	if payloadString(t, guest.readType(t, typeSys), "code") != codeNotAuth {
+		t.Fatal("look before auth")
+	}
+	guest.send(t, typeCmdMove, "nb", map[string]string{"dir": "north"})
+	if payloadString(t, guest.readType(t, typeSys), "code") != codeNotAuth {
+		t.Fatal("move before auth")
+	}
+
+	a := dialWS(t, addr)
+	a.send(t, typeAuthCreate, "c1", map[string]string{"username": "갑을", "password": "password1"})
+	_ = a.readType(t, typeAuthOK)
+	_ = a.readType(t, typeRoom)
+	b := dialWS(t, addr)
+	b.send(t, typeAuthCreate, "c2", map[string]string{"username": "병정", "password": "password2"})
+	_ = b.readType(t, typeAuthOK)
+	_ = b.readType(t, typeRoom)
+	waitRoster(t, loop, 2)
+
+	a.send(t, typeCmdLook, "l1", map[string]any{})
+	look := decodeRoom(t, a.readType(t, typeRoom))
+	if look.ID != "test:start" || look.Name != "시작 마당" {
+		t.Fatalf("look room: %+v", look)
+	}
+	if look.Exits["north"] != "안마당" {
+		t.Fatalf("look exits: %+v", look.Exits)
+	}
+	if len(look.Who) != 1 || look.Who[0] != "병정" {
+		t.Fatalf("look who: %v", look.Who)
+	}
+
+	a.send(t, typeCmdMove, "m0", map[string]string{"dir": "south"})
+	got := a.readType(t, typeSys)
+	if payloadString(t, got, "code") != text.CodeNoExit {
+		t.Fatalf("no_exit: %+v", got)
+	}
+	if payloadString(t, got, "message") != "그쪽으로는 갈 수 없습니다." {
+		t.Fatalf("no_exit message: %+v", got)
+	}
+
+	a.send(t, typeCmdMove, "m1", map[string]string{"dir": "sideways"})
+	got = a.readType(t, typeSys)
+	if payloadString(t, got, "code") != codeBadDir {
+		t.Fatalf("bad_dir: %+v", got)
+	}
+
+	a.send(t, typeCmdMove, "m2", map[string]string{"dir": "north"})
+	moved := decodeRoom(t, a.readType(t, typeRoom))
+	if moved.ID != "test:yard" {
+		t.Fatalf("move: %+v", moved)
+	}
+	snap := waitRoster(t, loop, 2)
+	for _, p := range snap.Players {
+		if p.Username == "갑을" && p.RoomID != "test:yard" {
+			t.Fatalf("RoomID written outside loop? %+v", p)
+		}
+	}
+
+	b.send(t, typeCmdLook, "lb", map[string]any{})
+	seen := decodeRoom(t, b.readType(t, typeRoom))
+	if seen.ID != "test:start" {
+		t.Fatalf("b look: %+v", seen)
+	}
+	for _, name := range seen.Who {
+		if name == "갑을" {
+			t.Fatal("moved player still in start who")
+		}
+	}
 }
 
 func TestWSDisconnectRemovesFromRoster(t *testing.T) {
@@ -346,6 +422,23 @@ func (c *wsClient) waitText(t *testing.T, channel, from, text string) {
 		}
 	}
 	t.Fatalf("timeout waiting for text %s %s %q", channel, from, text)
+}
+
+type roomPayload struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Exits       map[string]string `json:"exits"`
+	Who         []string          `json:"who"`
+}
+
+func decodeRoom(t *testing.T, f inFrame) roomPayload {
+	t.Helper()
+	var p roomPayload
+	if err := decodePayload(f.Payload, &p); err != nil {
+		t.Fatal(err)
+	}
+	return p
 }
 
 func payloadString(t *testing.T, f inFrame, key string) string {

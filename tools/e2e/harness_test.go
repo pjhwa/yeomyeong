@@ -18,6 +18,7 @@ import (
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	ynet "github.com/pjhwa/yeomyeong/internal/net"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 const (
@@ -73,7 +74,14 @@ func (h *harness) failf(t *testing.T, format string, args ...any) {
 func startHarness(t *testing.T) *harness {
 	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	loop := engine.New(log)
+	cat, err := world.NewCatalog([]world.Room{{
+		ID: world.SpawnID, Name: world.Localized{KO: "문"},
+		Description: world.Localized{KO: "문."},
+	}}, world.SpawnID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loop := engine.NewWithCatalog(log, cat)
 	store := persist.NewMemory()
 	ctx, cancel := context.WithCancel(context.Background())
 
