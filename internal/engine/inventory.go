@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/text"
 	yworld "github.com/pjhwa/yeomyeong/internal/world"
 )
@@ -108,8 +109,8 @@ func (l *Loop) sheet(c Sheet) {
 	}
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetInv, joinStacks(p.Bag, l.itemName))})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetEquip, l.formatEquip(p.Equip))})
-	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetSkills, joinInts(p.Skills))})
-	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetStats, joinInts(p.Stats))})
+	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetSkills, l.formatSkills(p.Skills))})
+	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetStats, l.formatStats(p.Stats))})
 }
 
 func (l *Loop) playerTitle(p Player) string {
@@ -256,20 +257,61 @@ func joinStacks(bag []yworld.Stack, name func(string) string) string {
 	return strings.Join(parts, ", ")
 }
 
-func joinInts(m map[string]int) string {
-	if len(m) == 0 {
+func (l *Loop) formatSkills(ranks map[string]int) string {
+	if len(ranks) == 0 {
 		return text.T(text.Default, text.SheetNone)
 	}
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
+	keys := make([]string, 0, len(ranks))
+	for k, n := range ranks {
+		if n > 0 {
+			keys = append(keys, k)
+		}
 	}
-	sort.Strings(keys)
+	if len(keys) == 0 {
+		return text.T(text.Default, text.SheetNone)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return l.skillName(keys[i]) < l.skillName(keys[j])
+	})
 	parts := make([]string, len(keys))
 	for i, k := range keys {
-		parts[i] = k + " " + strconv.Itoa(m[k])
+		parts[i] = l.skillName(k) + " " + skill.Band(ranks[k])
 	}
 	return strings.Join(parts, ", ")
+}
+
+func (l *Loop) formatStats(stats map[string]int) string {
+	if len(stats) == 0 {
+		return text.T(text.Default, text.SheetNone)
+	}
+	keys := make([]string, 0, len(stats))
+	for k, n := range stats {
+		if n > 0 {
+			keys = append(keys, k)
+		}
+	}
+	if len(keys) == 0 {
+		return text.T(text.Default, text.SheetNone)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return skill.StatName(keys[i]) < skill.StatName(keys[j])
+	})
+	parts := make([]string, len(keys))
+	for i, k := range keys {
+		parts[i] = skill.StatName(k)
+	}
+	return strings.Join(parts, ", ")
+}
+
+func (l *Loop) skillName(id string) string {
+	if l.skills != nil {
+		if sk, ok := l.skills.Skill(id); ok {
+			if n := strings.TrimSpace(sk.Name.Text(text.Default)); n != "" {
+				return n
+			}
+		}
+	}
+	return id
 }
 
 func hasStack(bag []yworld.Stack, id string) bool {

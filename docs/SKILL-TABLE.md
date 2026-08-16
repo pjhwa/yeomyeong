@@ -5,27 +5,29 @@ M2 ships **14 skills** (전투 6 + 생산 4 + 생활 4). The remaining ~26 wait.
 
 There are **no levels, no classes, no XP bars.** Rank is 0–100 per skill.
 The player-facing identity is a **title**, not a number.
+The player types an **action verb** (`두드리다`, `이야기하다`), not
+`익히다 대장`. That English-shaped command is a hidden alias only.
 
 Related: [CONTENT-SCHEMA.md](CONTENT-SCHEMA.md), [EVENT-BUS.md](EVENT-BUS.md).
 
 ## M2 skills
 
-| id | ko | group | stat | practice_flag | practice_item |
-|---|---|---|---|---|---|
-| unarmed | 격술 | combat | str | yard | — |
-| sword | 검술 | combat | str | yard | wooden-sword |
-| bow | 궁술 | combat | dex | yard | — |
-| dodge | 회피 | combat | dex | yard | — |
-| guard | 방어 | combat | vit | yard | — |
-| firstaid | 응급처치 | combat | sense | clinic | bandage |
-| smith | 대장 | craft | str | forge | hammer |
-| cook | 요리 | craft | sense | kitchen | kitchen-knife |
-| print | 인쇄 | craft | dex | press | composing-stick |
-| remedy | 약제 | craft | sense | clinic | — |
-| haggle | 흥정 | social | fame | market | — |
-| speech | 언변 | social | wit | town | — |
-| stealth | 잠입 | social | dex | dark | — |
-| lockpick | 자물쇠 | social | dex | — | lockpick |
+| id | ko | group | stat | practice_flag | practice_item | verbs |
+|---|---|---|---|---|---|---|
+| unarmed | 격술 | combat | str | yard | — | 주먹을쥐다, 품세 |
+| sword | 검술 | combat | str | yard | wooden-sword | 휘두르다, 칼질 |
+| bow | 궁술 | combat | dex | yard | — | 당기다, 과녁 |
+| dodge | 회피 | combat | dex | yard | — | 피하다, 비키다 |
+| guard | 방어 | combat | vit | yard | — | 막다, 낮추다 |
+| firstaid | 응급처치 | combat | sense | clinic | bandage | 감다, 붕대감다 |
+| smith | 대장 | craft | str | forge | hammer | 두드리다, 벼리다, 망치질 |
+| cook | 요리 | craft | sense | kitchen | kitchen-knife | 썰다, 볶다, 간보다 |
+| print | 인쇄 | craft | dex | press | composing-stick | 조판하다, 찍다 |
+| remedy | 약제 | craft | sense | clinic | — | 달이다, 짓다 |
+| haggle | 흥정 | social | fame | market | — | 흥정하다, 깎다 |
+| speech | 언변 | social | wit | salon | — | 이야기하다, 말걸다, 수다 |
+| stealth | 잠입 | social | dex | dark | — | 숨다, 살금 |
+| lockpick | 자물쇠 | social | dex | — | lockpick | 쑤시다, 빗장 |
 
 `practice_flag` / `practice_item` are **matching bonuses**, not hard gates.
 You may practice anywhere. Matching the room flag **or** holding the item
@@ -63,8 +65,11 @@ Deterministic tests inject a `Rand` (or a `Always(bool)` hook). Production
 uses `crypto/rand` or `math/rand/v2` seeded at process start — **not**
 per-command time.Now() jitter that tests cannot pin.
 
-A failed trial still emits a "nothing settles" line. Macro-grinding an
-easy station at high rank must measure `p ≈ 0`.
+A failed trial emits a skill-specific miss line (YAML `miss`). A success
+emits YAML `gain`. Neither line contains a rank number. The sheet shows
+the Korean name and a **band** (`대장 미숙`), never `smith 15`.
+
+Macro-grinding an easy station at high rank must measure `p ≈ 0`.
 
 ## Stats
 

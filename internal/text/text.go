@@ -94,7 +94,7 @@ var catalog = map[string]entry{
 	SheetNone:       {ko: "없음"},
 	SheetEquipSlots: {ko: "주손 %s, 몸 %s"},
 	SheetTitle:      {ko: "호칭: %s"},
-	PracticeGain:    {ko: "%s 숙련이 늘었습니다. (%d)"},
+	PracticeGain:    {ko: "손끝이 조금 기억한다."},
 	PracticeMiss:    {ko: "아무것도 자리 잡지 않는다."},
 	PracticeUnknown: {ko: "그런 숙련은 없습니다."},
 }

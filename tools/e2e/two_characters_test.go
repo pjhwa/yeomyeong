@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -26,12 +25,8 @@ const (
 	smithTitle  = "달빛골의 대장장이"
 	speechTitle = "말을 부리는 자"
 
-	practiceGain = "숙련이 늘었습니다"
-	practiceMiss = "아무것도 자리 잡지 않는다"
-	rateLimited  = "rate_limited"
+	rateLimited = "rate_limited"
 )
-
-var gainRankRe = regexp.MustCompile(`숙련이 늘었습니다\.\s*\((\d+)\)`)
 
 func TestTwoCharactersPlayDifferently(t *testing.T) {
 	w, skills := loadRealPracticeWorld(t)
@@ -41,14 +36,14 @@ func TestTwoCharactersPlayDifferently(t *testing.T) {
 	a.createUser(t, "갑을", "password1")
 	walkTo(t, a, w.Rooms, world.SpawnID, smithRoom)
 	pickAndEquip(t, a, "쇠망치", "hammer")
-	aLoops := practiceUntilTitle(t, a, "익히다 대장", smithTitle)
+	aLoops := practiceUntilTitle(t, a, skills, "두드리다", smithTitle)
 	aSheet := readSheet(t, a, "숙련")
 	t.Logf("account A practice loops=%d sheet=%q", aLoops, compactSheet(aSheet))
 
 	b := h.dialTelnet(t, "telnet-B")
 	b.createUser(t, "병정", "password2")
 	walkTo(t, b, w.Rooms, world.SpawnID, speechRoom)
-	bLoops := practiceUntilTitle(t, b, "practice speech", speechTitle)
+	bLoops := practiceUntilTitle(t, b, skills, "이야기하다", speechTitle)
 	bSheet := readSheet(t, b, "skills")
 	t.Logf("account B practice loops=%d sheet=%q", bLoops, compactSheet(bSheet))
 
@@ -106,8 +101,8 @@ func loadRealPracticeWorld(t *testing.T) (*content.World, *skill.Catalog) {
 	if !ok {
 		t.Fatalf("%s missing after LoadWorld", speechRoom)
 	}
-	if !roomHasFlag(cafe, "town") {
-		t.Fatalf("%s missing town flag: %v", speechRoom, cafe.Flags)
+	if !roomHasFlag(cafe, "salon") {
+		t.Fatalf("%s missing salon flag: %v", speechRoom, cafe.Flags)
 	}
 
 	skills, err := skill.Load(filepath.Join(root, "skills"))
@@ -173,31 +168,32 @@ func pickAndEquip(t *testing.T, c *telnetClient, names ...string) {
 	c.h.failf(t, "%s could not get %v\nlast recv: %q", c.name, names, last)
 }
 
-func practiceUntilTitle(t *testing.T, c *telnetClient, cmd, title string) int {
+func practiceUntilTitle(t *testing.T, c *telnetClient, skills *skill.Catalog, cmd, title string) int {
 	t.Helper()
+	sk, ok := skills.Lookup(cmd)
+	if !ok {
+		c.h.failf(t, "%s lookup %q", c.name, cmd)
+	}
+	needles := append(append([]string{}, sk.Gain...), sk.Miss...)
+	needles = append(needles, rateLimited, "그런 숙련은 없습니다", "모르는 말입니다")
 	loops := 0
 	for loops < maxPractice {
 		c.sendPaced(t, cmd)
-		got, hit := c.readUntilAny(t, practiceGain, practiceMiss, rateLimited, "그런 숙련은 없습니다")
+		got, hit := c.readUntilAny(t, needles...)
 		switch hit {
-		case "그런 숙련은 없습니다":
+		case "그런 숙련은 없습니다", "모르는 말입니다":
 			c.h.failf(t, "%s unknown skill for %q\nlast recv: %q", c.name, cmd, got)
 		case rateLimited:
 			time.Sleep(200 * time.Millisecond)
 			continue
 		}
 		loops++
-		if hit == practiceGain {
-			got += c.readUntil(t, ")")
-		}
-		if rank, ok := parseGainRank(got); ok && rank >= 15 {
-			sheet := readSheet(t, c, "skills")
-			if strings.Contains(sheet, title) {
-				return loops
-			}
+		sheet := readSheet(t, c, "숙련")
+		if strings.Contains(sheet, title) {
+			return loops
 		}
 	}
-	sheet := readSheet(t, c, "skills")
+	sheet := readSheet(t, c, "숙련")
 	if strings.Contains(sheet, title) {
 		return loops
 	}
@@ -229,18 +225,6 @@ func sheetHasSkill(dump, ko, id string) bool {
 		return strings.Contains(line, ko) || strings.Contains(line, id)
 	}
 	return strings.Contains(dump, ko) || strings.Contains(dump, id)
-}
-
-func parseGainRank(s string) (int, bool) {
-	m := gainRankRe.FindStringSubmatch(s)
-	if m == nil {
-		return 0, false
-	}
-	n := 0
-	for _, r := range m[1] {
-		n = n*10 + int(r-'0')
-	}
-	return n, true
 }
 
 func (c *telnetClient) sendPaced(t *testing.T, line string) {

@@ -17,6 +17,7 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
@@ -394,6 +395,11 @@ func startServerStore(t *testing.T) (string, *engine.Loop, *persist.Memory) {
 	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	loop := engine.NewWithCatalog(log, testCatalog(t))
+	if skills, err := skill.Load(filepath.Join("..", "..", "content", "skills")); err != nil {
+		t.Fatal(err)
+	} else {
+		loop = loop.WithSkills(skills)
+	}
 	store := persist.NewMemory()
 	ctx, cancel := context.WithCancel(context.Background())
 	srv := NewServer("127.0.0.1:0", loop, store, log)
@@ -575,6 +581,15 @@ func TestPracticeSkillsInvVerbs(t *testing.T) {
 	c.send(t, "익히다")
 	if !strings.Contains(c.readUntil(t, "모르는 말입니다. say / quit"), "모르는 말입니다. say / quit") {
 		t.Fatal("practice empty")
+	}
+
+	c.send(t, "두드리다")
+	got := c.readUntil(t, "모루")
+	if strings.Contains(got, "모르는 말입니다") || strings.Contains(got, "그런 숙련은 없습니다") {
+		t.Fatalf("두드리다 should practice smith, got %q", got)
+	}
+	if strings.Contains(got, "숙련이 늘었습니다") || strings.Contains(got, "smith") {
+		t.Fatalf("practice must not show a number bar: %q", got)
 	}
 
 	c.send(t, "get 없는물건")
