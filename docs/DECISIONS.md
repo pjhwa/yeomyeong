@@ -447,3 +447,15 @@ Format:
 - Decision: The fourteen ids in SKILL-TABLE.md are the M2 set. Adding a
   fifteenth in this milestone is scope creep (park it in PROPOSALS).
 - Consequences: Title rules and QA paths only mention those ids.
+
+## D-036 — M2 accepted
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md §5 M2 done-when: two skill mixes feel like different
+  games. Commissioner review is required.
+- Decision: M2 is complete on `dev`. Promote to `main`, reset `dev`.
+  Combat rounds remain out of scope (D-032).
+- Consequences: Next work is M3 (living economy). Do not start M3 until
+  this decision is on `main`. Commissioner play recipe is in the M2 report.
