@@ -1,0 +1,17 @@
+# test: zone fixtures. Not village items.
+- id: pebble
+  name: { ko: "조약돌" }
+  description: { ko: "손안에 들어오는 매끈한 돌이다." }
+  slot: none
+  weight: 1
+- id: cloak
+  name: { ko: "겉옷" }
+  description: { ko: "거친 베로 지은 겉옷이다." }
+  slot: body
+  weight: 2
+- id: rod
+  name: { ko: "나무막대" }
+  description: { ko: "곧은 나무막대다." }
+  slot: main_hand
+  skills: [unarmed]
+  weight: 3
