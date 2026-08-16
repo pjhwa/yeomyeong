@@ -78,7 +78,7 @@ docker compose up
 Then connect with either:
 
 ```bash
-telnet localhost 4000        # classic
+telnet localhost 4001        # classic (override with YEOMYEONG_TELNET_ADDR)
 open http://localhost:8080   # web client
 ```
 

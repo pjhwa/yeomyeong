@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultTelnetAddr = ":4000"
+	DefaultTelnetAddr = ":4001"
 	DefaultWSAddr     = ":8080"
 	DefaultLogLevel   = "info"
 

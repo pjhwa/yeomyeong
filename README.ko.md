@@ -74,7 +74,7 @@ docker compose up
 그다음 둘 중 하나:
 
 ```bash
-telnet localhost 4000        # 고전
+telnet localhost 4001        # 고전 (YEOMYEONG_TELNET_ADDR 로 변경)
 open http://localhost:8080   # 웹 클라이언트
 ```
 

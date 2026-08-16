@@ -208,7 +208,7 @@ Format:
 - Decider: LEAD
 - Context: First `go.mod` must not churn.
 - Decision: Module is `github.com/pjhwa/yeomyeong`. Env:
-  `YEOMYEONG_TELNET_ADDR` (`:4000`), `YEOMYEONG_WS_ADDR` (`:8080`),
+  `YEOMYEONG_TELNET_ADDR` (`:4001`), `YEOMYEONG_WS_ADDR` (`:8080`),
   `DATABASE_URL`, `YEOMYEONG_LOG_LEVEL` (`info`).
 - Consequences: Import paths and Docker image names follow the module.
 
@@ -459,3 +459,16 @@ Format:
   Combat rounds remain out of scope (D-032).
 - Consequences: Next work is M3 (living economy). Do not start M3 until
   this decision is on `main`. Commissioner play recipe is in the M2 report.
+
+## D-037 — Telnet default is :4001; busy ports step forward
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: On the commissioner's Mac, OrbStack already listens on :4000,
+  so `go run ./cmd/server` failed with `bind: address already in use`.
+- Decision: Default `YEOMYEONG_TELNET_ADDR` is **`:4001`**. If the
+  requested TCP port is in use, the listener tries the next ports (up to
+  10) and logs the bound address.
+- Consequences: `telnet localhost 4001`. Override with the env var. Read
+  the `telnet listening` log line if a fallback fired.
