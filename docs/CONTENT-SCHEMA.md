@@ -13,8 +13,16 @@ Related: [CONTENT-STYLE.md](CONTENT-STYLE.md), [FORESHADOW.md](FORESHADOW.md),
 content/zones/<zone>/rooms.yaml
 ```
 
-`<zone>` is a lowercase slug (`dalbitgol`). One file per zone in M1.
-Additional files (`npcs.yaml`, `items.yaml`, `quests.yaml`) are reserved.
+`<zone>` is a lowercase slug (`dalbitgol`).
+
+```
+content/skills/*.yaml          # GAMEPLAY — ranks, titles (SKILL-TABLE.md)
+content/items/*.yaml           # WORLD names + ENGINE slots
+content/zones/<zone>/rooms.yaml
+content/zones/<zone>/spawns.yaml   # extra flags + ground item ids
+```
+
+`npcs.yaml` and `quests.yaml` remain reserved.
 
 ## Localized string
 
@@ -63,11 +71,46 @@ The loader canonicalizes both forms to `{ko, en}`.
 | `name` | yes | Localized. Non-empty `ko`. |
 | `description` | yes | Localized. 2–4 sentences in `ko` (style, not schema). |
 | `exits` | no | Keys: `north` `south` `east` `west` `up` `down`. Values: existing room ids (checked after the full load). |
-| `flags` | no | Closed set M1: `safe`, `town`, `market`, `indoor`, `dark`. Unknown flag = load error. |
+| `flags` | no | Closed set: `safe`, `town`, `market`, `indoor`, `dark`, `forge`, `kitchen`, `press`, `clinic`, `yard`. Unknown flag = load error. |
 | `market` | no | Slug of a price table. Unused in M1; stored for M3. |
 | `heat_modifier` | no | Float, default `1.0`. Unused in M1; stored for M5. |
 | `ambient` | no | List of localized strings. Flavor only in M1. |
 | `foreshadow` | no | List of `FS-NNN` that **already exist** in `docs/FORESHADOW.md`. Unknown ID = load error. |
+
+## Item object (`content/items/*.yaml`)
+
+```yaml
+- id: hammer
+  name: { ko: "쇠망치" }
+  description: { ko: "자루가 반질한 쇠망치다. 대장간 냄새를 아직 품고 있다." }
+  slot: main_hand          # none | main_hand | body
+  skills: [smith]          # practice bonus tags
+  weight: 2
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `id` | yes | `[a-z][a-z0-9-]*`, unique |
+| `name` / `description` | yes | Localized. Style: short, one object, no 총독부 |
+| `slot` | no | default `none` (not wearable) |
+| `skills` | no | skill ids from SKILL-TABLE |
+| `weight` | no | integer ≥ 0, default 1. Bag cap is **20** weight |
+
+## Zone spawns (`content/zones/<zone>/spawns.yaml`)
+
+Does not rewrite room prose. Applied after rooms load.
+
+```yaml
+- room: dalbitgol:smithy
+  flags_add: [forge]
+  items: [hammer]
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `room` | yes | existing room id |
+| `flags_add` | no | subset of the closed flag set |
+| `items` | no | item ids that exist. Copied onto the **room ground** at boot (world state), not into the catalog |
 
 ## Graph rules
 

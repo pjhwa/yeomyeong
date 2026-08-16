@@ -400,3 +400,50 @@ Format:
   decision is on `main`.
 - Consequences: CONTENT-STYLE is binding for all later zones. Spawn stays
   `dalbitgol:gate`. YAML rooms remain the only room source.
+
+## D-032 — M2 has skills, not a combat-round engine
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md M2 lists "전투 6" skills. A full 3-second combat
+  resolver would blow the line budget and is not required for the
+  done-when ("two skill mixes feel like different games").
+- Decision: Ship the six combat *skills* as practiceable ranks. Do **not**
+  ship rounds, stance, cooldown, or hit locations. Those wait for a later
+  GAMEPLAY issue (not M2).
+- Consequences: QA proves difference via titles and practice/check
+  outcomes, not via a duel.
+
+## D-033 — No lock/down commands in M2
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md allows skill lock/down. Two review characters will not
+  hit the 700 cap.
+- Decision: Enforce the 700 / 300 caps in the gain function. Do not add
+  `lock` / `down` verbs yet.
+- Consequences: A later issue may add them without changing the curve.
+
+## D-034 — Account sheet is 1:1 with the login
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: Need two durable characters for commissioner review.
+- Decision: Skills, stats, bag, and equipment persist on the **account**.
+  Still one body per login. Load on `EnterWorld`, save on `LeaveWorld`.
+- Consequences: Reconnect must restore the sheet. In-memory store is
+  enough for CI; Postgres JSON columns when `DATABASE_URL` is set.
+
+## D-035 — M2 practice set is fourteen YAML skills
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md's 40-skill list is the long-term table. M2 asks for
+  전투 6 + 생산 4 + 생활 4.
+- Decision: The fourteen ids in SKILL-TABLE.md are the M2 set. Adding a
+  fifteenth in this milestone is scope creep (park it in PROPOSALS).
+- Consequences: Title rules and QA paths only mention those ids.
