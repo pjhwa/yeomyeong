@@ -82,10 +82,10 @@ func TestLoadM2(t *testing.T) {
 		t.Fatalf("두드리다: %+v %v", smith, ok)
 	}
 	speech, ok := cat.Lookup("이야기하다")
-	if !ok || speech.Name.KO != "언변" || speech.PracticeFlag != "salon" {
+	if !ok || speech.Name.KO != "말솜씨" || speech.PracticeFlag != "salon" {
 		t.Fatalf("이야기하다: %+v %v", speech, ok)
 	}
-	if Band(3) != "미숙" || Band(15) != "미숙" || Band(20) != "수련" {
+	if Band(3) != "초보" || Band(15) != "초보" || Band(20) != "수련" {
 		t.Fatalf("band %s %s %s", Band(3), Band(15), Band(20))
 	}
 }

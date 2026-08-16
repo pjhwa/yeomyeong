@@ -50,7 +50,7 @@ func TestMixedTelnetAndWSExchangeSay(t *testing.T) {
 	}
 
 	ws.send(t, typeCmdQuit, "q1", map[string]any{})
-	if !strings.Contains(tn.readUntil(t, "병정 님이 자리를 떴습니다."), "병정 님이 자리를 떴습니다.") {
+	if !strings.Contains(tn.readUntil(t, "병정 님이 나갔습니다."), "병정 님이 나갔습니다.") {
 		t.Fatal("telnet missed websocket leave")
 	}
 	waitRoster(t, loop, 1)
@@ -265,16 +265,16 @@ func TestWSPracticeSkillsInvVerbs(t *testing.T) {
 	waitRoster(t, loop, 1)
 
 	c.send(t, typeCmdSkills, "sk", map[string]any{})
-	c.waitText(t, engine.ChannelSys, "", "소지:", "능력:")
+	c.waitText(t, engine.ChannelSys, "", "가진 것:", "몸:")
 	c.send(t, typeCmdInv, "iv", map[string]any{})
-	c.waitText(t, engine.ChannelSys, "", "소지:")
+	c.waitText(t, engine.ChannelSys, "", "가진 것:")
 
 	c.send(t, typeCmdPractice, "p0", map[string]string{"skill": ""})
 	if payloadString(t, c.readType(t, typeSys), "code") != codeBadFrame {
 		t.Fatal("empty practice")
 	}
 	c.send(t, typeCmdPractice, "p1", map[string]string{"skill": "nope"})
-	c.waitText(t, engine.ChannelSys, "", "그런 숙련은 없습니다.")
+	c.waitText(t, engine.ChannelSys, "", "숙련할 기술 중에 그런 기술은 없습니다.")
 
 	c.send(t, typeCmdGet, "g1", map[string]string{"item": "x"})
 	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {

@@ -108,8 +108,8 @@ Server speaks Korean. Bytes are UTF-8.
 ```
 여명 · YEOMYEONG
 한글이 깨지면: nc localhost 4001
-계정 이름:
-암호:
+이름:
+비밀번호:
 ```
 
 `한글이 깨지면` names the bound TCP port. macOS `/usr/bin/telnet` plus a Hangul IME cannot compose syllables; use `nc` (or the WebSocket client). The server still accepts UTF-8.
@@ -117,23 +117,23 @@ Server speaks Korean. Bytes are UTF-8.
 If the name is unknown:
 
 ```
-그 이름은 장부에 없습니다. 새로 만드시겠습니까? (y/n)
+없는 이름입니다. 새로 만드시겠습니까? (y/n)
 ```
 
 `y` → prompt for the password again as the new password, create, enter world.  
-`n` → restart at `계정 이름:`.
+`n` → restart at `이름:`.
 
 If the name exists, the typed password is verified. Failure:
 
 ```
-이름이나 암호가 맞지 않습니다.
-계정 이름:
+이름이나 비밀번호가 맞지 않습니다.
+이름:
 ```
 
 On success:
 
 ```
-<username> 님이 자리에 앉았습니다.
+<username> 님이 들어왔습니다.
 >
 ```
 
@@ -147,7 +147,7 @@ After the prompt:
 | `북` `남` `동` `서` `위` `아래` | `Move` |
 | `north` `south` `east` `west` `up` `down` | `Move` |
 | `go <dir>` / `가다 <dir>` | `Move` |
-| `skills` / `숙련` | `Sheet` |
+| `skills` / `숙련` / `기술` | `Sheet` |
 | `practice <skill>` / `익히다 <skill>` | `Practice` (hidden alias) |
 | `두드리다` `벼리다` `이야기하다` … | `Practice` — YAML `verbs` for that skill (D-040) |
 | `inv` / `소지` | `Sheet` (inventory section) |
@@ -182,7 +182,7 @@ same `Command` values as WebSocket.
 ## Rate limit
 
 20 commands per connection per rolling second (PLAN.md §4.5), counted
-**before** enqueue. Excess is dropped and the client is told `rate_limited`.
+**before** enqueue. Excess is dropped and the client is told `너무 빨리 입력했습니다. 잠깐만 기다리세요.` (code `rate_limited`).
 The game loop never sees the dropped command.
 
 ## What this document is not

@@ -34,7 +34,8 @@ func (l *Loop) get(c Get) {
 	}
 	p.Bag = yworld.AddStack(p.Bag, itemID, 1)
 	l.world.roster[c.ConnID] = p
-	l.sysf(p.ConnID, text.GetOK, l.itemName(itemID))
+	name := l.itemName(itemID)
+	l.sysf(p.ConnID, text.GetOK, name, text.EulReul(name))
 }
 
 func (l *Loop) dropItem(c DropItem) {
@@ -51,7 +52,8 @@ func (l *Loop) dropItem(c DropItem) {
 	p.Bag = bag
 	l.world.roster[c.ConnID] = p
 	l.world.ground[p.RoomID] = yworld.AddStack(l.world.ground[p.RoomID], itemID, 1)
-	l.sysf(p.ConnID, text.DropOK, l.itemName(itemID))
+	name := l.itemName(itemID)
+	l.sysf(p.ConnID, text.DropOK, name, text.EulReul(name))
 }
 
 func (l *Loop) equip(c Equip) {
@@ -80,7 +82,8 @@ func (l *Loop) equip(c Equip) {
 	}
 	p.Equip = slotSet(p.Equip, it.Slot, itemID)
 	l.world.roster[c.ConnID] = p
-	l.sysf(p.ConnID, text.EquipOK, l.itemName(itemID))
+	name := l.itemName(itemID)
+	l.sysf(p.ConnID, text.EquipOK, name, text.EulReul(name))
 }
 
 func (l *Loop) unequip(c Unequip) {
@@ -96,7 +99,8 @@ func (l *Loop) unequip(c Unequip) {
 	p.Equip = slotSet(p.Equip, canonicalSlot(c.Slot), "")
 	p.Bag = yworld.AddStack(p.Bag, id, 1)
 	l.world.roster[c.ConnID] = p
-	l.sysf(p.ConnID, text.UnequipOK, l.itemName(id))
+	name := l.itemName(id)
+	l.sysf(p.ConnID, text.UnequipOK, name, text.EulReul(name))
 }
 
 func (l *Loop) sheet(c Sheet) {
@@ -145,7 +149,7 @@ func (l *Loop) resolveItemID(query string, piles []yworld.Stack) string {
 func canonicalSlot(slot string) string {
 	s := strings.TrimSpace(slot)
 	switch strings.ToLower(s) {
-	case yworld.SlotMainHand, "주손":
+	case yworld.SlotMainHand, "주손", "손":
 		return yworld.SlotMainHand
 	case yworld.SlotBody, "몸":
 		return yworld.SlotBody

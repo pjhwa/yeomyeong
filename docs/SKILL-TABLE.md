@@ -14,20 +14,20 @@ Related: [CONTENT-SCHEMA.md](CONTENT-SCHEMA.md), [EVENT-BUS.md](EVENT-BUS.md).
 
 | id | ko | group | stat | practice_flag | practice_item | verbs |
 |---|---|---|---|---|---|---|
-| unarmed | 격술 | combat | str | yard | — | 주먹을쥐다, 품세 |
-| sword | 검술 | combat | str | yard | wooden-sword | 휘두르다, 칼질 |
-| bow | 궁술 | combat | dex | yard | — | 당기다, 과녁 |
-| dodge | 회피 | combat | dex | yard | — | 피하다, 비키다 |
-| guard | 방어 | combat | vit | yard | — | 막다, 낮추다 |
-| firstaid | 응급처치 | combat | sense | clinic | bandage | 감다, 붕대감다 |
-| smith | 대장 | craft | str | forge | hammer | 두드리다, 벼리다, 망치질 |
-| cook | 요리 | craft | sense | kitchen | kitchen-knife | 썰다, 볶다, 간보다 |
-| print | 인쇄 | craft | dex | press | composing-stick | 조판하다, 찍다 |
-| remedy | 약제 | craft | sense | clinic | — | 달이다, 짓다 |
+| unarmed | 주먹 | combat | str | yard | — | 주먹질 |
+| sword | 칼 | combat | str | yard | wooden-sword | 휘두르다, 칼질 |
+| bow | 활 | combat | dex | yard | — | 당기다, 쏘다 |
+| dodge | 피하기 | combat | dex | yard | — | 피하다, 비키다 |
+| guard | 막기 | combat | vit | yard | — | 막다 |
+| firstaid | 응급처치 | combat | sense | clinic | bandage | 감다 |
+| smith | 대장 | craft | str | forge | hammer | 두드리다, 망치질 |
+| cook | 요리 | craft | sense | kitchen | kitchen-knife | 썰다, 볶다 |
+| print | 인쇄 | craft | dex | press | composing-stick | 찍다 |
+| remedy | 약 | craft | sense | clinic | — | 달이다 |
 | haggle | 흥정 | social | fame | market | — | 흥정하다, 깎다 |
-| speech | 언변 | social | wit | salon | — | 이야기하다, 말걸다, 수다 |
-| stealth | 잠입 | social | dex | dark | — | 숨다, 살금 |
-| lockpick | 자물쇠 | social | dex | — | lockpick | 쑤시다, 빗장 |
+| speech | 말솜씨 | social | wit | salon | — | 이야기하다, 말걸다 |
+| stealth | 숨기 | social | dex | dark | — | 숨다 |
+| lockpick | 자물쇠 | social | dex | — | lockpick | 따다 |
 
 `practice_flag` / `practice_item` are **matching bonuses**, not hard gates.
 You may practice anywhere. Matching the room flag **or** holding the item
@@ -38,7 +38,7 @@ sets `difficulty` to `max(0, rank-25)` (easy, almost no gain at mid-rank).
 
 | band | ko | range |
 |---|---|---|
-| raw | 미숙 | 0–19 |
+| raw | 초보 | 0–19 |
 | trained | 수련 | 20–44 |
 | able | 능숙 | 45–69 |
 | veteran | 노련 | 70–89 |
@@ -67,7 +67,7 @@ per-command time.Now() jitter that tests cannot pin.
 
 A failed trial emits a skill-specific miss line (YAML `miss`). A success
 emits YAML `gain`. Neither line contains a rank number. The sheet shows
-the Korean name and a **band** (`대장 미숙`), never `smith 15`.
+the Korean name and a **band** (`대장 초보`), never `smith 15`.
 
 Macro-grinding an easy station at high rank must measure `p ≈ 0`.
 
@@ -89,7 +89,7 @@ YAML list, first matching rule in file order wins (priority = order).
   title: { ko: "달빛골의 대장장이" }
 - id: speaker
   require: { speech: 15 }
-  title: { ko: "말을 부리는 자" }
+  title: { ko: "말 잘하는 사람" }
 - id: nobody
   require: {}
   title: { ko: "아무개" }

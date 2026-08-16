@@ -528,3 +528,21 @@ Format:
   remain hidden aliases.
 - Consequences: [COMMISSIONER.md](COMMISSIONER.md) §8 uses the new verbs.
   Re-review M2 after this lands. A second fail stays on M2.
+
+## D-041 — Player-facing Korean is everyday speech
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: Commissioner: `그런 숙련은 없습니다` and many other lines are
+  not how people talk. D-016 froze M0 wording; that freeze is lifted
+  for player-facing strings.
+- Decision: System lines, prompts, skill names, verbs, bands, and
+  practice/title announce use ordinary spoken Korean. Particle `을/를`
+  is chosen by the last Hangul batchim, not `을(를)`. Protocol *codes*
+  (`rate_limited`) stay English; the visible sentence is Korean.
+  Room descriptions stay literary (CONTENT-STYLE). WIRE-PROTOCOL
+  transcripts follow the new wording.
+- Consequences: Tests assert the new sentences. `그대`, `장부`,
+  `호칭`, `주손`, `을(를)`, and English `rate_limited` as a player
+  line are defects.
