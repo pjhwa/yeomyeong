@@ -94,6 +94,6 @@ LEAD reviews within 24 hours. Rejections come with a concrete defect list, not "
 
 ## Design arguments
 
-Design debate happens on issues labelled `needs-decision`, not in PR review threads. LEAD records the ruling in `docs/DECISIONS.md`. Open questions for the commissioner go in `docs/QUESTIONS.md` only.
+Design debate happens on issues labelled `needs-decision`, not in PR review threads. LEAD records the ruling in `docs/DECISIONS.md`. Open questions for the commissioner go in `docs/QUESTIONS.md` only. Milestone playtests follow `docs/COMMISSIONER.md`.
 
 Features that are not in PLAN.md are not implemented. Park them in `docs/PROPOSALS.md` for the next commissioner review.

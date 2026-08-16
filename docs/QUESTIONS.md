@@ -1,7 +1,8 @@
 # Questions for the commissioner
 
 Only items that need Jerry's judgment live here. LEAD decides everything else
-and writes it in [DECISIONS.md](DECISIONS.md).
+and writes it in [DECISIONS.md](DECISIONS.md). How to play a finished
+milestone, and how to send that review, is [COMMISSIONER.md](COMMISSIONER.md).
 
 Format:
 

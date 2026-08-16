@@ -123,6 +123,9 @@ simulation; database writes and LLM calls are delegated to async workers.
 - [x] **M1** — YAML world loader, movement, first village (40 rooms)
 - [x] **M2** — Skill system: growth curves, total cap, equipment
 - [ ] **M3** — Living economy: gathering → crafting → regional trade
+
+When a milestone is declared done, the commissioner playtests with
+[`docs/COMMISSIONER.md`](docs/COMMISSIONER.md) and replies using that template.
 - [ ] **M4** — Act I narrative, foreshadowing ledger, first AI-driven NPC
 - [ ] **M5** — Cells (guilds), reputation, smuggling, the weekly in-game newspaper
 - [ ] **M6** — Web client, balance pass, 500 concurrent load target

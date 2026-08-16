@@ -458,7 +458,8 @@ Format:
 - Decision: M2 is complete on `dev`. Promote to `main`, reset `dev`.
   Combat rounds remain out of scope (D-032).
 - Consequences: Next work is M3 (living economy). Do not start M3 until
-  this decision is on `main`. Commissioner play recipe is in the M2 report.
+  this decision is on `main`. Commissioner play recipe is
+  [COMMISSIONER.md](COMMISSIONER.md) §8.
 
 ## D-037 — Telnet default is :4001; busy ports step forward
 
@@ -492,3 +493,21 @@ Format:
 - Consequences: `nc localhost 4001` is the Hangul-safe classic client.
   macOS `telnet` is supported for ASCII movement and English verbs.
   Do not add linemode or a second input parser.
+
+## D-039 — Commissioner playtest lives in COMMISSIONER.md
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: After M2 the commissioner could connect but had no written
+  recipe for what to try or what kind of reply counts as a review.
+  PLAN.md §9.5 requires commissioner review at M2, M4, and M6.
+- Decision: [`docs/COMMISSIONER.md`](COMMISSIONER.md) is the playbook.
+  Each milestone section states the PLAN §5 done-when in player language,
+  a connect recipe, and a verdict template (bug / gate miss / taste).
+  Official gates stay M2/M4/M6; M0/M1/M3/M5 use the same shape. Unshipped
+  sections list judgment questions only — LEAD fills exact verbs when
+  declaring that milestone complete, in the same file, same PR as closeout.
+- Consequences: Closeout reports link this file instead of a one-off
+  chat recipe. Taste notes are not a reject reason. A missing recipe
+  block on a closeout is a LEAD defect.
