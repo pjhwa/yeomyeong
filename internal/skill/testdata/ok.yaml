@@ -1,0 +1,8 @@
+skills:
+  - {id: test:swing, name: {ko: 휘두르기, en: Swing}, group: combat, stat: str, practice_flag: yard}
+  - {id: test:talk, name: 말솜씨, group: social, stat: wit, practice_flag: town}
+  - {id: test:cook, name: 달이기, group: craft, stat: sense, practice_flag: kitchen, practice_item: kitchen-knife}
+titles:
+  - {id: cook-local, require: {"test:cook": 15}, title: {ko: 부뚜막의 손}}
+  - {id: speaker, require: {"test:talk": 15}, title: {ko: 말을 부리는 자}}
+  - {id: nobody, require: {}, title: {ko: 아무개}}
