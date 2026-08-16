@@ -1,0 +1,26 @@
+# M2 practice set (SKILL-TABLE.md, D-035). Fourteen skills. 아무개 last.
+skills:
+  - {id: unarmed, name: 격술, group: combat, stat: str, practice_flag: yard}
+  - {id: sword, name: 검술, group: combat, stat: str, practice_flag: yard, practice_item: wooden-sword}
+  - {id: bow, name: 궁술, group: combat, stat: dex, practice_flag: yard}
+  - {id: dodge, name: 회피, group: combat, stat: dex, practice_flag: yard}
+  - {id: guard, name: 방어, group: combat, stat: vit, practice_flag: yard}
+  - {id: firstaid, name: 응급처치, group: combat, stat: sense, practice_flag: clinic, practice_item: bandage}
+  - {id: smith, name: 대장, group: craft, stat: str, practice_flag: forge, practice_item: hammer}
+  - {id: cook, name: 요리, group: craft, stat: sense, practice_flag: kitchen, practice_item: kitchen-knife}
+  - {id: print, name: 인쇄, group: craft, stat: dex, practice_flag: press, practice_item: composing-stick}
+  - {id: remedy, name: 약제, group: craft, stat: sense, practice_flag: clinic}
+  - {id: haggle, name: 흥정, group: social, stat: fame, practice_flag: market}
+  - {id: speech, name: 언변, group: social, stat: wit, practice_flag: town}
+  - {id: stealth, name: 잠입, group: social, stat: dex, practice_flag: dark}
+  - {id: lockpick, name: 자물쇠, group: social, stat: dex, practice_item: lockpick}
+titles:
+  - id: smith-local
+    require: {smith: 15}
+    title: {ko: 달빛골의 대장장이}
+  - id: speaker
+    require: {speech: 15}
+    title: {ko: 말을 부리는 자}
+  - id: nobody
+    require: {}
+    title: {ko: 아무개}

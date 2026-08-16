@@ -17,6 +17,7 @@ import (
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	ynet "github.com/pjhwa/yeomyeong/internal/net"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
@@ -47,6 +48,9 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 
 	cat, err := loadWorld(log, contentRoot)
 	if err != nil {
+		return err
+	}
+	if _, err := loadSkills(log, contentRoot); err != nil {
 		return err
 	}
 
@@ -126,5 +130,27 @@ func loadWorld(log *slog.Logger, root string) (*world.Catalog, error) {
 		return nil, fmt.Errorf("load content: %w", err)
 	}
 	log.Info("content loaded", "rooms", cat.Len(), "spawn", cat.Spawn())
+	return cat, nil
+}
+
+// loadSkills loads content/skills if that directory exists. Missing skills is
+// not a boot failure. Invalid YAML is fatal. Practice verbs are not wired.
+func loadSkills(log *slog.Logger, root string) (*skill.Catalog, error) {
+	dir := filepath.Join(root, "skills")
+	st, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("stat content skills: %w", err)
+	}
+	if !st.IsDir() {
+		return nil, fmt.Errorf("content skills %s is not a directory", dir)
+	}
+	cat, err := skill.Load(dir)
+	if err != nil {
+		return nil, fmt.Errorf("load skills: %w", err)
+	}
+	log.Info("skills loaded", "skills", cat.Len())
 	return cat, nil
 }
