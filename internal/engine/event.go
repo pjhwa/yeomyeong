@@ -35,6 +35,7 @@ type Room struct {
 	Description string
 	Exits       map[string]string // dir → destination display name
 	Who         []string          // other usernames in the room
+	Ground      []string          // catalog display names, one entry per unit
 }
 
 // Target returns the connection that should receive this card.

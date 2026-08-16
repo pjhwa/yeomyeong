@@ -305,11 +305,16 @@ func (s *wsSession) enter(ctx context.Context, acc persist.Account, tok persist.
 		return s.writeSys(id, codeInternal, codeInternal)
 	}
 	s.attached = true
+	sheet, err := s.store.LoadSheet(ctx, acc.ID)
+	if err != nil {
+		return s.writeSys(id, codeInternal, codeInternal)
+	}
 	if !s.loop.Submit(engine.EnterWorld{
 		ConnID:    s.id,
 		AccountID: engine.AccountID(acc.ID),
 		Username:  acc.Username,
 		Session:   tok.Token,
+		Sheet:     sheet,
 	}) {
 		return s.writeSys(id, codeRateLimited, codeRateLimited)
 	}
@@ -423,12 +428,17 @@ func (s *wsSession) writeEvent(ev engine.Event) error {
 		if who == nil {
 			who = []string{}
 		}
+		ground := e.Ground
+		if ground == nil {
+			ground = []string{}
+		}
 		return s.writeJSON(typeRoom, "", map[string]any{
 			"id":          e.ID,
 			"name":        e.Name,
 			"description": e.Description,
 			"exits":       exits,
 			"who":         who,
+			"ground":      ground,
 		})
 	case engine.Drop:
 		return io.EOF
