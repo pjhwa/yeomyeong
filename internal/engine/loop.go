@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/text"
 	yworld "github.com/pjhwa/yeomyeong/internal/world"
 )
@@ -39,9 +40,11 @@ type Loop struct {
 	cmds chan Command
 	log  *slog.Logger
 
-	// catalog/items are immutable after construction. nil means none loaded.
+	// catalog/items/skills are immutable after construction. nil means none loaded.
 	catalog *yworld.Catalog
 	items   *yworld.Items
+	skills  *skill.Catalog
+	rng     func() float64
 	sheets  SheetSink
 
 	// Owned exclusively by the Run goroutine.
@@ -74,6 +77,18 @@ func NewWithWorld(log *slog.Logger, cat *yworld.Catalog, items *yworld.Items, gr
 		world:    world{roster: make(map[ConnID]Player), ground: yworld.CloneGround(ground)},
 		outbound: make(map[ConnID]chan Event),
 	}
+}
+
+// WithSkills attaches the practice catalog. Call before Run.
+func (l *Loop) WithSkills(cat *skill.Catalog) *Loop {
+	l.skills = cat
+	return l
+}
+
+// WithRand injects the Practice rng. Nil uses skill.DefaultRand. Call before Run.
+func (l *Loop) WithRand(rng func() float64) *Loop {
+	l.rng = rng
+	return l
 }
 
 // Submit enqueues cmd. It is safe for concurrent use and never blocks:
@@ -209,6 +224,8 @@ func (l *Loop) handle(cmd Command) {
 		l.unequip(c)
 	case Sheet:
 		l.sheet(c)
+	case Practice:
+		l.practice(c)
 	case attachReq:
 		c.resp <- l.ensureOut(c.id)
 	case detachReq:

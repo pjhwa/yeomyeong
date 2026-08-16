@@ -296,6 +296,31 @@ func (c *Catalog) Skill(id string) (Skill, bool) {
 	return s, ok
 }
 
+// Lookup finds a skill by id (case-insensitive) or Korean/English name.
+func (c *Catalog) Lookup(q string) (Skill, bool) {
+	if c == nil {
+		return Skill{}, false
+	}
+	q = strings.TrimSpace(q)
+	if q == "" {
+		return Skill{}, false
+	}
+	if s, ok := c.skills[q]; ok {
+		return s, true
+	}
+	low := strings.ToLower(q)
+	if s, ok := c.skills[low]; ok {
+		return s, true
+	}
+	for _, id := range c.order {
+		s := c.skills[id]
+		if s.Name.KO == q || s.Name.EN == q || strings.EqualFold(s.ID, q) {
+			return s, true
+		}
+	}
+	return Skill{}, false
+}
+
 // TitleRules returns a defensive copy of the title list (file order).
 func (c *Catalog) TitleRules() []TitleRule {
 	if c == nil {

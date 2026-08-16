@@ -50,7 +50,8 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	if _, err := loadSkills(log, contentRoot); err != nil {
+	skills, err := loadSkills(log, contentRoot)
+	if err != nil {
 		return err
 	}
 
@@ -72,7 +73,7 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	saver := persist.NewAsyncSaver(store, log)
 	defer saver.Close()
 
-	loop := engine.NewWithWorld(log, cat, items, ground, saver)
+	loop := engine.NewWithWorld(log, cat, items, ground, saver).WithSkills(skills)
 	loopDone := make(chan struct{})
 	go func() {
 		defer close(loopDone)
@@ -139,7 +140,7 @@ func loadWorld(log *slog.Logger, root string) (*world.Catalog, *world.Items, map
 var _ engine.SheetSink = (*persist.AsyncSaver)(nil)
 
 // loadSkills loads content/skills if that directory exists. Missing skills is
-// not a boot failure. Invalid YAML is fatal. Practice verbs are not wired.
+// not a boot failure. Invalid YAML is fatal. The catalog is attached to the loop.
 func loadSkills(log *slog.Logger, root string) (*skill.Catalog, error) {
 	dir := filepath.Join(root, "skills")
 	st, err := os.Stat(dir)

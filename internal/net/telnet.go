@@ -370,6 +370,45 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
+	case low == "skills" || verb == "숙련" || low == "inv" || verb == "소지":
+		if !s.loop.Submit(engine.Sheet{ConnID: s.id}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "practice" || verb == "익히다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Practice{ConnID: s.id, SkillID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "get" || verb == "집다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Get{ConnID: s.id, ItemID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "drop" || verb == "놓다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.DropItem{ConnID: s.id, ItemID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "equip" || verb == "들다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Equip{ConnID: s.id, ItemID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "unequip" || verb == "벗다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Unequip{ConnID: s.id, Slot: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
 	case low == "quit" || verb == "종료":
 		if s.user != "" {
 			_ = s.writeLine(text.T(text.Default, text.SysLeave, s.user))
