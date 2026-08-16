@@ -405,7 +405,7 @@ func Band(rank int) string {
 	case rank >= 20:
 		return "수련"
 	default:
-		return "미숙"
+		return "초보"
 	}
 }
 

@@ -323,15 +323,15 @@ func (c *telnetClient) createUser(t *testing.T, user, pass string) {
 // the seated line through the first command prompt (includes the spawn card).
 func (c *telnetClient) createUserUntilPrompt(t *testing.T, user, pass string) string {
 	t.Helper()
-	c.readUntil(t, "계정 이름:")
+	c.readUntil(t, "이름:")
 	c.send(t, user)
-	c.readUntil(t, "암호:")
+	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
 	c.readUntil(t, "새로 만드시겠습니까?")
 	c.send(t, "y")
-	c.readUntil(t, "암호:")
+	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	seated := c.readUntil(t, user+" 님이 자리에 앉았습니다.")
+	seated := c.readUntil(t, user+" 님이 들어왔습니다.")
 	prompt := c.readUntil(t, ">")
 	return seated + prompt
 }

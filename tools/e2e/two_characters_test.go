@@ -23,9 +23,9 @@ const (
 	smithRoom   = "dalbitgol:smithy"
 	speechRoom  = "dalbitgol:cafe-baekya"
 	smithTitle  = "달빛골의 대장장이"
-	speechTitle = "말을 부리는 자"
+	speechTitle = "말 잘하는 사람"
 
-	rateLimited = "rate_limited"
+	rateLimited = "너무 빨리 입력했습니다"
 )
 
 func TestTwoCharactersPlayDifferently(t *testing.T) {
@@ -63,8 +63,8 @@ func TestTwoCharactersPlayDifferently(t *testing.T) {
 	if strings.Contains(bSheet, smithTitle) {
 		h.failf(t, "B must not have smith title\nsheet: %q", bSheet)
 	}
-	if !sheetHasSkill(bSheet, "언변", "speech") {
-		h.failf(t, "B skills missing 언변/speech\nsheet: %q", bSheet)
+	if !sheetHasSkill(bSheet, "말솜씨", "speech") {
+		h.failf(t, "B skills missing 말솜씨/speech\nsheet: %q", bSheet)
 	}
 	if aSheet == bSheet {
 		h.failf(t, "titles/sheets must differ\nA: %q\nB: %q", aSheet, bSheet)
@@ -157,11 +157,11 @@ func pickAndEquip(t *testing.T, c *telnetClient, names ...string) {
 	var last string
 	for _, name := range names {
 		c.sendPaced(t, "get "+name)
-		got, hit := c.readUntilAny(t, "집었습니다", "여기에는 그것이 없습니다")
+		got, hit := c.readUntilAny(t, "집었습니다", "여기엔 그런 게 없습니다")
 		last = got
 		if hit == "집었습니다" {
 			c.sendPaced(t, "equip "+name)
-			c.expectLine(t, "갖췄습니다")
+			c.expectLine(t, "들었습니다")
 			return
 		}
 	}
@@ -175,13 +175,13 @@ func practiceUntilTitle(t *testing.T, c *telnetClient, skills *skill.Catalog, cm
 		c.h.failf(t, "%s lookup %q", c.name, cmd)
 	}
 	needles := append(append([]string{}, sk.Gain...), sk.Miss...)
-	needles = append(needles, rateLimited, "그런 숙련은 없습니다", "모르는 말입니다")
+	needles = append(needles, rateLimited, "그런 기술은 없습니다", "무슨 말인지")
 	loops := 0
 	for loops < maxPractice {
 		c.sendPaced(t, cmd)
 		got, hit := c.readUntilAny(t, needles...)
 		switch hit {
-		case "그런 숙련은 없습니다", "모르는 말입니다":
+		case "그런 기술은 없습니다", "무슨 말인지":
 			c.h.failf(t, "%s unknown skill for %q\nlast recv: %q", c.name, cmd, got)
 		case rateLimited:
 			time.Sleep(200 * time.Millisecond)
@@ -204,7 +204,7 @@ func practiceUntilTitle(t *testing.T, c *telnetClient, skills *skill.Catalog, cm
 func readSheet(t *testing.T, c *telnetClient, cmd string) string {
 	t.Helper()
 	c.sendPaced(t, cmd)
-	got := c.readUntil(t, "능력:")
+	got := c.readUntil(t, "몸:")
 	if i := strings.IndexAny(c.buf, "\r\n"); i >= 0 {
 		got += c.buf[:i]
 		c.buf = c.buf[i:]
@@ -219,7 +219,7 @@ func compactSheet(s string) string {
 func sheetHasSkill(dump, ko, id string) bool {
 	for _, line := range strings.Split(dump, "\n") {
 		line = strings.TrimSpace(line)
-		if !strings.HasPrefix(line, "숙련:") {
+		if !strings.HasPrefix(line, "기술:") {
 			continue
 		}
 		return strings.Contains(line, ko) || strings.Contains(line, id)
