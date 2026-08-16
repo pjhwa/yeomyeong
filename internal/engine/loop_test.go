@@ -216,6 +216,26 @@ func TestEventTargets(t *testing.T) {
 	}
 }
 
+func TestEnterEmitsRoomBeforeSeated(t *testing.T) {
+	l := startLoopWith(t, testCatalog(t))
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
+	_ = mustSnapshot(t, l)
+	evs := drain(out)
+	roomI, seatedI := -1, -1
+	for i, ev := range evs {
+		if _, ok := ev.(Room); ok && roomI < 0 {
+			roomI = i
+		}
+		if tx, ok := ev.(Text); ok && tx.Channel == ChannelSys && strings.Contains(tx.Body, "앉았습니다") && seatedI < 0 {
+			seatedI = i
+		}
+	}
+	if roomI < 0 || seatedI < 0 || roomI > seatedI {
+		t.Fatalf("want Room before seated, room=%d seated=%d evs=%#v", roomI, seatedI, evs)
+	}
+}
+
 func TestEnterSeatsAtSpawnAndLookShowsOthers(t *testing.T) {
 	l := startLoopWith(t, testCatalog(t))
 	outA := mustAttach(t, l, "a")

@@ -109,9 +109,9 @@ func serveListeners(ctx context.Context, log *slog.Logger, cfg config.Config, lo
 	return first
 }
 
-// loadWorld loads content/zones if that directory exists. Missing zones is
-// not a boot failure. Invalid zones are fatal. Real-tree spawn is
-// dalbitgol:gate (D-028). The catalog is attached to the loop.
+// loadWorld loads rooms, optional items, and optional spawns. Missing zones is
+// not a boot failure. Invalid content is fatal. Real-tree spawn is
+// dalbitgol:gate (D-028). Skills load separately (loadSkills).
 func loadWorld(log *slog.Logger, root string) (*world.Catalog, error) {
 	zones := filepath.Join(root, "zones")
 	st, err := os.Stat(zones)
@@ -125,12 +125,12 @@ func loadWorld(log *slog.Logger, root string) (*world.Catalog, error) {
 	if !st.IsDir() {
 		return nil, fmt.Errorf("content zones %s is not a directory", zones)
 	}
-	cat, err := content.Load(root, world.SpawnID)
+	w, err := content.LoadWorld(root, world.SpawnID)
 	if err != nil {
 		return nil, fmt.Errorf("load content: %w", err)
 	}
-	log.Info("content loaded", "rooms", cat.Len(), "spawn", cat.Spawn())
-	return cat, nil
+	log.Info("content loaded", "rooms", w.Rooms.Len(), "items", w.Items.Len(), "spawn", w.Rooms.Spawn())
+	return w.Rooms, nil
 }
 
 // loadSkills loads content/skills if that directory exists. Missing skills is

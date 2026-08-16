@@ -221,10 +221,12 @@ func (l *Loop) enter(c EnterWorld) {
 		RoomID:    roomID,
 	}
 	l.world.roster[c.ConnID] = p
-	l.sysInRoom(roomID, text.T(text.Default, text.SysSeated, c.Username))
+	// Room card first so adapters that return on seated (awaitSeated +
+	// flushNow) cannot print ">" before the spawn description.
 	if l.catalog != nil {
 		l.emit(l.roomCard(p))
 	}
+	l.sysInRoom(roomID, text.T(text.Default, text.SysSeated, c.Username))
 }
 
 func (l *Loop) say(c Say) {

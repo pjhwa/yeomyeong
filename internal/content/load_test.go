@@ -3,6 +3,7 @@ package content
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,46 @@ import (
 
 	"github.com/pjhwa/yeomyeong/internal/world"
 )
+
+func TestLoadItemsAndSpawns(t *testing.T) {
+	w, err := LoadWorld(fixture("valid"), "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pebble, ok := w.Items.Get("pebble")
+	if !ok || pebble.Name.KO != "조약돌" || pebble.Weight != 1 {
+		t.Fatalf("pebble: %+v items=%d", pebble, w.Items.Len())
+	}
+	start, _ := w.Rooms.Room("test:start")
+	shop, _ := w.Rooms.Room("test:shop")
+	if !hasFlag(start.Flags, "yard") || !hasFlag(shop.Flags, "forge") {
+		t.Fatalf("flags start=%v shop=%v", start.Flags, shop.Flags)
+	}
+	if stacksOf(w.Ground["test:start"], "pebble") != 1 || stacksOf(w.Ground["test:shop"], "cloak") != 1 {
+		t.Fatalf("ground=%v", w.Ground)
+	}
+	if _, ok := w.Ground["test:yard"]; ok {
+		t.Fatal("yard must not share start ground")
+	}
+	root := writeZone(t, minRoom(""))
+	empty, err := LoadWorld(root, "test:start")
+	if err != nil || empty.Items.Len() != 0 || len(empty.Ground) != 0 {
+		t.Fatalf("missing items/spawns: %v %#v", err, empty)
+	}
+	writeSpawns(t, root, "- room: test:start\n  items: [ghost]\n")
+	if _, err := LoadWorld(root, "test:start"); !errors.Is(err, ErrUnknownItem) {
+		t.Fatalf("unknown item: %v", err)
+	}
+	root = writeZone(t, minRoom("  flags: [forge, kitchen, press, clinic, yard]\n"))
+	if _, err := Load(root, "test:start"); err != nil {
+		t.Fatal(err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeItems(t, root, minItem("hat", "head", 1))
+	if _, err := LoadWorld(root, "test:start"); !errors.Is(err, ErrUnknownSlot) {
+		t.Fatalf("slot: %v", err)
+	}
+}
 
 func TestLoadValidGraph(t *testing.T) {
 	cat, err := Load(fixture("valid"), "test:start")
@@ -211,4 +252,35 @@ func writeZone(t *testing.T, rooms string) string {
 
 func minRoom(extra string) string {
 	return "- id: test:start\n  name: \"방\"\n  description: \"설명이다.\"\n" + extra
+}
+
+func minItem(id, slot string, weight int) string {
+	return fmt.Sprintf("- id: %s\n  name: \"물건\"\n  description: \"설명이다.\"\n  slot: %s\n  weight: %d\n", id, slot, weight)
+}
+
+func writeItems(t *testing.T, root, yaml string) {
+	t.Helper()
+	dir := filepath.Join(root, "items")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "tools.yaml"), []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeSpawns(t *testing.T, root, yaml string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(root, "zones", "test", "spawns.yaml"), []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func stacksOf(piles []world.Stack, id string) int {
+	for _, s := range piles {
+		if s.ID == id {
+			return s.Qty
+		}
+	}
+	return 0
 }

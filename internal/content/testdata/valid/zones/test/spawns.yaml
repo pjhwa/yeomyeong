@@ -1,0 +1,6 @@
+- room: test:start
+  flags_add: [yard]
+  items: [pebble, rod]
+- room: test:shop
+  flags_add: [forge, kitchen, press, clinic]
+  items: [cloak]
