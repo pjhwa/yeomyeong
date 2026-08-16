@@ -18,6 +18,7 @@ import (
 	"github.com/pjhwa/yeomyeong/internal/engine"
 	ynet "github.com/pjhwa/yeomyeong/internal/net"
 	"github.com/pjhwa/yeomyeong/internal/persist"
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
@@ -86,8 +87,16 @@ func startHarness(t *testing.T) *harness {
 
 func startHarnessWithCatalog(t *testing.T, cat *world.Catalog) *harness {
 	t.Helper()
+	return startHarnessWithWorld(t, cat, nil, nil, nil)
+}
+
+func startHarnessWithWorld(t *testing.T, cat *world.Catalog, items *world.Items, ground map[string][]world.Stack, skills *skill.Catalog) *harness {
+	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	loop := engine.NewWithCatalog(log, cat)
+	loop := engine.NewWithWorld(log, cat, items, ground, nil)
+	if skills != nil {
+		loop = loop.WithSkills(skills)
+	}
 	store := persist.NewMemory()
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -251,6 +260,58 @@ func (c *telnetClient) expectLine(t *testing.T, want string) {
 	if !strings.Contains(got, want) {
 		c.h.failf(t, "%s did not receive %q\nlast recv: %q", c.name, want, got)
 	}
+}
+
+// readUntilAny returns the bytes through the earliest of needles.
+func (c *telnetClient) readUntilAny(t *testing.T, needles ...string) (got, matched string) {
+	t.Helper()
+	if len(needles) == 0 {
+		c.h.failf(t, "%s readUntilAny: no needles", c.name)
+	}
+	deadline := time.Now().Add(readWait)
+	_ = c.conn.SetReadDeadline(deadline)
+	tmp := make([]byte, 256)
+	var collected strings.Builder
+	for {
+		if needle, end, ok := firstNeedle(c.buf, needles); ok {
+			collected.WriteString(c.buf[:end])
+			c.buf = c.buf[end:]
+			got = collected.String()
+			c.h.tr.add("%s RECV %q", c.name, got)
+			return got, needle
+		}
+		collected.WriteString(c.buf)
+		c.buf = ""
+		n, err := c.conn.Read(tmp)
+		if n > 0 {
+			c.buf += string(tmp[:n])
+			continue
+		}
+		if err != nil {
+			c.h.tr.add("%s RECV %q (error %v, waiting for %q)", c.name, collected.String(), err, needles)
+			c.h.failf(t, "%s readUntilAny %q: %v", c.name, needles, err)
+		}
+	}
+}
+
+func firstNeedle(s string, needles []string) (needle string, end int, ok bool) {
+	best := -1
+	for _, n := range needles {
+		if n == "" {
+			continue
+		}
+		i := strings.Index(s, n)
+		if i < 0 {
+			continue
+		}
+		if best < 0 || i < best {
+			best = i
+			needle = n
+			end = i + len(n)
+			ok = true
+		}
+	}
+	return needle, end, ok
 }
 
 func (c *telnetClient) createUser(t *testing.T, user, pass string) {
