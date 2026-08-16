@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/text"
 	yworld "github.com/pjhwa/yeomyeong/internal/world"
 )
@@ -23,7 +24,15 @@ const (
 	CommandQueueSize = 256
 	// OutboundSize is the per-connection event buffer. Overflow drops oldest.
 	OutboundSize = 64
+	// BagCap is the carried-weight limit (CONTENT-SCHEMA). Equipped items count.
+	BagCap = 20
 )
+
+// SheetSink receives a cloned sheet from LeaveWorld. The impl must not block
+// the loop (enqueue; persist I/O stays off this goroutine).
+type SheetSink interface {
+	SaveAsync(accountID string, sheet yworld.Sheet)
+}
 
 // Loop is the sole writer of world state. Connection goroutines only Submit
 // commands and drain the outbound channel returned by Attach.
@@ -31,8 +40,12 @@ type Loop struct {
 	cmds chan Command
 	log  *slog.Logger
 
-	// catalog is immutable after construction. nil means no rooms.
+	// catalog/items/skills are immutable after construction. nil means none loaded.
 	catalog *yworld.Catalog
+	items   *yworld.Items
+	skills  *skill.Catalog
+	rng     func() float64
+	sheets  SheetSink
 
 	// Owned exclusively by the Run goroutine.
 	world    world
@@ -47,6 +60,11 @@ func New(log *slog.Logger) *Loop {
 // NewWithCatalog constructs a loop that seats players at cat.Spawn() and
 // serves Look/Move from the immutable graph. cat may be nil.
 func NewWithCatalog(log *slog.Logger, cat *yworld.Catalog) *Loop {
+	return NewWithWorld(log, cat, nil, nil, nil)
+}
+
+// NewWithWorld wires catalogs, boot ground piles, and an optional sheet sink.
+func NewWithWorld(log *slog.Logger, cat *yworld.Catalog, items *yworld.Items, ground map[string][]yworld.Stack, sheets SheetSink) *Loop {
 	if log == nil {
 		log = slog.Default()
 	}
@@ -54,9 +72,23 @@ func NewWithCatalog(log *slog.Logger, cat *yworld.Catalog) *Loop {
 		cmds:     make(chan Command, CommandQueueSize),
 		log:      log,
 		catalog:  cat,
-		world:    world{roster: make(map[ConnID]Player)},
+		items:    items,
+		sheets:   sheets,
+		world:    world{roster: make(map[ConnID]Player), ground: yworld.CloneGround(ground)},
 		outbound: make(map[ConnID]chan Event),
 	}
+}
+
+// WithSkills attaches the practice catalog. Call before Run.
+func (l *Loop) WithSkills(cat *skill.Catalog) *Loop {
+	l.skills = cat
+	return l
+}
+
+// WithRand injects the Practice rng. Nil uses skill.DefaultRand. Call before Run.
+func (l *Loop) WithRand(rng func() float64) *Loop {
+	l.rng = rng
+	return l
 }
 
 // Submit enqueues cmd. It is safe for concurrent use and never blocks:
@@ -182,6 +214,18 @@ func (l *Loop) handle(cmd Command) {
 		l.move(c)
 	case LeaveWorld:
 		l.leave(c)
+	case Get:
+		l.get(c)
+	case DropItem:
+		l.dropItem(c)
+	case Equip:
+		l.equip(c)
+	case Unequip:
+		l.unequip(c)
+	case Sheet:
+		l.sheet(c)
+	case Practice:
+		l.practice(c)
 	case attachReq:
 		c.resp <- l.ensureOut(c.id)
 	case detachReq:
@@ -195,7 +239,7 @@ func (l *Loop) handle(cmd Command) {
 		sort.Slice(players, func(i, j int) bool {
 			return players[i].ConnID < players[j].ConnID
 		})
-		c.resp <- Snapshot{Players: players}
+		c.resp <- Snapshot{Players: players, Ground: l.world.copyGround()}
 	default:
 		l.log.Warn("unknown command", "type", fmt.Sprintf("%T", cmd))
 	}
@@ -213,18 +257,25 @@ func (l *Loop) enter(c EnterWorld) {
 	if l.catalog != nil {
 		roomID = l.catalog.Spawn()
 	}
+	sh := yworld.CloneSheet(c.Sheet)
 	p := Player{
 		ConnID:    c.ConnID,
 		AccountID: c.AccountID,
 		Username:  c.Username,
 		Session:   c.Session,
 		RoomID:    roomID,
+		Skills:    sh.Skills,
+		Stats:     sh.Stats,
+		Bag:       sh.Bag,
+		Equip:     sh.Equip,
 	}
 	l.world.roster[c.ConnID] = p
-	l.sysInRoom(roomID, text.T(text.Default, text.SysSeated, c.Username))
+	// Room card first so adapters that return on seated (awaitSeated +
+	// flushNow) cannot print ">" before the spawn description.
 	if l.catalog != nil {
 		l.emit(l.roomCard(p))
 	}
+	l.sysInRoom(roomID, text.T(text.Default, text.SysSeated, c.Username))
 }
 
 func (l *Loop) say(c Say) {
@@ -276,6 +327,9 @@ func (l *Loop) leave(c LeaveWorld) {
 	if !ok {
 		return
 	}
+	if l.sheets != nil {
+		l.sheets.SaveAsync(string(p.AccountID), yworld.CloneSheet(p.sheet()))
+	}
 	delete(l.world.roster, c.ConnID)
 	l.sysInRoom(p.RoomID, text.T(text.Default, text.SysLeave, p.Username))
 }
@@ -295,6 +349,7 @@ func (l *Loop) roomCard(viewer Player) Room {
 		ID:     viewer.RoomID,
 		Exits:  map[string]string{},
 		Who:    who,
+		Ground: l.groundNames(viewer.RoomID),
 	}
 	if l.catalog == nil {
 		return card

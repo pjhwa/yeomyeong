@@ -79,8 +79,41 @@ func TestLoadWorldZonesNotDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	if _, err := loadWorld(log, dir); err == nil {
+	if _, _, _, err := loadWorld(log, dir); err == nil {
 		t.Fatal("want error when zones is a file")
+	}
+}
+
+func TestRunFailsOnInvalidSkills(t *testing.T) {
+	dir := t.TempDir()
+	skills := filepath.Join(dir, "content", "skills")
+	if err := os.MkdirAll(skills, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(skills, "m2.yaml"), []byte("skills: [\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(dir)
+	t.Setenv(config.EnvDatabase, "")
+	t.Setenv(config.EnvTelnetAddr, "127.0.0.1:0")
+	t.Setenv(config.EnvWSAddr, "127.0.0.1:0")
+	err := run(context.Background(), slog.New(slog.NewTextHandler(io.Discard, nil)), config.Load())
+	if err == nil {
+		t.Fatal("want skill load error")
+	}
+}
+
+func TestLoadSkillsNotDir(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "skills"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	if _, err := loadSkills(log, dir); err == nil {
+		t.Fatal("want error when skills is a file")
+	}
+	if cat, err := loadSkills(log, t.TempDir()); err != nil || cat != nil {
+		t.Fatalf("missing: %v %v", cat, err)
 	}
 }
 

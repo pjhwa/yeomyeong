@@ -35,6 +35,7 @@ var knownDirs = map[string]struct{}{
 
 var knownFlags = map[string]struct{}{
 	"safe": {}, "town": {}, "market": {}, "indoor": {}, "dark": {},
+	"forge": {}, "kitchen": {}, "press": {}, "clinic": {}, "yard": {},
 }
 
 // loc is a YAML localized string: a bare Korean scalar or {ko, en}.
@@ -80,69 +81,14 @@ type yamlRoom struct {
 	Foreshadow   []string          `yaml:"foreshadow"`
 }
 
-// Load reads root/zones/*/rooms.yaml and returns an immutable catalog.
+// Load reads rooms, optional items, and optional spawns, then returns the room catalog.
 // spawnID must exist (dalbitgol:gate on the real tree; testdata uses test:start).
 func Load(root, spawnID string) (*world.Catalog, error) {
-	if spawnID == "" {
-		return nil, fmt.Errorf("%w: empty id", ErrSpawnMissing)
-	}
-	zonesDir := filepath.Join(root, "zones")
-	entries, err := os.ReadDir(zonesDir)
-	if err != nil {
-		return nil, fmt.Errorf("read zones: %w", err)
-	}
-
-	byID := make(map[string]world.Room)
-	var order []world.Room
-	for _, e := range entries {
-		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") || !zoneRe.MatchString(e.Name()) {
-			continue
-		}
-		path := filepath.Join(zonesDir, e.Name(), "rooms.yaml")
-		st, err := os.Stat(path)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return nil, err
-		}
-		if st.IsDir() {
-			return nil, fmt.Errorf("%s: is a directory", path)
-		}
-		rooms, err := parseRoomsFile(path, e.Name())
-		if err != nil {
-			return nil, err
-		}
-		for _, r := range rooms {
-			if _, dup := byID[r.ID]; dup {
-				return nil, fmt.Errorf("duplicate room id %q", r.ID)
-			}
-			byID[r.ID] = r
-			order = append(order, r)
-		}
-	}
-
-	if _, ok := byID[spawnID]; !ok {
-		return nil, fmt.Errorf("%w: %s", ErrSpawnMissing, spawnID)
-	}
-	for _, r := range order {
-		for dir, dest := range r.Exits {
-			if _, ok := byID[dest]; !ok {
-				return nil, fmt.Errorf("%w: %s %s -> %s", ErrUnknownExit, r.ID, dir, dest)
-			}
-		}
-	}
-	if err := checkForeshadow(root, order); err != nil {
-		return nil, err
-	}
-	cat, err := world.NewCatalog(order, spawnID)
+	w, err := LoadWorld(root, spawnID)
 	if err != nil {
 		return nil, err
 	}
-	if err := checkReachable(cat, spawnID); err != nil {
-		return nil, err
-	}
-	return cat, nil
+	return w.Rooms, nil
 }
 
 // Reachable reports room ids reachable from start (including start).

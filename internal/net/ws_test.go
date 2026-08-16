@@ -251,6 +251,49 @@ func TestWSLookMoveAndNoExit(t *testing.T) {
 	}
 }
 
+func TestWSPracticeSkillsInvVerbs(t *testing.T) {
+	_, loop, store := startServerStore(t)
+	addr := startWS(t, loop, store)
+	c := dialWS(t, addr)
+	c.send(t, typeCmdSkills, "na", map[string]any{})
+	if payloadString(t, c.readType(t, typeSys), "code") != codeNotAuth {
+		t.Fatal("skills before auth")
+	}
+	c.send(t, typeAuthCreate, "c1", map[string]string{"username": "갑을", "password": "password1"})
+	_ = c.readType(t, typeAuthOK)
+	_ = c.readType(t, typeRoom)
+	waitRoster(t, loop, 1)
+
+	c.send(t, typeCmdSkills, "sk", map[string]any{})
+	c.waitText(t, engine.ChannelSys, "", "소지:", "능력:")
+	c.send(t, typeCmdInv, "iv", map[string]any{})
+	c.waitText(t, engine.ChannelSys, "", "소지:")
+
+	c.send(t, typeCmdPractice, "p0", map[string]string{"skill": ""})
+	if payloadString(t, c.readType(t, typeSys), "code") != codeBadFrame {
+		t.Fatal("empty practice")
+	}
+	c.send(t, typeCmdPractice, "p1", map[string]string{"skill": "nope"})
+	c.waitText(t, engine.ChannelSys, "", "그런 숙련은 없습니다.")
+
+	c.send(t, typeCmdGet, "g1", map[string]string{"item": "x"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {
+		t.Fatal("get missing")
+	}
+	c.send(t, typeCmdDrop, "d1", map[string]string{"item": "x"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {
+		t.Fatal("drop missing")
+	}
+	c.send(t, typeCmdEquip, "e1", map[string]string{"item": "x"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {
+		t.Fatal("equip missing")
+	}
+	c.send(t, typeCmdUnequip, "u1", map[string]string{"slot": "main_hand"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeEmptySlot {
+		t.Fatal("unequip empty")
+	}
+}
+
 func TestWSDisconnectRemovesFromRoster(t *testing.T) {
 	_, loop, store := startServerStore(t)
 	c := dialWS(t, startWS(t, loop, store))
@@ -401,8 +444,14 @@ func (c *wsClient) readType(t *testing.T, typ string) inFrame {
 	return inFrame{}
 }
 
-func (c *wsClient) waitText(t *testing.T, channel, from, text string) {
+// waitText waits until every needle appears in matching text frames.
+// One frame may satisfy several needles; leftover needles are sought later.
+func (c *wsClient) waitText(t *testing.T, channel, from string, needles ...string) {
 	t.Helper()
+	pending := append([]string(nil), needles...)
+	if len(pending) == 0 {
+		return
+	}
 	deadline := time.Now().Add(15 * time.Second)
 	for time.Now().Before(deadline) {
 		f := c.mustRead(t)
@@ -417,11 +466,21 @@ func (c *wsClient) waitText(t *testing.T, channel, from, text string) {
 		if err := decodePayload(f.Payload, &p); err != nil {
 			t.Fatal(err)
 		}
-		if p.Channel == channel && (from == "" || p.From == from) && strings.Contains(p.Text, text) {
+		if p.Channel != channel || (from != "" && p.From != from) {
+			continue
+		}
+		still := pending[:0]
+		for _, n := range pending {
+			if !strings.Contains(p.Text, n) {
+				still = append(still, n)
+			}
+		}
+		pending = still
+		if len(pending) == 0 {
 			return
 		}
 	}
-	t.Fatalf("timeout waiting for text %s %s %q", channel, from, text)
+	t.Fatalf("timeout waiting for text %s %s %q", channel, from, needles)
 }
 
 type roomPayload struct {

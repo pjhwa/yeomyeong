@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 	"unicode/utf8"
+
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 func TestOpenEmptyURLIsMemory(t *testing.T) {
@@ -154,6 +156,37 @@ func testAccountStore(t *testing.T, s AccountStore) {
 	if _, err := s.IssueSession(ctx, "missing-account", time.Hour); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("issue missing: %v", err)
 	}
+
+	empty, err := s.LoadSheet(ctx, acc.ID)
+	if err != nil || len(empty.Bag) != 0 || len(empty.Skills) != 0 {
+		t.Fatalf("empty sheet: %+v %v", empty, err)
+	}
+	want := world.Sheet{
+		Skills: map[string]int{"smith": 4},
+		Stats:  map[string]int{"str": 1},
+		Bag:    []world.Stack{{ID: "pebble", Qty: 2}},
+		Equip:  world.Equipment{MainHand: "rod"},
+	}
+	if err := s.SaveSheet(ctx, acc.ID, want); err != nil {
+		t.Fatal(err)
+	}
+	gotSheet, err := s.LoadSheet(ctx, acc.ID)
+	if err != nil || gotSheet.Skills["smith"] != 4 || gotSheet.Stats["str"] != 1 ||
+		len(gotSheet.Bag) != 1 || gotSheet.Bag[0] != (world.Stack{ID: "pebble", Qty: 2}) ||
+		gotSheet.Equip.MainHand != "rod" {
+		t.Fatalf("load sheet: %+v %v", gotSheet, err)
+	}
+	gotSheet.Bag[0].ID = "hacked"
+	again, err := s.LoadSheet(ctx, acc.ID)
+	if err != nil || again.Bag[0].ID != "pebble" {
+		t.Fatalf("sheet must copy: %+v %v", again, err)
+	}
+	if _, err := s.LoadSheet(ctx, "missing-account"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("load missing: %v", err)
+	}
+	if err := s.SaveSheet(ctx, "missing-account", want); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("save missing: %v", err)
+	}
 }
 
 func TestExpiredSessionRejected(t *testing.T) {
@@ -199,6 +232,12 @@ func TestMemoryCancelledContext(t *testing.T) {
 	}
 	if err := m.RevokeSession(ctx, "x"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("revoke: %v", err)
+	}
+	if _, err := m.LoadSheet(ctx, "x"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("load sheet: %v", err)
+	}
+	if err := m.SaveSheet(ctx, "x", world.Sheet{}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("save sheet: %v", err)
 	}
 }
 
@@ -255,19 +294,29 @@ func TestPHCRoundTripAndRejectsOtherHashes(t *testing.T) {
 }
 
 func TestMigrationHasRequiredSchema(t *testing.T) {
-	body, err := os.ReadFile(filepath.Join("..", "..", "migrations", "001_init.sql"))
+	files, err := filepath.Glob(filepath.Join("..", "..", "migrations", "*.sql"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := string(body)
+	var b strings.Builder
+	for _, f := range files {
+		body, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b.Write(body)
+		b.WriteByte('\n')
+	}
+	s := b.String()
 	for _, need := range []string{
 		"CREATE TABLE IF NOT EXISTS accounts",
 		"username", "username_fold", "password_hash", "created_at",
 		"CREATE TABLE IF NOT EXISTS sessions",
 		"token", "account_id", "expires_at",
+		"skills JSONB", "stats JSONB", "bag JSONB", "equipment JSONB",
 	} {
 		if !strings.Contains(s, need) {
-			t.Errorf("migrations/001_init.sql missing %q", need)
+			t.Errorf("migrations missing %q", need)
 		}
 	}
 	for _, stmt := range schemaStmts {

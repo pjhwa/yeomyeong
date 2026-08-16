@@ -1,0 +1,43 @@
+# M2 practice tools. Ids match SKILL-TABLE practice_item.
+
+- id: hammer
+  name: { ko: "쇠망치" }
+  description: { ko: "자루가 반질한 쇠망치다. 대장간 냄새를 아직 품고 있다." }
+  slot: main_hand
+  skills: [smith]
+  weight: 2
+
+- id: kitchen-knife
+  name: { ko: "식칼" }
+  description: { ko: "날이 한쪽만 간 식칼이다. 손잡이 나무에 참기름이 배어 끈적하다." }
+  slot: main_hand
+  skills: [cook]
+  weight: 1
+
+- id: composing-stick
+  name: { ko: "식자봉" }
+  description: { ko: "납 활자를 끼우는 나무 식자봉이다. 홈에 잉크가 검게 말라 붙어 손가락에 묻는다." }
+  slot: main_hand
+  skills: [print]
+  weight: 1
+
+- id: bandage
+  name: { ko: "붕대 두루마리" }
+  description: { ko: "베로 감은 붕대 두루마리다. 풀기가 남아 손가락에 거칠다." }
+  slot: none
+  skills: [firstaid]
+  weight: 1
+
+- id: wooden-sword
+  name: { ko: "목검" }
+  description: { ko: "날이 없는 나무 목검이다. 자루 끝에 땀때가 검게 배어 있다." }
+  slot: main_hand
+  skills: [sword]
+  weight: 2
+
+- id: lockpick
+  name: { ko: "자물쇠송곳" }
+  description: { ko: "끝이 납작하게 갈린 쇠 송곳이다. 주머니에 넣으면 차갑게 닿는다." }
+  slot: none
+  skills: [lockpick]
+  weight: 1

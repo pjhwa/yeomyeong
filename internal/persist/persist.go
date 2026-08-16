@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 const (
@@ -66,6 +68,8 @@ type AccountStore interface {
 	IssueSession(ctx context.Context, accountID string, ttl time.Duration) (Session, error)
 	LookupSession(ctx context.Context, token string) (Session, error)
 	RevokeSession(ctx context.Context, token string) error
+	LoadSheet(ctx context.Context, accountID string) (world.Sheet, error)
+	SaveSheet(ctx context.Context, accountID string, sheet world.Sheet) error
 }
 
 var (

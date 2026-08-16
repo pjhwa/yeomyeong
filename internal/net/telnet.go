@@ -150,6 +150,10 @@ func (s *Server) handle(ctx context.Context, raw stdnet.Conn) {
 	}
 	sess.user = acc.Username
 
+	sheet, err := s.Store.LoadSheet(ctx, acc.ID)
+	if err != nil {
+		return
+	}
 	out, err := s.Loop.Attach(ctx, id)
 	if err != nil {
 		return
@@ -159,6 +163,7 @@ func (s *Server) handle(ctx context.Context, raw stdnet.Conn) {
 		AccountID: engine.AccountID(acc.ID),
 		Username:  acc.Username,
 		Session:   tok.Token,
+		Sheet:     sheet,
 	}) {
 		_ = sess.writeLine(text.T(text.Default, text.SysRateLimit))
 		return
@@ -365,6 +370,45 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
+	case low == "skills" || verb == "숙련" || low == "inv" || verb == "소지":
+		if !s.loop.Submit(engine.Sheet{ConnID: s.id}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "practice" || verb == "익히다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Practice{ConnID: s.id, SkillID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "get" || verb == "집다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Get{ConnID: s.id, ItemID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "drop" || verb == "놓다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.DropItem{ConnID: s.id, ItemID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "equip" || verb == "들다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Equip{ConnID: s.id, ItemID: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "unequip" || verb == "벗다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Unequip{ConnID: s.id, Slot: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
 	case low == "quit" || verb == "종료":
 		if s.user != "" {
 			_ = s.writeLine(text.T(text.Default, text.SysLeave, s.user))
@@ -430,6 +474,9 @@ func formatRoom(e engine.Room) []string {
 	}
 	if len(e.Who) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomHere, strings.Join(e.Who, ", ")))
+	}
+	if len(e.Ground) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomGround, strings.Join(e.Ground, ", ")))
 	}
 	return lines
 }

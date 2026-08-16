@@ -32,6 +32,10 @@ var schemaStmts = []string{
 	)`,
 	`CREATE INDEX IF NOT EXISTS sessions_account_id_idx ON sessions (account_id)`,
 	`CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions (expires_at)`,
+	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS skills JSONB NOT NULL DEFAULT '{}'::jsonb`,
+	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS stats JSONB NOT NULL DEFAULT '{}'::jsonb`,
+	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS bag JSONB NOT NULL DEFAULT '[]'::jsonb`,
+	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS equipment JSONB NOT NULL DEFAULT '{}'::jsonb`,
 }
 
 // Postgres is the PostgreSQL AccountStore. Used only when DATABASE_URL is set.

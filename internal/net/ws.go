@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	stdnet "net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,17 +24,24 @@ import (
 const (
 	protoV = 1
 
-	typeAuthCreate = "auth.create"
-	typeAuthLogin  = "auth.login"
-	typeCmdSay     = "cmd.say"
-	typeCmdLook    = "cmd.look"
-	typeCmdMove    = "cmd.move"
-	typeCmdQuit    = "cmd.quit"
-	typeAuthOK     = "auth.ok"
-	typeAuthErr    = "auth.err"
-	typeText       = "text"
-	typeRoom       = "room"
-	typeSys        = "sys"
+	typeAuthCreate  = "auth.create"
+	typeAuthLogin   = "auth.login"
+	typeCmdSay      = "cmd.say"
+	typeCmdLook     = "cmd.look"
+	typeCmdMove     = "cmd.move"
+	typeCmdPractice = "cmd.practice"
+	typeCmdSkills   = "cmd.skills"
+	typeCmdInv      = "cmd.inv"
+	typeCmdGet      = "cmd.get"
+	typeCmdDrop     = "cmd.drop"
+	typeCmdEquip    = "cmd.equip"
+	typeCmdUnequip  = "cmd.unequip"
+	typeCmdQuit     = "cmd.quit"
+	typeAuthOK      = "auth.ok"
+	typeAuthErr     = "auth.err"
+	typeText        = "text"
+	typeRoom        = "room"
+	typeSys         = "sys"
 
 	codeBadFrame    = "bad_frame"
 	codeRateLimited = "rate_limited"
@@ -240,7 +248,8 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
 	}
 	switch f.Type {
-	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdLook, typeCmdMove, typeCmdQuit:
+	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdLook, typeCmdMove, typeCmdQuit,
+		typeCmdPractice, typeCmdSkills, typeCmdInv, typeCmdGet, typeCmdDrop, typeCmdEquip, typeCmdUnequip:
 		if !s.lim.allow(time.Now()) {
 			return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 		}
@@ -258,6 +267,18 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.doLook(f)
 	case typeCmdMove:
 		return s.doMove(f)
+	case typeCmdPractice:
+		return s.doPractice(f)
+	case typeCmdSkills, typeCmdInv:
+		return s.doSheet(f)
+	case typeCmdGet:
+		return s.doGet(f)
+	case typeCmdDrop:
+		return s.doDrop(f)
+	case typeCmdEquip:
+		return s.doEquip(f)
+	case typeCmdUnequip:
+		return s.doUnequip(f)
 	case typeCmdQuit:
 		return s.doQuit()
 	default:
@@ -305,11 +326,16 @@ func (s *wsSession) enter(ctx context.Context, acc persist.Account, tok persist.
 		return s.writeSys(id, codeInternal, codeInternal)
 	}
 	s.attached = true
+	sheet, err := s.store.LoadSheet(ctx, acc.ID)
+	if err != nil {
+		return s.writeSys(id, codeInternal, codeInternal)
+	}
 	if !s.loop.Submit(engine.EnterWorld{
 		ConnID:    s.id,
 		AccountID: engine.AccountID(acc.ID),
 		Username:  acc.Username,
 		Session:   tok.Token,
+		Sheet:     sheet,
 	}) {
 		return s.writeSys(id, codeRateLimited, codeRateLimited)
 	}
@@ -375,6 +401,76 @@ var canonicalDir = map[string]struct{}{
 	"north": {}, "south": {}, "east": {}, "west": {}, "up": {}, "down": {},
 }
 
+func (s *wsSession) doPractice(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Skill string `json:"skill"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil || strings.TrimSpace(p.Skill) == "" {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(engine.Practice{ConnID: s.id, SkillID: strings.TrimSpace(p.Skill)}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doSheet(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	if !s.loop.Submit(engine.Sheet{ConnID: s.id}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doGet(f inFrame) error {
+	return s.submitItem(f, func(id string) engine.Command { return engine.Get{ConnID: s.id, ItemID: id} })
+}
+
+func (s *wsSession) doDrop(f inFrame) error {
+	return s.submitItem(f, func(id string) engine.Command { return engine.DropItem{ConnID: s.id, ItemID: id} })
+}
+
+func (s *wsSession) doEquip(f inFrame) error {
+	return s.submitItem(f, func(id string) engine.Command { return engine.Equip{ConnID: s.id, ItemID: id} })
+}
+
+func (s *wsSession) submitItem(f inFrame, cmd func(string) engine.Command) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Item string `json:"item"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil || strings.TrimSpace(p.Item) == "" {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(cmd(strings.TrimSpace(p.Item))) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doUnequip(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Slot string `json:"slot"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil || strings.TrimSpace(p.Slot) == "" {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(engine.Unequip{ConnID: s.id, Slot: strings.TrimSpace(p.Slot)}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
 func (s *wsSession) doQuit() error {
 	if s.user != "" {
 		_ = s.writeJSON(typeText, "", map[string]string{
@@ -423,12 +519,17 @@ func (s *wsSession) writeEvent(ev engine.Event) error {
 		if who == nil {
 			who = []string{}
 		}
+		ground := e.Ground
+		if ground == nil {
+			ground = []string{}
+		}
 		return s.writeJSON(typeRoom, "", map[string]any{
 			"id":          e.ID,
 			"name":        e.Name,
 			"description": e.Description,
 			"exits":       exits,
 			"who":         who,
+			"ground":      ground,
 		})
 	case engine.Drop:
 		return io.EOF
