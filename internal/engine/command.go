@@ -70,9 +70,15 @@ type Unequip struct {
 	Slot   string
 }
 
-// Sheet asks the loop for skills/stats/inv text.
+// Sheet asks the loop for skills/title/stats/inv text.
 type Sheet struct {
 	ConnID ConnID
+}
+
+// Practice is one skill trial (SKILL-TABLE.md). SkillID is a catalog id or Korean name.
+type Practice struct {
+	ConnID  ConnID
+	SkillID string
 }
 
 func (EnterWorld) command() {}
@@ -85,6 +91,7 @@ func (DropItem) command()   {}
 func (Equip) command()      {}
 func (Unequip) command()    {}
 func (Sheet) command()      {}
+func (Practice) command()   {}
 
 // Control requests served by the same queue so they observe FIFO order
 // relative to world-mutating commands. Not part of the public bus.

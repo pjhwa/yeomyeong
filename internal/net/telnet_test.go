@@ -448,6 +448,49 @@ func testCatalog(t *testing.T) *world.Catalog {
 	return cat
 }
 
+func TestPracticeSkillsInvVerbs(t *testing.T) {
+	addr, _ := startServer(t)
+	c := dial(t, addr)
+	loginNew(t, c, "갑을", "password1")
+
+	c.send(t, "skills")
+	if !strings.Contains(c.readUntil(t, "소지:"), "소지:") {
+		t.Fatal("skills")
+	}
+	c.send(t, "숙련")
+	c.readUntil(t, "능력:")
+	c.send(t, "inv")
+	c.readUntil(t, "소지:")
+	c.send(t, "소지")
+	c.readUntil(t, "장비:")
+
+	c.send(t, "practice nope")
+	if !strings.Contains(c.readUntil(t, "그런 숙련은 없습니다."), "그런 숙련은 없습니다.") {
+		t.Fatal("practice unknown")
+	}
+	c.send(t, "익히다")
+	if !strings.Contains(c.readUntil(t, "모르는 말입니다. say / quit"), "모르는 말입니다. say / quit") {
+		t.Fatal("practice empty")
+	}
+
+	c.send(t, "get 없는물건")
+	c.readUntil(t, "여기에는 그것이 없습니다.")
+	c.send(t, "집다 x")
+	c.readUntil(t, "여기에는 그것이 없습니다.")
+	c.send(t, "drop 없는물건")
+	c.readUntil(t, "그런 물건이 없습니다.")
+	c.send(t, "놓다 x")
+	c.readUntil(t, "그런 물건이 없습니다.")
+	c.send(t, "equip 없는물건")
+	c.readUntil(t, "그런 물건이 없습니다.")
+	c.send(t, "들다 x")
+	c.readUntil(t, "그런 물건이 없습니다.")
+	c.send(t, "unequip main_hand")
+	c.readUntil(t, "그 자리에는 아무것도 없습니다.")
+	c.send(t, "벗다 몸")
+	c.readUntil(t, "그 자리에는 아무것도 없습니다.")
+}
+
 func TestAdaptersNeverWriteRoomID(t *testing.T) {
 	err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {

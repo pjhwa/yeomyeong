@@ -157,6 +157,31 @@ func TestTitlePick(t *testing.T) {
 	if _, ok := c.Skill("x"); ok {
 		t.Fatal("nil skill")
 	}
+	if _, ok := c.Lookup("test:swing"); ok {
+		t.Fatal("nil lookup")
+	}
+}
+
+func TestLookupIDAndName(t *testing.T) {
+	cat := loadOK(t)
+	if sk, ok := cat.Lookup("test:swing"); !ok || sk.Name.KO != "휘두르기" {
+		t.Fatalf("id: %+v %v", sk, ok)
+	}
+	if sk, ok := cat.Lookup("TEST:SWING"); !ok || sk.ID != "test:swing" {
+		t.Fatalf("fold: %+v %v", sk, ok)
+	}
+	if sk, ok := cat.Lookup("말솜씨"); !ok || sk.ID != "test:talk" {
+		t.Fatalf("ko: %+v %v", sk, ok)
+	}
+	if sk, ok := cat.Lookup("Swing"); !ok || sk.ID != "test:swing" {
+		t.Fatalf("en: %+v %v", sk, ok)
+	}
+	if _, ok := cat.Lookup("nope"); ok {
+		t.Fatal("missing")
+	}
+	if _, ok := cat.Lookup("  "); ok {
+		t.Fatal("blank")
+	}
 }
 
 func TestNoLevelClassXPOrHardcodedIDs(t *testing.T) {

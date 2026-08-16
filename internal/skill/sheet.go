@@ -35,6 +35,48 @@ func (s Sheet) Title() Localized {
 	return s.cat.Title(s)
 }
 
+// Ranks returns a copy of stored ranks.
+func (s Sheet) Ranks() map[string]int { return copyInts(s.ranks) }
+
+// Stats returns a copy of stored stats.
+func (s Sheet) Stats() map[string]int { return copyInts(s.stats) }
+
+// Bind attaches ranks and stats to this catalog. Nil maps become empty.
+func (c *Catalog) Bind(ranks, stats map[string]int) Sheet {
+	return Sheet{cat: c, ranks: copyInts(ranks), stats: copyInts(stats)}
+}
+
+// Difficulty is the practice trial difficulty (SKILL-TABLE.md).
+// A matching room flag or held item uses the current rank; otherwise max(0, rank-25).
+func Difficulty(rank int, matched bool) int {
+	if rank < 0 {
+		rank = 0
+	}
+	if matched {
+		return rank
+	}
+	if rank < 25 {
+		return 0
+	}
+	return rank - 25
+}
+
+// Always is a deterministic rng hook that always succeeds a Bernoulli trial.
+func Always() float64 { return 0 }
+
+// Never is a deterministic rng hook that always fails a Bernoulli trial.
+func Never() float64 { return 1 }
+
+func copyInts(m map[string]int) map[string]int {
+	out := make(map[string]int, len(m))
+	for k, v := range m {
+		if v > 0 {
+			out[k] = v
+		}
+	}
+	return out
+}
+
 // WithRank returns a copy with id set to n. n<=0 deletes the key.
 func (s Sheet) WithRank(id string, n int) Sheet {
 	out := s.clone()

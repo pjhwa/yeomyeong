@@ -251,6 +251,50 @@ func TestWSLookMoveAndNoExit(t *testing.T) {
 	}
 }
 
+func TestWSPracticeSkillsInvVerbs(t *testing.T) {
+	_, loop, store := startServerStore(t)
+	addr := startWS(t, loop, store)
+	c := dialWS(t, addr)
+	c.send(t, typeCmdSkills, "na", map[string]any{})
+	if payloadString(t, c.readType(t, typeSys), "code") != codeNotAuth {
+		t.Fatal("skills before auth")
+	}
+	c.send(t, typeAuthCreate, "c1", map[string]string{"username": "갑을", "password": "password1"})
+	_ = c.readType(t, typeAuthOK)
+	_ = c.readType(t, typeRoom)
+	waitRoster(t, loop, 1)
+
+	c.send(t, typeCmdSkills, "sk", map[string]any{})
+	c.waitText(t, engine.ChannelSys, "", "소지:")
+	c.waitText(t, engine.ChannelSys, "", "능력:")
+	c.send(t, typeCmdInv, "iv", map[string]any{})
+	c.waitText(t, engine.ChannelSys, "", "소지:")
+
+	c.send(t, typeCmdPractice, "p0", map[string]string{"skill": ""})
+	if payloadString(t, c.readType(t, typeSys), "code") != codeBadFrame {
+		t.Fatal("empty practice")
+	}
+	c.send(t, typeCmdPractice, "p1", map[string]string{"skill": "nope"})
+	c.waitText(t, engine.ChannelSys, "", "그런 숙련은 없습니다.")
+
+	c.send(t, typeCmdGet, "g1", map[string]string{"item": "x"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {
+		t.Fatal("get missing")
+	}
+	c.send(t, typeCmdDrop, "d1", map[string]string{"item": "x"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {
+		t.Fatal("drop missing")
+	}
+	c.send(t, typeCmdEquip, "e1", map[string]string{"item": "x"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeNotFound {
+		t.Fatal("equip missing")
+	}
+	c.send(t, typeCmdUnequip, "u1", map[string]string{"slot": "main_hand"})
+	if payloadString(t, c.readType(t, typeSys), "code") != text.CodeEmptySlot {
+		t.Fatal("unequip empty")
+	}
+}
+
 func TestWSDisconnectRemovesFromRoster(t *testing.T) {
 	_, loop, store := startServerStore(t)
 	c := dialWS(t, startWS(t, loop, store))

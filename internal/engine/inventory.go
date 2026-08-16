@@ -15,13 +15,14 @@ func (l *Loop) get(c Get) {
 		return
 	}
 	room := p.RoomID
-	piles, ok := yworld.TakeStack(l.world.ground[room], c.ItemID, 1)
+	itemID := l.resolveItemID(c.ItemID, l.world.ground[room])
+	piles, ok := yworld.TakeStack(l.world.ground[room], itemID, 1)
 	if !ok {
 		l.sys(p.ConnID, text.GetMissing, text.CodeNotFound)
 		return
 	}
-	if l.carryWeight(p)+l.itemWeight(c.ItemID) > BagCap {
-		l.world.ground[room] = yworld.AddStack(l.world.ground[room], c.ItemID, 1)
+	if l.carryWeight(p)+l.itemWeight(itemID) > BagCap {
+		l.world.ground[room] = yworld.AddStack(l.world.ground[room], itemID, 1)
 		l.sys(p.ConnID, text.GetHeavy, text.CodeTooHeavy)
 		return
 	}
@@ -30,9 +31,9 @@ func (l *Loop) get(c Get) {
 	} else {
 		l.world.ground[room] = piles
 	}
-	p.Bag = yworld.AddStack(p.Bag, c.ItemID, 1)
+	p.Bag = yworld.AddStack(p.Bag, itemID, 1)
 	l.world.roster[c.ConnID] = p
-	l.sysf(p.ConnID, text.GetOK, l.itemName(c.ItemID))
+	l.sysf(p.ConnID, text.GetOK, l.itemName(itemID))
 }
 
 func (l *Loop) dropItem(c DropItem) {
@@ -40,15 +41,16 @@ func (l *Loop) dropItem(c DropItem) {
 	if !ok || c.ItemID == "" {
 		return
 	}
-	bag, ok := yworld.TakeStack(p.Bag, c.ItemID, 1)
+	itemID := l.resolveItemID(c.ItemID, p.Bag)
+	bag, ok := yworld.TakeStack(p.Bag, itemID, 1)
 	if !ok {
 		l.sys(p.ConnID, text.DropMissing, text.CodeNotFound)
 		return
 	}
 	p.Bag = bag
 	l.world.roster[c.ConnID] = p
-	l.world.ground[p.RoomID] = yworld.AddStack(l.world.ground[p.RoomID], c.ItemID, 1)
-	l.sysf(p.ConnID, text.DropOK, l.itemName(c.ItemID))
+	l.world.ground[p.RoomID] = yworld.AddStack(l.world.ground[p.RoomID], itemID, 1)
+	l.sysf(p.ConnID, text.DropOK, l.itemName(itemID))
 }
 
 func (l *Loop) equip(c Equip) {
@@ -56,16 +58,17 @@ func (l *Loop) equip(c Equip) {
 	if !ok || c.ItemID == "" {
 		return
 	}
-	it, ok := l.item(c.ItemID)
+	itemID := l.resolveItemID(c.ItemID, p.Bag)
+	it, ok := l.item(itemID)
 	if !ok || it.Slot == yworld.SlotNone || it.Slot == "" {
 		code, key := text.CodeNotWearable, text.EquipNotWear
-		if !hasStack(p.Bag, c.ItemID) {
+		if !hasStack(p.Bag, itemID) {
 			code, key = text.CodeNotFound, text.EquipMissing
 		}
 		l.sys(p.ConnID, key, code)
 		return
 	}
-	bag, ok := yworld.TakeStack(p.Bag, c.ItemID, 1)
+	bag, ok := yworld.TakeStack(p.Bag, itemID, 1)
 	if !ok {
 		l.sys(p.ConnID, text.EquipMissing, text.CodeNotFound)
 		return
@@ -74,9 +77,9 @@ func (l *Loop) equip(c Equip) {
 	if prev := slotGet(p.Equip, it.Slot); prev != "" {
 		p.Bag = yworld.AddStack(p.Bag, prev, 1)
 	}
-	p.Equip = slotSet(p.Equip, it.Slot, c.ItemID)
+	p.Equip = slotSet(p.Equip, it.Slot, itemID)
 	l.world.roster[c.ConnID] = p
-	l.sysf(p.ConnID, text.EquipOK, l.itemName(c.ItemID))
+	l.sysf(p.ConnID, text.EquipOK, l.itemName(itemID))
 }
 
 func (l *Loop) unequip(c Unequip) {
@@ -84,12 +87,12 @@ func (l *Loop) unequip(c Unequip) {
 	if !ok {
 		return
 	}
-	id := slotGet(p.Equip, c.Slot)
+	id := slotGet(p.Equip, canonicalSlot(c.Slot))
 	if id == "" {
 		l.sys(p.ConnID, text.UnequipEmpty, text.CodeEmptySlot)
 		return
 	}
-	p.Equip = slotSet(p.Equip, c.Slot, "")
+	p.Equip = slotSet(p.Equip, canonicalSlot(c.Slot), "")
 	p.Bag = yworld.AddStack(p.Bag, id, 1)
 	l.world.roster[c.ConnID] = p
 	l.sysf(p.ConnID, text.UnequipOK, l.itemName(id))
@@ -100,10 +103,53 @@ func (l *Loop) sheet(c Sheet) {
 	if !ok {
 		return
 	}
+	if title := l.playerTitle(p); title != "" {
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetTitle, title)})
+	}
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetInv, joinStacks(p.Bag, l.itemName))})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetEquip, l.formatEquip(p.Equip))})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetSkills, joinInts(p.Skills))})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetStats, joinInts(p.Stats))})
+}
+
+func (l *Loop) playerTitle(p Player) string {
+	if l.skills == nil {
+		return ""
+	}
+	t := l.skills.Bind(p.Skills, p.Stats).Title().Text(text.Default)
+	if t == "" {
+		return text.T(text.Default, text.SheetNone)
+	}
+	return t
+}
+
+func (l *Loop) resolveItemID(query string, piles []yworld.Stack) string {
+	q := strings.TrimSpace(query)
+	if q == "" {
+		return ""
+	}
+	for _, s := range piles {
+		if s.ID == q {
+			return s.ID
+		}
+	}
+	for _, s := range piles {
+		if l.itemName(s.ID) == q {
+			return s.ID
+		}
+	}
+	return q
+}
+
+func canonicalSlot(slot string) string {
+	s := strings.TrimSpace(slot)
+	switch strings.ToLower(s) {
+	case yworld.SlotMainHand, "주손":
+		return yworld.SlotMainHand
+	case yworld.SlotBody, "몸":
+		return yworld.SlotBody
+	}
+	return s
 }
 
 func (l *Loop) item(id string) (yworld.Item, bool) {

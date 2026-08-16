@@ -18,6 +18,12 @@ func TestTKoreanAndFallback(t *testing.T) {
 	if got := T(Default, SysRateLimit); got != "rate_limited" {
 		t.Fatalf("rate: %q", got)
 	}
+	if got := T(Default, PracticeMiss); got != "아무것도 자리 잡지 않는다." {
+		t.Fatalf("miss: %q", got)
+	}
+	if got := T(Default, SheetTitle, "아무개"); got != "호칭: 아무개" {
+		t.Fatalf("title: %q", got)
+	}
 	if got := T(LocaleEN, "missing.key"); got != "missing.key" {
 		t.Fatalf("missing: %q", got)
 	}

@@ -120,6 +120,26 @@ func TestStatSideEffect(t *testing.T) {
 	}
 }
 
+func TestDifficultyAndBind(t *testing.T) {
+	if Difficulty(50, true) != 50 || Difficulty(50, false) != 25 || Difficulty(10, false) != 0 || Difficulty(-3, true) != 0 {
+		t.Fatalf("diff %d %d %d %d", Difficulty(50, true), Difficulty(50, false), Difficulty(10, false), Difficulty(-3, true))
+	}
+	cat := loadOK(t)
+	s := cat.Bind(map[string]int{"test:swing": 4, "gone": 0}, map[string]int{statStr: 3})
+	if s.Rank("test:swing") != 4 || s.Stat(statStr) != 3 || s.Rank("gone") != 0 {
+		t.Fatalf("bind %+v", s.Ranks())
+	}
+	ranks, stats := s.Ranks(), s.Stats()
+	ranks["hacked"] = 9
+	stats[statStr] = 99
+	if s.Rank("hacked") != 0 || s.Stat(statStr) != 3 {
+		t.Fatal("mutated")
+	}
+	if Always() != 0 || Never() < 1 {
+		t.Fatal("hooks")
+	}
+}
+
 func TestDefaultRandAndText(t *testing.T) {
 	for i := 0; i < 8; i++ {
 		if v := DefaultRand(); v < 0 || v >= 1 {

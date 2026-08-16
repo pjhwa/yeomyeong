@@ -43,6 +43,10 @@ const (
 	SheetStats      = "sheet.stats"
 	SheetNone       = "sheet.none"
 	SheetEquipSlots = "sheet.equip_slots"
+	SheetTitle      = "sheet.title"
+	PracticeGain    = "practice.gain"
+	PracticeMiss    = "practice.miss"
+	PracticeUnknown = "practice.unknown"
 )
 
 // Sys codes for inventory (additive; WIRE-PROTOCOL M1 codes unchanged).
@@ -89,6 +93,10 @@ var catalog = map[string]entry{
 	SheetStats:      {ko: "능력: %s"},
 	SheetNone:       {ko: "없음"},
 	SheetEquipSlots: {ko: "주손 %s, 몸 %s"},
+	SheetTitle:      {ko: "호칭: %s"},
+	PracticeGain:    {ko: "%s 숙련이 늘었습니다. (%d)"},
+	PracticeMiss:    {ko: "아무것도 자리 잡지 않는다."},
+	PracticeUnknown: {ko: "그런 숙련은 없습니다."},
 }
 
 var dirKey = map[string]string{
