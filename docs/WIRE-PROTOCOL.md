@@ -10,7 +10,7 @@ Related: [EVENT-BUS.md](EVENT-BUS.md).
 
 | Transport | Address env | Default | Framing |
 |---|---|---|---|
-| Telnet (compat) | `YEOMYEONG_TELNET_ADDR` | `:4001` | CRLF or LF lines. IAC bytes (`0xFF`) are dropped, not negotiated. |
+| Telnet (compat) | `YEOMYEONG_TELNET_ADDR` | `:4001` | CRLF, LF, or CR. On accept the server sends `IAC WILL ECHO` and `IAC WILL SGA` (client local echo off). Inbound IAC is still dropped. Password lines are not echoed. |
 | WebSocket (primary) | `YEOMYEONG_WS_ADDR` | `:8080` | JSON text frames on `GET /ws` |
 
 Both transports enqueue the **same** command types on the game loop.
@@ -107,9 +107,12 @@ Server speaks Korean. Bytes are UTF-8.
 
 ```
 여명 · YEOMYEONG
+한글이 깨지면: nc localhost 4001
 계정 이름:
 암호:
 ```
+
+`한글이 깨지면` names the bound TCP port. macOS `/usr/bin/telnet` plus a Hangul IME cannot compose syllables; use `nc` (or the WebSocket client). The server still accepts UTF-8.
 
 If the name is unknown:
 

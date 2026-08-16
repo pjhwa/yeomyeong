@@ -78,7 +78,8 @@ docker compose up
 Then connect with either:
 
 ```bash
-telnet localhost 4001        # classic (override with YEOMYEONG_TELNET_ADDR)
+nc localhost 4001            # Hangul-safe classic client
+telnet localhost 4001        # classic (macOS telnet breaks Hangul IME)
 open http://localhost:8080   # web client
 ```
 

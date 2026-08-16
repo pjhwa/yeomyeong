@@ -472,3 +472,23 @@ Format:
   10) and logs the bound address.
 - Consequences: `telnet localhost 4001`. Override with the env var. Read
   the `telnet listening` log line if a fallback fired.
+
+## D-038 — Telnet takes echo; passwords stay off the wire
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: Commissioner play on macOS `telnet localhost 4001` showed
+  passwords in the clear and Hangul / `look` input as C0 garbage
+  (`c^E^Sc^C`, `l'^Qk^K$`). The adapter dropped inbound IAC but never
+  sent `WILL ECHO`, so the client kept local echo. BSD telnet plus a
+  Hangul IME cannot compose syllables; that is a client limit, not a
+  missing UTF-8 decoder (room cards already print Hangul).
+- Decision: On accept, send `IAC WILL ECHO` and `IAC WILL SGA`. The
+  server echoes typed bytes except at `암호:`. Backspace/DEL erase the
+  last rune; other C0 controls are dropped. The banner adds
+  `한글이 깨지면: nc localhost <port>`. Inbound IAC is still skipped —
+  this is not a full option engine. WIRE-PROTOCOL is updated to match.
+- Consequences: `nc localhost 4001` is the Hangul-safe classic client.
+  macOS `telnet` is supported for ASCII movement and English verbs.
+  Do not add linemode or a second input parser.
