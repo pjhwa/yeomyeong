@@ -150,6 +150,10 @@ func (s *Server) handle(ctx context.Context, raw stdnet.Conn) {
 	}
 	sess.user = acc.Username
 
+	sheet, err := s.Store.LoadSheet(ctx, acc.ID)
+	if err != nil {
+		return
+	}
 	out, err := s.Loop.Attach(ctx, id)
 	if err != nil {
 		return
@@ -159,6 +163,7 @@ func (s *Server) handle(ctx context.Context, raw stdnet.Conn) {
 		AccountID: engine.AccountID(acc.ID),
 		Username:  acc.Username,
 		Session:   tok.Token,
+		Sheet:     sheet,
 	}) {
 		_ = sess.writeLine(text.T(text.Default, text.SysRateLimit))
 		return
@@ -430,6 +435,9 @@ func formatRoom(e engine.Room) []string {
 	}
 	if len(e.Who) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomHere, strings.Join(e.Who, ", ")))
+	}
+	if len(e.Ground) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomGround, strings.Join(e.Ground, ", ")))
 	}
 	return lines
 }

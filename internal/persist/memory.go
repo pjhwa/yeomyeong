@@ -4,11 +4,14 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
 type memAccount struct {
 	Account
-	hash string
+	hash  string
+	sheet world.Sheet
 }
 
 // Memory is the in-memory AccountStore. It may use a mutex: it is not world state (D-012).
@@ -56,7 +59,7 @@ func (m *Memory) Create(ctx context.Context, username, password string) (Account
 		return Account{}, ErrNameTaken
 	}
 	acc := Account{ID: id, Username: username, CreatedAt: m.now()}
-	rec := &memAccount{Account: acc, hash: hash}
+	rec := &memAccount{Account: acc, hash: hash, sheet: world.CloneSheet(world.Sheet{})}
 	m.byFold[fold] = rec
 	m.byID[id] = rec
 	return acc, nil
@@ -149,5 +152,34 @@ func (m *Memory) RevokeSession(ctx context.Context, token string) error {
 	m.mu.Lock()
 	delete(m.sessions, token)
 	m.mu.Unlock()
+	return nil
+}
+
+// LoadSheet returns a copy of the account sheet. Missing accounts are ErrNotFound.
+func (m *Memory) LoadSheet(ctx context.Context, accountID string) (world.Sheet, error) {
+	if err := ctx.Err(); err != nil {
+		return world.Sheet{}, err
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	rec, ok := m.byID[accountID]
+	if !ok {
+		return world.Sheet{}, ErrNotFound
+	}
+	return world.CloneSheet(rec.sheet), nil
+}
+
+// SaveSheet replaces the account sheet. Missing accounts are ErrNotFound.
+func (m *Memory) SaveSheet(ctx context.Context, accountID string, sheet world.Sheet) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	rec, ok := m.byID[accountID]
+	if !ok {
+		return ErrNotFound
+	}
+	rec.sheet = world.CloneSheet(sheet)
 	return nil
 }

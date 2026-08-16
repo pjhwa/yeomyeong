@@ -1,5 +1,7 @@
 package engine
 
+import yworld "github.com/pjhwa/yeomyeong/internal/world"
+
 // ConnID identifies a live connection. Assigned by the net adapter.
 type ConnID string
 
@@ -13,11 +15,13 @@ type Command interface {
 }
 
 // EnterWorld inserts a player on the roster after persist auth succeeds.
+// Sheet is loaded by the adapter before enqueue (D-034).
 type EnterWorld struct {
 	ConnID    ConnID
 	AccountID AccountID
 	Username  string
 	Session   string
+	Sheet     yworld.Sheet
 }
 
 // Say delivers a line to roster connections in the same room (D-030).
@@ -42,11 +46,45 @@ type LeaveWorld struct {
 	ConnID ConnID
 }
 
+// Get moves one ground unit of ItemID into the bag if weight allows.
+type Get struct {
+	ConnID ConnID
+	ItemID string
+}
+
+// DropItem is EVENT-BUS Drop. The disconnect event is already named Drop.
+type DropItem struct {
+	ConnID ConnID
+	ItemID string
+}
+
+// Equip moves a wearable bag item into its catalog slot.
+type Equip struct {
+	ConnID ConnID
+	ItemID string
+}
+
+// Unequip moves Slot (main_hand|body) back into the bag.
+type Unequip struct {
+	ConnID ConnID
+	Slot   string
+}
+
+// Sheet asks the loop for skills/stats/inv text.
+type Sheet struct {
+	ConnID ConnID
+}
+
 func (EnterWorld) command() {}
 func (Say) command()        {}
 func (Look) command()       {}
 func (Move) command()       {}
 func (LeaveWorld) command() {}
+func (Get) command()        {}
+func (DropItem) command()   {}
+func (Equip) command()      {}
+func (Unequip) command()    {}
+func (Sheet) command()      {}
 
 // Control requests served by the same queue so they observe FIFO order
 // relative to world-mutating commands. Not part of the public bus.

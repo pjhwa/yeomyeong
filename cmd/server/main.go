@@ -46,7 +46,7 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 		defer func() { _ = c.Close() }()
 	}
 
-	cat, err := loadWorld(log, contentRoot)
+	cat, items, ground, err := loadWorld(log, contentRoot)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,10 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	loop := engine.NewWithCatalog(log, cat)
+	saver := persist.NewAsyncSaver(store, log)
+	defer saver.Close()
+
+	loop := engine.NewWithWorld(log, cat, items, ground, saver)
 	loopDone := make(chan struct{})
 	go func() {
 		defer close(loopDone)
@@ -112,26 +115,28 @@ func serveListeners(ctx context.Context, log *slog.Logger, cfg config.Config, lo
 // loadWorld loads rooms, optional items, and optional spawns. Missing zones is
 // not a boot failure. Invalid content is fatal. Real-tree spawn is
 // dalbitgol:gate (D-028). Skills load separately (loadSkills).
-func loadWorld(log *slog.Logger, root string) (*world.Catalog, error) {
+func loadWorld(log *slog.Logger, root string) (*world.Catalog, *world.Items, map[string][]world.Stack, error) {
 	zones := filepath.Join(root, "zones")
 	st, err := os.Stat(zones)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Info("no content")
-			return nil, nil
+			return nil, nil, nil, nil
 		}
-		return nil, fmt.Errorf("stat content zones: %w", err)
+		return nil, nil, nil, fmt.Errorf("stat content zones: %w", err)
 	}
 	if !st.IsDir() {
-		return nil, fmt.Errorf("content zones %s is not a directory", zones)
+		return nil, nil, nil, fmt.Errorf("content zones %s is not a directory", zones)
 	}
 	w, err := content.LoadWorld(root, world.SpawnID)
 	if err != nil {
-		return nil, fmt.Errorf("load content: %w", err)
+		return nil, nil, nil, fmt.Errorf("load content: %w", err)
 	}
 	log.Info("content loaded", "rooms", w.Rooms.Len(), "items", w.Items.Len(), "spawn", w.Rooms.Spawn())
-	return w.Rooms, nil
+	return w.Rooms, w.Items, w.Ground, nil
 }
+
+var _ engine.SheetSink = (*persist.AsyncSaver)(nil)
 
 // loadSkills loads content/skills if that directory exists. Missing skills is
 // not a boot failure. Invalid YAML is fatal. Practice verbs are not wired.
