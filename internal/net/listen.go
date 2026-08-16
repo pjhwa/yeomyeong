@@ -31,7 +31,7 @@ func listenTCP(addr string, log *slog.Logger, kind string) (stdnet.Listener, err
 			return ln, nil
 		}
 		last = err
-		if !isAddrInUse(err) {
+		if !isAddrInUse(err) || !allowPortFallback(cur) {
 			return nil, err
 		}
 		next, err := nextTCPAddr(cur)
@@ -41,6 +41,17 @@ func listenTCP(addr string, log *slog.Logger, kind string) (stdnet.Listener, err
 		cur = next
 	}
 	return nil, fmt.Errorf("listen %s %s: %w", kind, addr, last)
+}
+
+// allowPortFallback is only for the documented player ports. Tests bind
+// ephemeral 127.0.0.1:N and dial that exact N — stepping forward would
+// make them hang.
+func allowPortFallback(addr string) bool {
+	_, port, err := stdnet.SplitHostPort(addr)
+	if err != nil {
+		return false
+	}
+	return port == "4000" || port == "4001"
 }
 
 func isAddrInUse(err error) bool {

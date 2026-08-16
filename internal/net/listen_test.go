@@ -2,6 +2,7 @@ package net
 
 import (
 	"errors"
+	stdnet "net"
 	"syscall"
 	"testing"
 )
@@ -20,20 +21,31 @@ func TestNextTCPAddr(t *testing.T) {
 	}
 }
 
-func TestListenTCPFallsBackWhenBusy(t *testing.T) {
-	held, err := listenTCP("127.0.0.1:0", nil, "test")
+func TestListenTCPFallsBackOnPlayerPort(t *testing.T) {
+	held, err := stdnet.Listen("tcp", "127.0.0.1:4001")
 	if err != nil {
-		t.Fatal(err)
+		t.Skip(err)
 	}
 	defer func() { _ = held.Close() }()
-	busy := held.Addr().String()
-	ln, err := listenTCP(busy, nil, "test")
+	ln, err := listenTCP("127.0.0.1:4001", nil, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() { _ = ln.Close() }()
-	if ln.Addr().String() == busy {
-		t.Fatal("fallback bound the busy address")
+	if ln.Addr().String() == held.Addr().String() {
+		t.Fatal("fallback bound the busy player port")
+	}
+}
+
+func TestListenTCPDoesNotMoveEphemeralPorts(t *testing.T) {
+	held, err := stdnet.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = held.Close() }()
+	_, err = listenTCP(held.Addr().String(), nil, "test")
+	if err == nil {
+		t.Fatal("ephemeral busy port must not step forward")
 	}
 }
 
