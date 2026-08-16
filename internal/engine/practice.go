@@ -20,6 +20,7 @@ func (l *Loop) practice(c Practice) {
 		return
 	}
 	sheet := l.skills.Bind(p.Skills, p.Stats)
+	oldTitle := sheet.Title().Text(text.Default)
 	rank := sheet.Rank(sk.ID)
 	diff := skill.Difficulty(rank, l.practiceMatched(p, sk))
 	gained, next := sheet.TryGain(sk.ID, diff, l.rng)
@@ -27,10 +28,24 @@ func (l *Loop) practice(c Practice) {
 	p.Stats = next.Stats()
 	l.world.roster[c.ConnID] = p
 	if gained {
-		l.sysf(p.ConnID, text.PracticeGain, sk.Name.Text(text.Default), next.Rank(sk.ID))
+		line := skill.LineAt(sk.Gain, next.Rank(sk.ID))
+		if line == "" {
+			line = text.T(text.Default, text.PracticeGain)
+		}
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: line})
+		newTitle := next.Title().Text(text.Default)
+		if newTitle != "" && newTitle != oldTitle {
+			if ann := l.skills.Announce(next).Text(text.Default); ann != "" {
+				l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: ann})
+			}
+		}
 		return
 	}
-	l.sysf(p.ConnID, text.PracticeMiss)
+	line := skill.LineAt(sk.Miss, rank)
+	if line == "" {
+		line = text.T(text.Default, text.PracticeMiss)
+	}
+	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: line})
 }
 
 func (l *Loop) practiceMatched(p Player, sk skill.Skill) bool {

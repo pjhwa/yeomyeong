@@ -77,6 +77,17 @@ func TestLoadM2(t *testing.T) {
 	if n := len(rules); n == 0 || rules[n-1].Title.KO != "아무개" || len(rules[n-1].Require) != 0 {
 		t.Fatalf("아무개 last: %+v", rules)
 	}
+	smith, ok := cat.Lookup("두드리다")
+	if !ok || smith.Name.KO != "대장" || len(smith.Gain) == 0 || len(smith.Miss) == 0 {
+		t.Fatalf("두드리다: %+v %v", smith, ok)
+	}
+	speech, ok := cat.Lookup("이야기하다")
+	if !ok || speech.Name.KO != "언변" || speech.PracticeFlag != "salon" {
+		t.Fatalf("이야기하다: %+v %v", speech, ok)
+	}
+	if Band(3) != "미숙" || Band(15) != "미숙" || Band(20) != "수련" {
+		t.Fatalf("band %s %s %s", Band(3), Band(15), Band(20))
+	}
 }
 
 func TestLoadDirAndErrors(t *testing.T) {

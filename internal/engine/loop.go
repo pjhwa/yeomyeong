@@ -85,6 +85,15 @@ func (l *Loop) WithSkills(cat *skill.Catalog) *Loop {
 	return l
 }
 
+// KnowsSkill reports whether q is a skill id, Korean name, or practice verb.
+func (l *Loop) KnowsSkill(q string) bool {
+	if l == nil || l.skills == nil {
+		return false
+	}
+	_, ok := l.skills.Lookup(q)
+	return ok
+}
+
 // WithRand injects the Practice rng. Nil uses skill.DefaultRand. Call before Run.
 func (l *Loop) WithRand(rng func() float64) *Loop {
 	l.rng = rng

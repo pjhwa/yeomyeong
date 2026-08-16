@@ -432,6 +432,12 @@ func (s *session) dispatch(line string) error {
 			}
 			return nil
 		}
+		if s.loop.KnowsSkill(verb) {
+			if !s.loop.Submit(engine.Practice{ConnID: s.id, SkillID: verb}) {
+				return s.writeLine(text.T(text.Default, text.SysRateLimit))
+			}
+			return nil
+		}
 		return s.writeLine(text.T(text.Default, text.CmdUnknown))
 	}
 	return nil

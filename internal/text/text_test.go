@@ -18,6 +18,9 @@ func TestTKoreanAndFallback(t *testing.T) {
 	if got := T(Default, SysRateLimit); got != "rate_limited" {
 		t.Fatalf("rate: %q", got)
 	}
+	if got := T(Default, PracticeGain); got != "손끝이 조금 기억한다." {
+		t.Fatalf("gain fallback: %q", got)
+	}
 	if got := T(Default, PracticeMiss); got != "아무것도 자리 잡지 않는다." {
 		t.Fatalf("miss: %q", got)
 	}

@@ -71,7 +71,7 @@ The loader canonicalizes both forms to `{ko, en}`.
 | `name` | yes | Localized. Non-empty `ko`. |
 | `description` | yes | Localized. 2–4 sentences in `ko` (style, not schema). |
 | `exits` | no | Keys: `north` `south` `east` `west` `up` `down`. Values: existing room ids (checked after the full load). |
-| `flags` | no | Closed set: `safe`, `town`, `market`, `indoor`, `dark`, `forge`, `kitchen`, `press`, `clinic`, `yard`. Unknown flag = load error. |
+| `flags` | no | Closed set: `safe`, `town`, `market`, `indoor`, `dark`, `forge`, `kitchen`, `press`, `clinic`, `yard`, `salon`. Unknown flag = load error. |
 | `market` | no | Slug of a price table. Unused in M1; stored for M3. |
 | `heat_modifier` | no | Float, default `1.0`. Unused in M1; stored for M5. |
 | `ambient` | no | List of localized strings. Flavor only in M1. |

@@ -21,7 +21,7 @@ Go로 구축. [DikuMUD](https://dikumud.com) (1990)에서 영감을 받았고, �
 
 ---
 
-> **⚠️ 상태: M2 숙련이 동작한다.** 경제와 1부 서사는 아직 설계 목표다.
+> **⚠️ 상태: M2 숙련 재검수 중 (D-040).** 경제와 1부 서사는 아직 설계 목표다.
 > 현재 범위는 [로드맵](#로드맵)을 본다.
 
 <!-- TODO(M1): replace with asciinema demo GIF — 30s: market → haggle → checkpoint → deliver -->

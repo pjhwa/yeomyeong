@@ -21,7 +21,7 @@ Built in Go. Inspired by [DikuMUD](https://dikumud.com) (1990), sharing none of 
 
 ---
 
-> **⚠️ Status: M2 skills are live.** Economy and Act I are still the design
+> **⚠️ Status: M2 playtest reopened (D-040).** Economy and Act I are still the design
 > target. Follow the [roadmap](#roadmap).
 
 <!-- TODO(M1): replace with asciinema demo GIF — 30s: market → haggle → checkpoint → deliver -->
