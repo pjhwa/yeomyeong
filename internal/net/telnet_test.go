@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -128,6 +129,69 @@ func TestDisconnectRemovesFromRoster(t *testing.T) {
 	waitRoster(t, loop, 0)
 }
 
+func TestNegotiateSendsWillEchoAndSGA(t *testing.T) {
+	addr, _ := startServer(t)
+	c := dial(t, addr)
+	got := c.readN(t, 6)
+	want := []byte{iac, iacWill, 1, iac, iacWill, 3}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("negotiate prefix: %v want %v", got, want)
+	}
+	banner := c.readUntil(t, "계정 이름:")
+	if !strings.Contains(banner, "여명 · YEOMYEONG") {
+		t.Fatalf("missing banner: %q", banner)
+	}
+	if !strings.Contains(banner, "한글이 깨지면: nc ") {
+		t.Fatalf("missing hangul hint: %q", banner)
+	}
+}
+
+func TestPasswordHiddenUsernameEchoed(t *testing.T) {
+	addr, _ := startServer(t)
+	c := dial(t, addr)
+	c.readUntil(t, "계정 이름:")
+	c.send(t, "갑을")
+	nameChunk := c.readUntil(t, "암호:")
+	if !strings.Contains(nameChunk, "갑을") {
+		t.Fatalf("username must be echoed, got %q", nameChunk)
+	}
+	c.send(t, "s3cretPW")
+	passChunk := c.readUntil(t, "새로 만드시겠습니까?")
+	if strings.Contains(passChunk, "s3cretPW") {
+		t.Fatalf("password must not be echoed, got %q", passChunk)
+	}
+	c.send(t, "y")
+	c.readUntil(t, "암호:")
+	c.send(t, "s3cretPW")
+	createChunk := c.readUntil(t, "갑을 님이 자리에 앉았습니다.")
+	if strings.Contains(createChunk, "s3cretPW") {
+		t.Fatalf("create password must not be echoed, got %q", createChunk)
+	}
+}
+
+func TestBackspaceAndControlChars(t *testing.T) {
+	addr, loop := startServer(t)
+	c := dial(t, addr)
+	c.readUntil(t, "계정 이름:")
+	// "갑x<BS>을" plus C0 junk (^E ^S) must become "갑을".
+	raw := []byte("갑")
+	raw = append(raw, 'x', 0x08)
+	raw = append(raw, []byte("을")...)
+	raw = append(raw, 0x05, 0x13, '\n')
+	_ = c.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	if _, err := c.conn.Write(raw); err != nil {
+		t.Fatal(err)
+	}
+	c.readUntil(t, "암호:")
+	c.send(t, "password1")
+	c.readUntil(t, "새로 만드시겠습니까?")
+	c.send(t, "y")
+	c.readUntil(t, "암호:")
+	c.send(t, "password1")
+	c.readUntil(t, "갑을 님이 자리에 앉았습니다.")
+	waitRoster(t, loop, 1)
+}
+
 func TestExistingLoginAndIAC(t *testing.T) {
 	addr, _, store := startServerStore(t)
 	if _, err := store.Create(context.Background(), "갑을", "password1"); err != nil {
@@ -173,6 +237,36 @@ func TestReadLineCRLFAndIAC(t *testing.T) {
 	got, err = readLine(r)
 	if err != nil || got != "z" {
 		t.Fatalf("subneg: %q %v", got, err)
+	}
+	got, err = readLineSoon(t, r, a, []byte("cronly\r"))
+	if err != nil || got != "cronly" {
+		t.Fatalf("bare cr: %q %v", got, err)
+	}
+	got, err = readLineSoon(t, r, a, []byte("crnul\r\x00"))
+	if err != nil || got != "crnul" {
+		t.Fatalf("cr nul: %q %v", got, err)
+	}
+}
+
+func readLineSoon(t *testing.T, r *bufio.Reader, w stdnet.Conn, payload []byte) (string, error) {
+	t.Helper()
+	type res struct {
+		s   string
+		err error
+	}
+	ch := make(chan res, 1)
+	go func() {
+		s, err := readLine(r)
+		ch <- res{s, err}
+	}()
+	if _, err := w.Write(payload); err != nil {
+		return "", err
+	}
+	select {
+	case got := <-ch:
+		return got.s, got.err
+	case <-time.After(2 * time.Second):
+		return "", errors.New("timeout")
 	}
 }
 
@@ -350,6 +444,16 @@ func dial(t *testing.T, addr string) *testConn {
 	}
 	t.Cleanup(func() { _ = c.Close() })
 	return &testConn{conn: c}
+}
+
+func (c *testConn) readN(t *testing.T, n int) []byte {
+	t.Helper()
+	_ = c.conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	buf := make([]byte, n)
+	if _, err := io.ReadFull(c.conn, buf); err != nil {
+		t.Fatalf("readN %d: %v", n, err)
+	}
+	return buf
 }
 
 func (c *testConn) send(t *testing.T, line string) {
