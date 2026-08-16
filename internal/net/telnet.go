@@ -22,14 +22,14 @@ import (
 	"github.com/pjhwa/yeomyeong/internal/text"
 )
 
-// Korean auth prompts remain WIRE-PROTOCOL literals. Sys lines come from
-// internal/text (D-016 → D-029) without wording changes.
+// Korean auth prompts are WIRE-PROTOCOL literals. Sys lines come from
+// internal/text (D-016, D-029, D-041 everyday speech).
 const (
 	banner       = "여명 · YEOMYEONG"
-	promptName   = "계정 이름:"
-	promptPass   = "암호:"
-	promptCreate = "그 이름은 장부에 없습니다. 새로 만드시겠습니까? (y/n)"
-	msgBadCreds  = "이름이나 암호가 맞지 않습니다."
+	promptName   = "이름:"
+	promptPass   = "비밀번호:"
+	promptCreate = "없는 이름입니다. 새로 만드시겠습니까? (y/n)"
+	msgBadCreds  = "이름이나 비밀번호가 맞지 않습니다."
 	promptCmd    = ">"
 
 	maxLine   = 4096
@@ -380,7 +380,7 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
-	case low == "skills" || verb == "숙련" || low == "inv" || verb == "소지":
+	case low == "skills" || verb == "숙련" || verb == "기술" || low == "inv" || verb == "소지" || verb == "가방":
 		if !s.loop.Submit(engine.Sheet{ConnID: s.id}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}

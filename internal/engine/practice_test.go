@@ -75,7 +75,7 @@ func TestTitlesDifferAtFifteen(t *testing.T) {
 	if !hasBody(drain(outA), text.T(text.Default, text.SheetTitle, "달빛골의 대장장이")) {
 		t.Fatal("smith title")
 	}
-	if !hasBody(drain(outB), text.T(text.Default, text.SheetTitle, "말을 부리는 자")) {
+	if !hasBody(drain(outB), text.T(text.Default, text.SheetTitle, "말 잘하는 사람")) {
 		t.Fatal("speech title")
 	}
 }
@@ -114,7 +114,7 @@ func TestTitleAnnounceAndKoreanSheet(t *testing.T) {
 	l.Submit(Sheet{ConnID: "a"})
 	_ = mustSnapshot(t, l)
 	evs := drain(out)
-	if !hasBody(evs, "사람들은 그대를 달빛골의 대장장이라고 부른다.") {
+	if !hasBody(evs, "사람들이 이제 달빛골의 대장장이라고 부릅니다.") {
 		t.Fatalf("missing title announce: %#v", evs)
 	}
 	if !hasBody(evs, text.T(text.Default, text.SheetTitle, "달빛골의 대장장이")) {
@@ -122,11 +122,11 @@ func TestTitleAnnounceAndKoreanSheet(t *testing.T) {
 	}
 	var skillsLine string
 	for _, ev := range evs {
-		if tx, ok := ev.(Text); ok && strings.HasPrefix(tx.Body, "숙련:") {
+		if tx, ok := ev.(Text); ok && strings.HasPrefix(tx.Body, "기술:") {
 			skillsLine = tx.Body
 		}
 	}
-	if !strings.Contains(skillsLine, "대장 미숙") {
+	if !strings.Contains(skillsLine, "대장 초보") {
 		t.Fatalf("want Korean band, got %q", skillsLine)
 	}
 	if strings.Contains(skillsLine, "smith") || strings.Contains(skillsLine, "15") {
