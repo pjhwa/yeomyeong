@@ -82,7 +82,7 @@ func (s *Server) BoundAddr() string {
 
 // Serve listens until ctx is cancelled. It returns nil on shutdown.
 func (s *Server) Serve(ctx context.Context) error {
-	ln, err := stdnet.Listen("tcp", s.Addr)
+	ln, err := listenTCP(s.Addr, s.Log, "telnet")
 	if err != nil {
 		return err
 	}

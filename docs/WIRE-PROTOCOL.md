@@ -10,7 +10,7 @@ Related: [EVENT-BUS.md](EVENT-BUS.md).
 
 | Transport | Address env | Default | Framing |
 |---|---|---|---|
-| Telnet (compat) | `YEOMYEONG_TELNET_ADDR` | `:4000` | CRLF or LF lines. IAC bytes (`0xFF`) are dropped, not negotiated. |
+| Telnet (compat) | `YEOMYEONG_TELNET_ADDR` | `:4001` | CRLF or LF lines. IAC bytes (`0xFF`) are dropped, not negotiated. |
 | WebSocket (primary) | `YEOMYEONG_WS_ADDR` | `:8080` | JSON text frames on `GET /ws` |
 
 Both transports enqueue the **same** command types on the game loop.
