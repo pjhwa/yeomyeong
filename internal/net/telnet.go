@@ -43,6 +43,10 @@ const (
 	iacWont   = 252
 	iacDo     = 253
 	iacDont   = 254
+	optEcho   = 1
+	optSGA    = 3
+	telnetBS  = 0x08
+	telnetDEL = 0x7f
 )
 
 var connSeq atomic.Uint64
@@ -118,6 +122,9 @@ func (s *Server) Serve(ctx context.Context) error {
 func (s *Server) handle(ctx context.Context, raw stdnet.Conn) {
 	defer func() { _ = raw.Close() }()
 	id := engine.ConnID(fmt.Sprintf("telnet-%d", connSeq.Add(1)))
+	if err := writeNegotiate(raw); err != nil {
+		return
+	}
 	sess := &session{
 		id:    id,
 		raw:   raw,
@@ -195,6 +202,9 @@ func (s *session) auth(ctx context.Context) (persist.Account, persist.Session, e
 	if err := s.writeLine(banner); err != nil {
 		return zeroAcc, zeroTok, err
 	}
+	if err := s.writeLine(hangulHint(s.raw.LocalAddr())); err != nil {
+		return zeroAcc, zeroTok, err
+	}
 	for {
 		if err := ctx.Err(); err != nil {
 			return zeroAcc, zeroTok, err
@@ -213,7 +223,7 @@ func (s *session) auth(ctx context.Context) (persist.Account, persist.Session, e
 		if err := s.writeLine(promptPass); err != nil {
 			return zeroAcc, zeroTok, err
 		}
-		pass, err := s.readLine()
+		pass, err := s.readSecret()
 		if err != nil {
 			return zeroAcc, zeroTok, err
 		}
@@ -239,7 +249,7 @@ func (s *session) auth(ctx context.Context) (persist.Account, persist.Session, e
 			if err := s.writeLine(promptPass); err != nil {
 				return zeroAcc, zeroTok, err
 			}
-			pass, err = s.readLine()
+			pass, err = s.readSecret()
 			if err != nil {
 				return zeroAcc, zeroTok, err
 			}
@@ -446,16 +456,41 @@ func (s *session) writeEvent(ev engine.Event) error {
 }
 
 func (s *session) writeLine(line string) error {
+	return s.writeRaw(line + "\r\n")
+}
+
+func (s *session) writeRaw(p string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	_ = s.raw.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	_, err := io.WriteString(s.raw, line+"\r\n")
+	_, err := io.WriteString(s.raw, p)
 	return err
 }
 
 func (s *session) readLine() (string, error) {
 	_ = s.raw.SetReadDeadline(time.Now().Add(readIdle))
-	return readLine(s.r)
+	return readLineInto(s.r, s.writeRaw, true)
+}
+
+func (s *session) readSecret() (string, error) {
+	_ = s.raw.SetReadDeadline(time.Now().Add(readIdle))
+	return readLineInto(s.r, s.writeRaw, false)
+}
+
+func writeNegotiate(c stdnet.Conn) error {
+	_ = c.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	_, err := c.Write([]byte{iac, iacWill, optEcho, iac, iacWill, optSGA})
+	return err
+}
+
+func hangulHint(addr stdnet.Addr) string {
+	port := "4001"
+	if addr != nil {
+		if _, p, err := stdnet.SplitHostPort(addr.String()); err == nil && p != "" {
+			port = p
+		}
+	}
+	return "한글이 깨지면: nc localhost " + port
 }
 
 func formatText(e engine.Text) string {
@@ -527,9 +562,19 @@ func splitCmd(line string) (verb, rest string) {
 	return line, ""
 }
 
-// readLine accepts CRLF or LF. IAC command sequences are skipped (not
-// negotiated). Lone IAC bytes (0xFF) are dropped as WIRE-PROTOCOL requires.
+// readLine accepts CRLF, LF, CR, or CR NUL. Inbound IAC is skipped.
+// Lone IAC bytes (0xFF) are dropped as WIRE-PROTOCOL requires.
 func readLine(r *bufio.Reader) (string, error) {
+	return readLineInto(r, nil, false)
+}
+
+func readLineInto(r *bufio.Reader, out func(string) error, echo bool) (string, error) {
+	write := func(s string) error {
+		if out == nil {
+			return nil
+		}
+		return out(s)
+	}
 	var buf []byte
 	over := false
 	for {
@@ -537,14 +582,42 @@ func readLine(r *bufio.Reader) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if b == '\n' {
+		if b == '\n' || b == '\r' {
+			if b == '\r' {
+				if r.Buffered() > 0 {
+					if p, err := r.Peek(1); err == nil && (p[0] == '\n' || p[0] == 0) {
+						_, _ = r.ReadByte()
+					}
+				}
+			} else if n := len(buf); n > 0 && buf[n-1] == '\r' {
+				buf = buf[:n-1]
+			}
 			if over {
 				return "", nil
 			}
-			if n := len(buf); n > 0 && buf[n-1] == '\r' {
-				buf = buf[:n-1]
+			if err := write("\r\n"); err != nil {
+				return "", err
 			}
 			return string(buf), nil
+		}
+		if b == telnetBS || b == telnetDEL {
+			if over || len(buf) == 0 {
+				continue
+			}
+			_, size := utf8.DecodeLastRune(buf)
+			if size < 1 {
+				size = 1
+			}
+			buf = buf[:len(buf)-size]
+			if echo {
+				if err := write("\b \b"); err != nil {
+					return "", err
+				}
+			}
+			continue
+		}
+		if b < 0x20 {
+			continue
 		}
 		if over {
 			continue
@@ -554,6 +627,11 @@ func readLine(r *bufio.Reader) (string, error) {
 			continue
 		}
 		buf = append(buf, b)
+		if echo {
+			if err := write(string([]byte{b})); err != nil {
+				return "", err
+			}
+		}
 	}
 }
 
