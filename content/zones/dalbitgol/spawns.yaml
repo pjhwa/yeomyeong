@@ -1,0 +1,24 @@
+# Extra flags + ground piles. Does not rewrite room prose.
+
+- room: dalbitgol:smithy
+  flags_add: [forge]
+  items: [hammer]
+
+- room: dalbitgol:inn
+  flags_add: [kitchen]
+  items: [kitchen-knife]
+
+- room: dalbitgol:printshop
+  flags_add: [press]
+  items: [composing-stick]
+
+- room: dalbitgol:shrine
+  flags_add: [clinic]
+  items: [bandage]
+
+- room: dalbitgol:school-yard
+  flags_add: [yard]
+  items: [wooden-sword]
+
+- room: dalbitgol:warehouse
+  items: [lockpick]
