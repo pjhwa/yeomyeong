@@ -38,6 +38,13 @@ All client frames:
 | `cmd.say` | `{ "text" }` | After `auth.ok` |
 | `cmd.look` | `{}` | After `auth.ok` |
 | `cmd.move` | `{ "dir" }` | After `auth.ok`. `dir` is `north`/`south`/`east`/`west`/`up`/`down` |
+| `cmd.practice` | `{ "skill" }` | After `auth.ok`. `skill` is a SKILL-TABLE id or Korean name |
+| `cmd.skills` | `{}` | After `auth.ok` — sheet (title, ranks, stats) |
+| `cmd.inv` | `{}` | After `auth.ok` |
+| `cmd.get` | `{ "item" }` | After `auth.ok` |
+| `cmd.drop` | `{ "item" }` | After `auth.ok` |
+| `cmd.equip` | `{ "item" }` | After `auth.ok` |
+| `cmd.unequip` | `{ "slot" }` | After `auth.ok`. `slot` is `main_hand` or `body` |
 | `cmd.quit` | `{}` | Any time after connect |
 
 Username rules (server-enforced): 2–16 runes; Hangul syllables (`가`–`힣`),
@@ -72,6 +79,12 @@ Telnet renders a `room` event as:
 ```
 
 (omit the `여기` line when empty; omit `출구` when there are none.)
+
+When the room has ground items, Telnet adds:
+
+```
+바닥: 쇠망치, 쇠망치
+```
 
 `auth.err` / `sys` codes:
 
@@ -131,6 +144,13 @@ After the prompt:
 | `북` `남` `동` `서` `위` `아래` | `Move` |
 | `north` `south` `east` `west` `up` `down` | `Move` |
 | `go <dir>` / `가다 <dir>` | `Move` |
+| `skills` / `숙련` | `Sheet` |
+| `practice <skill>` / `익히다 <skill>` | `Practice` |
+| `inv` / `소지` | `Sheet` (inventory section) |
+| `get <item>` / `집다 <item>` | `Get` |
+| `drop <item>` / `놓다 <item>` | `Drop` |
+| `equip <item>` / `들다 <item>` | `Equip` |
+| `unequip <slot>` / `벗다 <slot>` | `Unequip` |
 | `quit` / `종료` | `Quit` (close after a farewell line) |
 | empty line | ignore |
 | anything else | `sys` equivalent: keyed `cmd.unknown` (Korean wording unchanged from M0) |

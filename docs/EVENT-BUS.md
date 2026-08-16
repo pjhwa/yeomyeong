@@ -13,6 +13,7 @@ The game-loop goroutine is the **only** goroutine that:
 - inserts / removes players on the in-memory roster
 - reads the roster to decide who receives a `say`
 - writes `Player.RoomID` (position)
+- writes skill ranks, stats, bag, equipment, and room ground piles
 - changes any future world field (heat, prices, …)
 
 The **room catalog** loaded from YAML is immutable after boot. The loop
@@ -37,9 +38,15 @@ the world.
 |---|---|---|---|
 | `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
 | `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
-| `Look` | `ConnID` | net | Emit `Room` card to that conn |
+| `Look` | `ConnID` | net | Emit `Room` card to that conn (include title + ground items) |
 | `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
-| `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Delete roster entry; emit `Sys` to remaining **in that room**: `"<name> 님이 자리를 떴습니다."` |
+| `Practice` | `ConnID`, `SkillID` | net | GAMEPLAY roll; loop writes new ranks/stats; emit Text |
+| `Get` | `ConnID`, `ItemID` | net | Move one ground stack into bag if weight allows |
+| `Drop` | `ConnID`, `ItemID` | net | Move one bag stack to ground |
+| `Equip` | `ConnID`, `ItemID` | net | Bag → slot if `slot` is wearable |
+| `Unequip` | `ConnID`, `Slot` | net | Slot → bag |
+| `Sheet` | `ConnID` | net | Emit skills/title/stats/inv text |
+| `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Persist sheet; delete roster; emit `Sys` to remaining **in that room** |
 
 Auth create/login is **not** a loop command. Hashing and store I/O run in
 the connection goroutine (or a persist worker). Only a successful auth
