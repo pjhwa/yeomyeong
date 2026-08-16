@@ -451,7 +451,7 @@ Format:
 ## D-036 — M2 accepted
 
 - Date: 2026-08-16
-- Status: accepted
+- Status: superseded by D-040
 - Decider: LEAD
 - Context: PLAN.md §5 M2 done-when: two skill mixes feel like different
   games. Commissioner review is required.
@@ -511,3 +511,20 @@ Format:
 - Consequences: Closeout reports link this file instead of a one-off
   chat recipe. Taste notes are not a reject reason. A missing recipe
   block on a closeout is a LEAD defect.
+
+## D-040 — M2 playtest failed; practice is an action, not 익히다
+
+- Date: 2026-08-16
+- Status: accepted
+- Decider: LEAD
+- Context: Commissioner M2 review: A and B did not feel like different
+  people; `익히다 대장` is not spoken Korean; the loop was a button that
+  raised a number. PLAN §5 done-when is unmet. D-036 is withdrawn.
+- Decision: Stay on M2. Do not start M3. Player commands are YAML
+  **verbs** (`두드리다`, `이야기하다`). Output is per-skill `gain`/`miss`
+  prose with **no rank number**. The sheet prints `대장 미숙`, not
+  `smith 15`. A title change is announced. Speech matches flag `salon`
+  (다방 백야, 주막), not every `town` street. `익히다` / `practice`
+  remain hidden aliases.
+- Consequences: [COMMISSIONER.md](COMMISSIONER.md) §8 uses the new verbs.
+  Re-review M2 after this lands. A second fail stays on M2.

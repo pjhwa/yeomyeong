@@ -148,7 +148,8 @@ After the prompt:
 | `north` `south` `east` `west` `up` `down` | `Move` |
 | `go <dir>` / `가다 <dir>` | `Move` |
 | `skills` / `숙련` | `Sheet` |
-| `practice <skill>` / `익히다 <skill>` | `Practice` |
+| `practice <skill>` / `익히다 <skill>` | `Practice` (hidden alias) |
+| `두드리다` `벼리다` `이야기하다` … | `Practice` — YAML `verbs` for that skill (D-040) |
 | `inv` / `소지` | `Sheet` (inventory section) |
 | `get <item>` / `집다 <item>` | `Get` |
 | `drop <item>` / `놓다 <item>` | `Drop` |

@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,10 +38,10 @@ func TestPracticeSmithAtForgeAndSpeech(t *testing.T) {
 		t.Fatalf("speech rank=%d", p.Skills[speech.ID])
 	}
 	evs := drain(out)
-	if !hasBody(evs, text.T(text.Default, text.PracticeGain, smith.Name.KO, 1)) {
+	if !hasBody(evs, skill.LineAt(smith.Gain, 1)) {
 		t.Fatalf("missing smith gain: %#v", evs)
 	}
-	if !hasBody(evs, text.T(text.Default, text.PracticeGain, speech.Name.KO, 1)) {
+	if !hasBody(evs, skill.LineAt(speech.Gain, 1)) {
 		t.Fatalf("missing speech gain: %#v", evs)
 	}
 }
@@ -92,7 +93,7 @@ func TestPracticeMismatchLowerP(t *testing.T) {
 	if snap := mustSnapshot(t, l); snap.Players[0].Skills[smith.ID] != rank {
 		t.Fatalf("unmatched must miss, rank=%d", snap.Players[0].Skills[smith.ID])
 	}
-	if !hasBody(drain(out), text.T(text.Default, text.PracticeMiss)) {
+	if !hasBody(drain(out), skill.LineAt(smith.Miss, rank)) {
 		t.Fatal("want miss line")
 	}
 
@@ -100,6 +101,36 @@ func TestPracticeMismatchLowerP(t *testing.T) {
 	l.Submit(Practice{ConnID: "a", SkillID: smith.ID})
 	if snap := mustSnapshot(t, l); snap.Players[0].Skills[smith.ID] != rank+1 {
 		t.Fatalf("matched must gain, rank=%d", snap.Players[0].Skills[smith.ID])
+	}
+}
+
+func TestTitleAnnounceAndKoreanSheet(t *testing.T) {
+	l, cat := startPractice(t, skill.Always)
+	smith, _ := cat.Skill("smith")
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s",
+		Sheet: yworld.Sheet{Skills: map[string]int{smith.ID: 14}}})
+	l.Submit(Practice{ConnID: "a", SkillID: "두드리다"})
+	l.Submit(Sheet{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	evs := drain(out)
+	if !hasBody(evs, "사람들은 그대를 달빛골의 대장장이라고 부른다.") {
+		t.Fatalf("missing title announce: %#v", evs)
+	}
+	if !hasBody(evs, text.T(text.Default, text.SheetTitle, "달빛골의 대장장이")) {
+		t.Fatal("title")
+	}
+	var skillsLine string
+	for _, ev := range evs {
+		if tx, ok := ev.(Text); ok && strings.HasPrefix(tx.Body, "숙련:") {
+			skillsLine = tx.Body
+		}
+	}
+	if !strings.Contains(skillsLine, "대장 미숙") {
+		t.Fatalf("want Korean band, got %q", skillsLine)
+	}
+	if strings.Contains(skillsLine, "smith") || strings.Contains(skillsLine, "15") {
+		t.Fatalf("sheet leaked id/number: %q", skillsLine)
 	}
 }
 

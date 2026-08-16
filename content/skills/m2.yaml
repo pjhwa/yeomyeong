@@ -1,26 +1,179 @@
-# M2 practice set (SKILL-TABLE.md, D-035). Fourteen skills. 아무개 last.
+# M2 practice set (SKILL-TABLE.md, D-035, D-040). Fourteen skills. 아무개 last.
+# verbs are what the player types. gain/miss are the room, not a number.
 skills:
-  - {id: unarmed, name: 격술, group: combat, stat: str, practice_flag: yard}
-  - {id: sword, name: 검술, group: combat, stat: str, practice_flag: yard, practice_item: wooden-sword}
-  - {id: bow, name: 궁술, group: combat, stat: dex, practice_flag: yard}
-  - {id: dodge, name: 회피, group: combat, stat: dex, practice_flag: yard}
-  - {id: guard, name: 방어, group: combat, stat: vit, practice_flag: yard}
-  - {id: firstaid, name: 응급처치, group: combat, stat: sense, practice_flag: clinic, practice_item: bandage}
-  - {id: smith, name: 대장, group: craft, stat: str, practice_flag: forge, practice_item: hammer}
-  - {id: cook, name: 요리, group: craft, stat: sense, practice_flag: kitchen, practice_item: kitchen-knife}
-  - {id: print, name: 인쇄, group: craft, stat: dex, practice_flag: press, practice_item: composing-stick}
-  - {id: remedy, name: 약제, group: craft, stat: sense, practice_flag: clinic}
-  - {id: haggle, name: 흥정, group: social, stat: fame, practice_flag: market}
-  - {id: speech, name: 언변, group: social, stat: wit, practice_flag: town}
-  - {id: stealth, name: 잠입, group: social, stat: dex, practice_flag: dark}
-  - {id: lockpick, name: 자물쇠, group: social, stat: dex, practice_item: lockpick}
+  - id: unarmed
+    name: 격술
+    group: combat
+    stat: str
+    practice_flag: yard
+    verbs: [주먹을쥐다, 품세]
+    gain:
+      - 주먹이 허공을 짧게 가른다. 모래가 발목에 붙는다.
+      - 숨이 갈라지고, 손마디가 뜨겁다.
+    miss:
+      - 자세만 흐트러진다. 먼지가 코를 찌른다.
+  - id: sword
+    name: 검술
+    group: combat
+    stat: str
+    practice_flag: yard
+    practice_item: wooden-sword
+    verbs: [휘두르다, 칼질]
+    gain:
+      - 목검이 바람을 가른다. 손바닥에 나무 결이 남는다.
+      - 칼끝이 한 뼘 더 낮아지고, 땀이 눈언저리에 밴다.
+    miss:
+      - 날이 없는 나무가 허공을 친다. 손목만 저리다.
+  - id: bow
+    name: 궁술
+    group: combat
+    stat: dex
+    practice_flag: yard
+    verbs: [당기다, 과녁]
+    gain:
+      - 시위가 손가락을 깨문다. 과녁 쪽에서 짚 냄새가 난다.
+      - 화살이 짧게 울리고, 어깨가 한 번 떨린다.
+    miss:
+      - 시위만 운다. 화살은 흙을 찍는다.
+  - id: dodge
+    name: 회피
+    group: combat
+    stat: dex
+    practice_flag: yard
+    verbs: [피하다, 비키다]
+    gain:
+      - 몸이 한 뼘 옆으로 난다. 모래가 발바닥에서 미끄럽다.
+      - 어깨가 바람을 스치고, 숨이 짧게 남는다.
+    miss:
+      - 발이 엉킨다. 먼지만 일어난다.
+  - id: guard
+    name: 방어
+    group: combat
+    stat: vit
+    practice_flag: yard
+    verbs: [막다, 낮추다]
+    gain:
+      - 팔뚝이 무거워진다. 흙내와 땀내가 뒤섞인다.
+      - 자세가 낮아지고, 발바닥이 땅을 문다.
+    miss:
+      - 팔이 늦게 올라간다. 숨만 가쁘다.
+  - id: firstaid
+    name: 응급처치
+    group: combat
+    stat: sense
+    practice_flag: clinic
+    practice_item: bandage
+    verbs: [감다, 붕대감다]
+    gain:
+      - 베가 피부에 붙는다. 풀 냄새가 손가락에 남는다.
+      - 매듭이 작고 단단해진다. 손끝이 따뜻하다.
+    miss:
+      - 붕대가 풀어진다. 풀기만 끈적하다.
+  - id: smith
+    name: 대장
+    group: craft
+    stat: str
+    practice_flag: forge
+    practice_item: hammer
+    verbs: [두드리다, 벼리다, 망치질]
+    gain:
+      - 쇠가 한 겹 더 얇아진다. 손바닥에 열기가 남는다.
+      - 모루가 낮게 울고, 불똥이 앞치마깃을 스친다.
+      - 망치 자루가 땀에 젖어 미끄럽다. 쇠 냄새가 코를 친다.
+    miss:
+      - 빗나가 모루만 운다. 집게가 벽에 부딪힌다.
+      - 불이 꺼진 자리만 차갑다. 쇠는 꿈쩍도 하지 않는다.
+  - id: cook
+    name: 요리
+    group: craft
+    stat: sense
+    practice_flag: kitchen
+    practice_item: kitchen-knife
+    verbs: [썰다, 볶다, 간보다]
+    gain:
+      - 칼이 도마를 짧게 친다. 참기름 냄새가 손등에 붙는다.
+      - 간이 혀끝에 남고, 김이 눈썹을 적신다.
+    miss:
+      - 재료가 버티지 않는다. 도마만 젖는다.
+  - id: print
+    name: 인쇄
+    group: craft
+    stat: dex
+    practice_flag: press
+    practice_item: composing-stick
+    verbs: [조판하다, 찍다]
+    gain:
+      - 활자가 홈에 들어앉는다. 잉크가 손톱 밑에 검다.
+      - 원지가 압착기에 물리고, 납 냄새가 가깝다.
+    miss:
+      - 활자가 빗나간다. 원지만 찢어진다.
+  - id: remedy
+    name: 약제
+    group: craft
+    stat: sense
+    practice_flag: clinic
+    verbs: [달이다, 짓다]
+    gain:
+      - 약탕기가 낮게 끓는다. 쓴내가 목구멍을 스친다.
+      - 뿌리가 손가락에서 부서지고, 손등이 따뜻하다.
+    miss:
+      - 불이 세다. 쓴내만 타고 약효는 없다.
+  - id: haggle
+    name: 흥정
+    group: social
+    stat: fame
+    practice_flag: market
+    verbs: [흥정하다, 깎다]
+    gain:
+      - 좌판 주인이 눈만 가늘게 뜬다. 기름종이 냄새가 가깝다.
+      - 숫자가 한 닢 내려가는 기색이다. 목청이 쉰다.
+    miss:
+      - 주인이 고개를 젓는다. 값은 그대로다.
+  - id: speech
+    name: 언변
+    group: social
+    stat: wit
+    practice_flag: salon
+    verbs: [이야기하다, 말걸다, 수다]
+    gain:
+      - 맞은편 손님이 잔을 멈추고 듣는다. 보리차 김이 말 사이로 흐른다.
+      - 창가 접시가 가볍게 울린다. 누군가가 짧게 웃는다.
+      - 말이 마루 가까이에서 낮아진다. 라디오가 한 박자 늦게 따라온다.
+    miss:
+      - 말이 보리차 김에 묻혀 흩어진다.
+      - 맞은편은 잔만 들여다본다. 대답이 없다.
+  - id: stealth
+    name: 잠입
+    group: social
+    stat: dex
+    practice_flag: dark
+    verbs: [숨다, 살금]
+    gain:
+      - 발소리가 흙에 묻힌다. 그늘이 어깨를 덮는다.
+      - 숨이 짧아지고, 담장 습기가 팔에 닿는다.
+    miss:
+      - 자갈이 운다. 그늘이 물러난다.
+  - id: lockpick
+    name: 자물쇠
+    group: social
+    stat: dex
+    practice_item: lockpick
+    verbs: [쑤시다, 빗장]
+    gain:
+      - 송곳이 홈을 더듬는다. 쇠가 손가락에 차갑다.
+      - 걸쇠가 작게 울리고, 손끝에 기름이 남는다.
+    miss:
+      - 송곳이 미끄러진다. 쇠만 차갑다.
+
 titles:
   - id: smith-local
     require: {smith: 15}
     title: {ko: 달빛골의 대장장이}
+    announce: 사람들은 그대를 달빛골의 대장장이라고 부른다.
   - id: speaker
     require: {speech: 15}
     title: {ko: 말을 부리는 자}
+    announce: 다방 안이 그대를 말을 부리는 자라 부른다.
   - id: nobody
     require: {}
     title: {ko: 아무개}

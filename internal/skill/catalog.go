@@ -43,13 +43,16 @@ func (l Localized) Text(locale string) string {
 type Skill struct {
 	ID, Group, Stat, PracticeFlag, PracticeItem string
 	Name                                        Localized
+	Verbs                                       []string
+	Gain, Miss                                  []string
 }
 
 // TitleRule is one YAML title rule. Empty Require is the default (must be last).
 type TitleRule struct {
-	ID      string
-	Require map[string]int
-	Title   Localized
+	ID       string
+	Require  map[string]int
+	Title    Localized
+	Announce Localized
 }
 
 // Catalog is an immutable skill + title table. Safe for concurrent reads after Load.
@@ -69,6 +72,23 @@ var (
 	knownFlags = map[string]struct{}{
 		"safe": {}, "town": {}, "market": {}, "indoor": {}, "dark": {},
 		"forge": {}, "kitchen": {}, "press": {}, "clinic": {}, "yard": {},
+		"salon": {},
+	}
+	reservedVerbs = map[string]struct{}{
+		"n": {}, "s": {}, "e": {}, "w": {}, "u": {}, "d": {},
+		"north": {}, "south": {}, "east": {}, "west": {}, "up": {}, "down": {},
+		"북": {}, "남": {}, "동": {}, "서": {}, "위": {}, "아래": {},
+		"look": {}, "l": {}, "보다": {}, "살펴": {},
+		"say": {}, "말": {}, "quit": {}, "종료": {},
+		"skills": {}, "숙련": {}, "inv": {}, "소지": {},
+		"practice": {}, "익히다": {},
+		"get": {}, "집다": {}, "drop": {}, "놓다": {},
+		"equip": {}, "들다": {}, "unequip": {}, "벗다": {},
+		"go": {}, "가다": {},
+	}
+	statNameKO = map[string]string{
+		statStr: "힘", statDex: "손재주", statVit: "맷집",
+		statWit: "기지", statSense: "감응", statFame: "인망",
 	}
 )
 
@@ -143,18 +163,22 @@ type yamlFile struct {
 }
 
 type yamlSkill struct {
-	ID           string `yaml:"id"`
-	Name         loc    `yaml:"name"`
-	Group        string `yaml:"group"`
-	Stat         string `yaml:"stat"`
-	PracticeFlag string `yaml:"practice_flag"`
-	PracticeItem string `yaml:"practice_item"`
+	ID           string   `yaml:"id"`
+	Name         loc      `yaml:"name"`
+	Group        string   `yaml:"group"`
+	Stat         string   `yaml:"stat"`
+	PracticeFlag string   `yaml:"practice_flag"`
+	PracticeItem string   `yaml:"practice_item"`
+	Verbs        []string `yaml:"verbs"`
+	Gain         []string `yaml:"gain"`
+	Miss         []string `yaml:"miss"`
 }
 
 type yamlTitle struct {
-	ID      string         `yaml:"id"`
-	Require map[string]int `yaml:"require"`
-	Title   loc            `yaml:"title"`
+	ID       string         `yaml:"id"`
+	Require  map[string]int `yaml:"require"`
+	Title    loc            `yaml:"title"`
+	Announce loc            `yaml:"announce"`
 }
 
 func parseFile(path string) ([]Skill, []TitleRule, error) {
@@ -209,8 +233,29 @@ func toSkill(ys yamlSkill) (Skill, error) {
 			return Skill{}, fmt.Errorf("skill %q: unknown practice_flag %q", id, flag)
 		}
 	}
+	verbs := cleanLines(ys.Verbs)
+	for _, v := range verbs {
+		if _, bad := reservedVerbs[v]; bad {
+			return Skill{}, fmt.Errorf("skill %q: verb %q is a reserved command", id, v)
+		}
+		if _, bad := reservedVerbs[strings.ToLower(v)]; bad {
+			return Skill{}, fmt.Errorf("skill %q: verb %q is a reserved command", id, v)
+		}
+	}
 	return Skill{ID: id, Name: Localized{KO: ys.Name.KO, EN: ys.Name.EN}, Group: group, Stat: stat,
-		PracticeFlag: flag, PracticeItem: strings.TrimSpace(ys.PracticeItem)}, nil
+		PracticeFlag: flag, PracticeItem: strings.TrimSpace(ys.PracticeItem),
+		Verbs: verbs, Gain: cleanLines(ys.Gain), Miss: cleanLines(ys.Miss)}, nil
+}
+
+func cleanLines(in []string) []string {
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
 }
 
 func toTitle(yt yamlTitle) (TitleRule, error) {
@@ -235,18 +280,27 @@ func toTitle(yt yamlTitle) (TitleRule, error) {
 		}
 		req[k] = v
 	}
-	return TitleRule{ID: id, Require: req, Title: Localized{KO: yt.Title.KO, EN: yt.Title.EN}}, nil
+	return TitleRule{ID: id, Require: req,
+		Title:    Localized{KO: yt.Title.KO, EN: yt.Title.EN},
+		Announce: Localized{KO: yt.Announce.KO, EN: yt.Announce.EN}}, nil
 }
 
 func newCatalog(skills []Skill, titles []TitleRule) (*Catalog, error) {
 	m := make(map[string]Skill, len(skills))
 	order := make([]string, 0, len(skills))
+	verbs := make(map[string]string)
 	for _, s := range skills {
 		if _, dup := m[s.ID]; dup {
 			return nil, fmt.Errorf("duplicate skill id %q", s.ID)
 		}
 		m[s.ID] = s
 		order = append(order, s.ID)
+		for _, v := range s.Verbs {
+			if other, dup := verbs[v]; dup {
+				return nil, fmt.Errorf("duplicate verb %q (%s and %s)", v, other, s.ID)
+			}
+			verbs[v] = s.ID
+		}
 	}
 	seen := make(map[string]struct{}, len(titles))
 	out := make([]TitleRule, 0, len(titles))
@@ -317,8 +371,50 @@ func (c *Catalog) Lookup(q string) (Skill, bool) {
 		if s.Name.KO == q || s.Name.EN == q || strings.EqualFold(s.ID, q) {
 			return s, true
 		}
+		for _, v := range s.Verbs {
+			if v == q {
+				return s, true
+			}
+		}
 	}
 	return Skill{}, false
+}
+
+// LineAt picks a stable line for rank (or 0). Empty list returns "".
+func LineAt(lines []string, rank int) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	if rank < 0 {
+		rank = 0
+	}
+	return lines[rank%len(lines)]
+}
+
+// Band is the player-facing rank word (SKILL-TABLE). Not a number.
+func Band(rank int) string {
+	switch {
+	case rank >= 100:
+		return "경지"
+	case rank >= 90:
+		return "명인"
+	case rank >= 70:
+		return "노련"
+	case rank >= 45:
+		return "능숙"
+	case rank >= 20:
+		return "수련"
+	default:
+		return "미숙"
+	}
+}
+
+// StatName is the Korean label for a stat id, or the id itself.
+func StatName(id string) string {
+	if n, ok := statNameKO[id]; ok {
+		return n
+	}
+	return id
 }
 
 // TitleRules returns a defensive copy of the title list (file order).
@@ -344,6 +440,19 @@ func (c *Catalog) Title(s Sheet) Localized {
 	for _, tr := range c.titles {
 		if titleMatches(tr, s) {
 			return tr.Title
+		}
+	}
+	return Localized{}
+}
+
+// Announce is the first matching title's spoken line, or empty.
+func (c *Catalog) Announce(s Sheet) Localized {
+	if c == nil {
+		return Localized{}
+	}
+	for _, tr := range c.titles {
+		if titleMatches(tr, s) {
+			return tr.Announce
 		}
 	}
 	return Localized{}

@@ -378,7 +378,7 @@
     east: dalbitgol:inn-yard
     south: dalbitgol:cafe-baekya
     north: dalbitgol:market
-  flags: [safe, town, indoor]
+  flags: [safe, town, indoor, salon]
   ambient:
     - ko: "누가 라디오 다이얼을 살짝 돌렸다가 도로 놓는다."
   foreshadow: [FS-011, FS-018]
@@ -463,7 +463,7 @@
     east: dalbitgol:cafe-back
     south: dalbitgol:school-lane
     north: dalbitgol:inn
-  flags: [safe, town, indoor]
+  flags: [safe, town, indoor, salon]
   ambient:
     - ko: "앞치마 끈을 매는 소리가 카운터 뒤에서 난다."
   foreshadow: [FS-005, FS-006]
