@@ -265,8 +265,7 @@ func TestWSPracticeSkillsInvVerbs(t *testing.T) {
 	waitRoster(t, loop, 1)
 
 	c.send(t, typeCmdSkills, "sk", map[string]any{})
-	c.waitText(t, engine.ChannelSys, "", "소지:")
-	c.waitText(t, engine.ChannelSys, "", "능력:")
+	c.waitText(t, engine.ChannelSys, "", "소지:", "능력:")
 	c.send(t, typeCmdInv, "iv", map[string]any{})
 	c.waitText(t, engine.ChannelSys, "", "소지:")
 
@@ -445,8 +444,14 @@ func (c *wsClient) readType(t *testing.T, typ string) inFrame {
 	return inFrame{}
 }
 
-func (c *wsClient) waitText(t *testing.T, channel, from, text string) {
+// waitText waits until every needle appears in matching text frames.
+// One frame may satisfy several needles; leftover needles are sought later.
+func (c *wsClient) waitText(t *testing.T, channel, from string, needles ...string) {
 	t.Helper()
+	pending := append([]string(nil), needles...)
+	if len(pending) == 0 {
+		return
+	}
 	deadline := time.Now().Add(15 * time.Second)
 	for time.Now().Before(deadline) {
 		f := c.mustRead(t)
@@ -461,11 +466,21 @@ func (c *wsClient) waitText(t *testing.T, channel, from, text string) {
 		if err := decodePayload(f.Payload, &p); err != nil {
 			t.Fatal(err)
 		}
-		if p.Channel == channel && (from == "" || p.From == from) && strings.Contains(p.Text, text) {
+		if p.Channel != channel || (from != "" && p.From != from) {
+			continue
+		}
+		still := pending[:0]
+		for _, n := range pending {
+			if !strings.Contains(p.Text, n) {
+				still = append(still, n)
+			}
+		}
+		pending = still
+		if len(pending) == 0 {
 			return
 		}
 	}
-	t.Fatalf("timeout waiting for text %s %s %q", channel, from, text)
+	t.Fatalf("timeout waiting for text %s %s %q", channel, from, needles)
 }
 
 type roomPayload struct {
