@@ -80,7 +80,7 @@ var (
 		"북": {}, "남": {}, "동": {}, "서": {}, "위": {}, "아래": {},
 		"look": {}, "l": {}, "보다": {}, "살펴": {},
 		"say": {}, "말": {}, "quit": {}, "종료": {},
-		"skills": {}, "숙련": {}, "inv": {}, "소지": {},
+		"skills": {}, "숙련": {}, "기술": {}, "inv": {}, "소지": {}, "가방": {},
 		"practice": {}, "익히다": {},
 		"get": {}, "집다": {}, "drop": {}, "놓다": {},
 		"equip": {}, "들다": {}, "unequip": {}, "벗다": {},
@@ -91,7 +91,7 @@ var (
 	}
 	statNameKO = map[string]string{
 		statStr: "힘", statDex: "손재주", statVit: "맷집",
-		statWit: "기지", statSense: "감응", statFame: "인망",
+		statWit: "재치", statSense: "감응", statFame: "평판",
 	}
 )
 
@@ -398,7 +398,7 @@ func LineAt(lines []string, rank int) string {
 func Band(rank int) string {
 	switch {
 	case rank >= 100:
-		return "경지"
+		return "달인"
 	case rank >= 90:
 		return "명인"
 	case rank >= 70:
@@ -406,7 +406,7 @@ func Band(rank int) string {
 	case rank >= 45:
 		return "능숙"
 	case rank >= 20:
-		return "수련"
+		return "익숙"
 	default:
 		return "초보"
 	}

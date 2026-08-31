@@ -134,13 +134,13 @@ skills:
     group: social
     stat: wit
     practice_flag: salon
-    verbs: [이야기하다, 말걸다, 언변]
+    verbs: [이야기하다, 말걸다]
     gain:
       - 맞은편 손님이 잔을 멈추고 듣는다. 보리차 김이 올라온다.
       - 창가 접시가 살짝 울렸다. 누가 짧게 웃는다.
-      - 목소리가 낮아졌다. 라디오 소리가 한 박자 늦게 들린다.
+      - 목소리가 낮아졌다. 라디오 소리가 조금 늦게 들린다.
     miss:
-      - 말이 김에 묻혀 흩어졌다.
+      - 말이 김에 묻혀 안 들린다.
       - 맞은편은 잔만 본다. 대답이 없다.
   - id: stealth
     name: 숨기
@@ -182,23 +182,23 @@ titles:
   - id: smith-local
     require: {smith: 15}
     title: {ko: 달빛골의 대장장이}
-    announce: 사람들이 이제 달빛골의 대장장이라고 부릅니다.
+    announce: 사람들이 이제 달빛골의 대장장이라고 불러요.
   - id: speaker
     require: {speech: 15}
     title: {ko: 말 잘하는 사람}
-    announce: 다방에서 이제 말 잘하는 사람이라고 부릅니다.
+    announce: 다방에서 이제 말 잘하는 사람이라고 불러요.
   - id: nailer
     require: {smith: 8}
     title: {ko: 못 벼리는 사람}
-    announce: 사람들이 이제 못 벼리는 사람이라고 부릅니다.
+    announce: 사람들이 이제 못 벼리는 사람이라고 불러요.
   - id: peddler
     require: {haggle: 8}
     title: {ko: 보부상}
-    announce: 사람들이 이제 보부상이라고 부릅니다.
+    announce: 사람들이 이제 보부상이라고 불러요.
   - id: forager
     require: {forage: 8}
     title: {ko: 달빛골의 채집꾼}
-    announce: 사람들이 이제 달빛골의 채집꾼이라고 부릅니다.
+    announce: 사람들이 이제 달빛골의 채집꾼이라고 불러요.
   - id: nobody
     require: {}
     title: {ko: 아무개}

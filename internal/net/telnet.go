@@ -28,8 +28,8 @@ const (
 	banner       = "여명 · YEOMYEONG"
 	promptName   = "이름:"
 	promptPass   = "비밀번호:"
-	promptCreate = "없는 이름입니다. 새로 만드시겠습니까? (y/n)"
-	msgBadCreds  = "이름이나 비밀번호가 맞지 않습니다."
+	promptCreate = "없는 이름이에요. 새로 만들까요? (y/n)"
+	msgBadCreds  = "이름이나 비밀번호가 안 맞아요."
 	promptCmd    = ">"
 
 	maxLine   = 4096

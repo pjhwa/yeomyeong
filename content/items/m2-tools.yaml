@@ -2,7 +2,7 @@
 
 - id: hammer
   name: { ko: "쇠망치" }
-  description: { ko: "자루가 반질한 쇠망치다. 대장간 냄새를 아직 품고 있다." }
+  description: { ko: "자루가 반질한 쇠망치다. 아직 대장간 냄새가 난다." }
   slot: main_hand
   skills: [smith]
   weight: 2
@@ -15,15 +15,15 @@
   weight: 1
 
 - id: composing-stick
-  name: { ko: "식자봉" }
-  description: { ko: "납 활자를 끼우는 나무 식자봉이다. 홈에 잉크가 검게 말라 붙어 손가락에 묻는다." }
+  name: { ko: "활자 막대" }
+  description: { ko: "납 활자를 끼우는 나무 막대다. 홈에 잉크가 검게 말라 붙어 손가락에 묻는다." }
   slot: main_hand
   skills: [print]
   weight: 1
 
 - id: bandage
-  name: { ko: "붕대 두루마리" }
-  description: { ko: "베로 감은 붕대 두루마리다. 풀기가 남아 손가락에 거칠다." }
+  name: { ko: "붕대 뭉치" }
+  description: { ko: "천으로 감은 붕대 뭉치다. 풀기가 남아 손가락에 거칠다." }
   slot: none
   skills: [firstaid]
   weight: 1

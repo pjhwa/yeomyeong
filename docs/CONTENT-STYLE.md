@@ -9,8 +9,9 @@ WORLD does not invent plot or foreshadow IDs.
 
 ## Voice
 
-Write as if the player is standing there, not as if a guidebook is summarizing
-the square. Prefer the thing in reach over the idea of the place.
+Write as if the player is standing there, talking about what they can see
+and touch — **everyday modern Korean** (D-045). The setting is 1910s–1920s
+달내; the diction is not. Do not write textbook 1920s literary Korean.
 
 - **2–4 sentences** in `description.ko`. One sentence is a caption. Five is
   a paragraph the look-loop will dump. Count Korean periods, not YAML lines.
@@ -24,8 +25,16 @@ the square. Prefer the thing in reach over the idea of the place.
 - **Spent, do not reuse:** the README (and the schema's illustration) already
   used *말린 명태와 삼베 냄새* and the taffy-seller's scissors. That sentence
   is retired for live rooms.
-- Period words are seasoning. Do not pour the whole allowed list into one
-  yard.
+- **Words people use now.** Prefer 가게 / 시장 / 길 / 경찰 / 검문 / 돈 /
+  가방 / 만들다 / 캐다. Cut rare 한자어, 고어, and 문어체 (엿장수 가위질,
+  윗도리, 문설주, 오래라, 한 켜, 품귀). Commands are common verbs a player
+  would type (`보다`, `캐다`, `만들다`, `팔다`), not 언변 or 익히다.
+- Period objects are seasoning when they are still the thing in the room.
+  Do not pour the whole allowed list into one yard.
+
+Keep unique proper nouns and world terms: 달내, 무쇠 제국, 새벽회, 달빛골,
+솔골, 지맥, 쇠말뚝, 한벽일보, 다방 백야, 만석상회. Those are setting, not
+diction.
 
 Korean is required. English `en` is optional and falls back to Korean
 (D-029). Do not ship an English-only room.
@@ -38,6 +47,7 @@ Korean is required. English `en` is optional and falls back to Korean
 | ≥2 distinct senses | The same spent smell in the next stall |
 | One concrete object | Abstract 한 / 기개 / 통한 |
 | Present tense, on the ground | A history lecture or a quest brief |
+| Everyday spoken Korean | 문어체, 고어, rare 한자어 |
 | Aftermath and residue | Torture, massacre, a death scene |
 
 A later beat may rewrite the same room (gloves on the anvil, a café shuttered
@@ -46,18 +56,21 @@ Act I description.
 
 ## Period vocabulary
 
-Welcome when they earn their keep:
+Welcome when they earn their keep as **objects in the room**, not as a
+writing style:
 
-전차, 등사기, 고무신, 주재소, 관아, 철탑, 다방, 활자, 지게
+전차, 등사기, 고무신, 주재소, 관아, 철탑, 다방, 활자, 지게, 통행증, 전신,
+원지
 
-Also fine when they are the object in the room: 고시문, 통행증, 전신, 원지,
-활자주.
 Occupation offices are **관아**. The intake tower is **한벽 철탑** (D-019).
-A village gendarmerie post is **주재소**, not a real-world bureau.
+A village post is **주재소**, not a real-world bureau. A checkpoint is
+**검문** / **검문소**. A posted 관아 paper is **안내문**, not 고시문.
 
 Dense Sino-Korean is forbidden even when it is historically flavored.
-If a sentence would sit in a textbook — 국권피탈, 민족정기, 무단통치, 철권 —
-cut it and name the gravel, the ink, or the strap instead.
+If a sentence would sit in a textbook — 국권피탈, 민족정기, 무단통치, 철권,
+분견대, 봉랍, 교정쇄, 식자대 — cut it and name the gravel, the ink, or the
+strap instead. Say 경찰 / 검문 when the player is meeting a check; keep
+주재소 when that building is the room.
 
 ## Forbidden
 
@@ -132,7 +145,7 @@ If the ledger does not mention the room, omit the field.
 
 ```yaml
 ambient:
-  - ko: "급사가 등사기 원지를 품에 안고 회랑을 가로지른다."
+  - ko: "심부름꾼이 등사기 원지를 품에 안고 마당을 가로지른다."
   - ko: "담 너머에서 전차 종소리가 한 번 끊긴다."
 ```
 
@@ -149,22 +162,22 @@ Do not copy it into `content/zones/`. Do not load an `example:` zone.
   description:
     ko: >
       관아 앞마당은 자갈이 닳아 하얗고, 낮에도 그늘이 짧다. 회벽에는
-      등사기 잉크가 덜 마른 고시문이 겹쳐 붙었고, 맨 앞장 모퉁이만
-      손가락 넓이로 찢겨 있다. 고무신 밑창이 자갈을 문지르는 소리가
+      등사기 잉크가 덜 마른 안내문이 겹쳐 붙었고, 맨 앞장 모퉁이만
+      손가락 넓이로 찢어져 있다. 고무신 밑창이 자갈을 문지르는 소리가
       담 너머 전차 종보다 가깝다. 누가 두고 간 지게가 문기둥에 기대어
       있고, 멜빵 가죽이 햇볕에 뜨겁다.
   exits:
     south: example:alley
   flags: [town]
   ambient:
-    - ko: "급사가 등사기 원지를 품에 안고 회랑을 가로지른다."
+    - ko: "심부름꾼이 등사기 원지를 품에 안고 마당을 가로지른다."
     - ko: "담 너머에서 전차 종소리가 한 번 끊긴다."
 ```
 
 Why this passes the recipe: four sentences; sight, sound, and touch; the
-specific object is the 지게 and its hot strap (the torn 고시문 is a second
-anchor, not a lecture); 관아 not 총독부; no spent market-smell sentence;
-ambient figures have no names.
+specific object is the 지게 and its hot strap (the torn 안내문 is a second
+anchor, not a lecture); 관아 not 총독부; everyday diction with period
+objects; no spent market-smell sentence; ambient figures have no names.
 
 A live room that the ledger already plants would add, for example,
 `foreshadow: [FS-014]` on `dalbitgol:market` — only when that YAML is
@@ -173,7 +186,7 @@ written, and only for ids already in the ledger.
 ## Writer checklist
 
 - [ ] 2–4 sentences, ≥2 senses, one specific object
-- [ ] No spent cliché, no dense Sino-Korean, no 총독부
+- [ ] Everyday Korean; no spent cliché, no dense Sino-Korean, no 총독부, no 문어체
 - [ ] `id` is `zone:slug`; `name.ko` is what the player reads
 - [ ] `foreshadow` ids exist in FORESHADOW.md or the field is omitted
 - [ ] `ambient` is scenery, not an NPC

@@ -132,7 +132,7 @@ func TestGatherCraftSellPriceAndToll(t *testing.T) {
 	if qtyOf(carrier.Bag, "herb") != 3 {
 		t.Fatalf("toll confiscate bag=%v", carrier.Bag)
 	}
-	if !hasBodyContains(drain(outD), "두고 가라고") {
+	if !hasBodyContains(drain(outD), "놓고 가라고") {
 		t.Fatal("toll line")
 	}
 

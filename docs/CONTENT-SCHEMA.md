@@ -53,9 +53,9 @@ The loader canonicalizes both forms to `{ko, en}`.
     ko: "달빛골 장터"
   description:
     ko: >
-      좁은 흙길 양옆으로 좌판이 늘어섰다. 말린 명태와 삼베 냄새가 뒤섞이고,
-      엿장수의 가위질 소리가 장단을 맞춘다. 장터 어귀의 게시판에는 관아
-      고시문이 붙어 있는데, 누군가 모퉁이를 찢어 갔다.
+      좁은 흙길 양옆으로 좌판이 늘어섰다. 참기름 고소한 냄새가 나고,
+      저울추가 나무판을 친다. 장터 어귀 게시판에는 관아 안내문이 붙어
+      있는데, 누군가 모퉁이를 찢어 갔다.
   exits:
     north: dalbitgol:smithy
     east: dalbitgol:inn
@@ -64,7 +64,7 @@ The loader canonicalizes both forms to `{ko, en}`.
   heat_modifier: 0.8
   ambient:
     - ko: "지게꾼이 무거운 짐을 지고 지나간다."
-    - ko: "저잣거리 소문이 바람결에 실려 온다."
+    - ko: "장터 소문이 바람결에 실려 온다."
   foreshadow: [FS-014]
 ```
 
@@ -85,7 +85,7 @@ The loader canonicalizes both forms to `{ko, en}`.
 ```yaml
 - id: hammer
   name: { ko: "쇠망치" }
-  description: { ko: "자루가 반질한 쇠망치다. 대장간 냄새를 아직 품고 있다." }
+  description: { ko: "자루가 반질한 쇠망치다. 아직 대장간 냄새가 난다." }
   slot: main_hand          # none | main_hand | body
   skills: [smith]          # practice bonus tags
   weight: 2

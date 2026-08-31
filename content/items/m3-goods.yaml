@@ -2,7 +2,7 @@
 
 - id: mugwort
   name: { ko: "쑥" }
-  description: { ko: "뿌리가 흙투성이인 쑥이다. 비린 풀 냄새가 손가락에 남는다." }
+  description: { ko: "뿌리가 흙투성이인 쑥이다. 풀 비린내가 손가락에 남는다." }
   slot: none
   weight: 1
 
@@ -14,13 +14,13 @@
 
 - id: hanji
   name: { ko: "한지" }
-  description: { ko: "방앗간에서 건진 한지 한 장이다. 겨가 섬유 사이에 끼어 꺼끌하다." }
+  description: { ko: "방앗간에서 건진 한지 한 장이다. 겨가 섬유 사이에 끼어 까칠하다." }
   slot: none
   weight: 1
 
 - id: iron-nail
   name: { ko: "쇠못" }
-  description: { ko: "머리가 살짝 기운 쇠못이다. 아직 모루 열이 손바닥에 남아 있다." }
+  description: { ko: "머리가 살짝 기운 쇠못이다. 아직 모루 온기가 손바닥에 남아 있다." }
   slot: none
   weight: 1
 

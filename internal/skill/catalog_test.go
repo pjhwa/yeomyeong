@@ -87,7 +87,7 @@ func TestLoadM2(t *testing.T) {
 	if !ok || speech.Name.KO != "말솜씨" || speech.PracticeFlag != "salon" {
 		t.Fatalf("이야기하다: %+v %v", speech, ok)
 	}
-	if Band(3) != "초보" || Band(15) != "초보" || Band(20) != "수련" {
+	if Band(3) != "초보" || Band(15) != "초보" || Band(20) != "익숙" {
 		t.Fatalf("band %s %s %s", Band(3), Band(15), Band(20))
 	}
 }

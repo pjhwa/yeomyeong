@@ -532,7 +532,7 @@ Format:
 ## D-041 — Player-facing Korean is everyday speech
 
 - Date: 2026-08-16
-- Status: accepted
+- Status: accepted; room diction superseded by D-045
 - Decider: LEAD
 - Context: Commissioner: `그런 숙련은 없습니다` and many other lines are
   not how people talk. D-016 froze M0 wording; that freeze is lifted
@@ -541,8 +541,8 @@ Format:
   practice/title announce use ordinary spoken Korean. Particle `을/를`
   is chosen by the last Hangul batchim, not `을(를)`. Protocol *codes*
   (`rate_limited`) stay English; the visible sentence is Korean.
-  Room descriptions stay literary (CONTENT-STYLE). WIRE-PROTOCOL
-  transcripts follow the new wording.
+  Room descriptions stay literary (CONTENT-STYLE) — **lifted by D-045**.
+  WIRE-PROTOCOL transcripts follow the new wording.
 - Consequences: Tests assert the new sentences. `그대`, `장부`,
   `호칭`, `주손`, `을(를)`, and English `rate_limited` as a player
   line are defects.
@@ -581,8 +581,8 @@ Format:
   with a 0.2 factor floor. Selling raises stock (price eases). Buying
   lowers it. Every 10 loop ticks, stock walks one step toward `target`
   (quiet NPC flow). `시세` prints the Korean stall name, a 냥 figure,
-  and a flavor clause (흔하다 / 잠잠하다 / 품귀). No English player
-  line; no rank numbers.
+  and a flavor clause (오늘은 흔하다 / 값은 평소랑 비슷하다 / 오늘은
+  귀하다). No English player line; no rank numbers.
 - Consequences: The same good must quote differently at 달빛골 vs 솔골
   at boot. Tests lock that spread and that a sell drops the next quote.
 
@@ -602,3 +602,28 @@ Format:
 - Consequences: The 보부상 loop is gather/craft in 달빛골, walk east
   from the station, sell dearer in 솔골 — with a chance the post
   skims the load.
+
+## D-045 — Rooms and remaining live copy are everyday Korean
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: D-041 converted system lines but left rooms literary
+  (CONTENT-STYLE). Live rooms, items, skill verbs, bands, quotes, and
+  tolls still used 문어체, 고어, and rare 한자어 (윗도리, 문설주,
+  고시문, 교정쇄, 분견대, 품귀, 언변, 숙련할 기술 중에…). Players
+  should read the world like contemporary daily speech, not a 1920s
+  textbook, while the occupation setting stays.
+- Decision: All player-facing copy — rooms, items, NPCs, skills, help,
+  commands, and system lines — is everyday modern Korean. Setting
+  nouns stay (달내, 무쇠 제국, 새벽회, 지맥, 쇠말뚝, 관아, 주재소,
+  등사기, 통행증). Prefer 가게/시장/길/경찰/검문/돈/가방/만들다/캐다.
+  Commands are common verbs (`보다`, `캐다`, `만들다`, `팔다`, `사다`,
+  `가방`). Rank bands print 초보/익숙/능숙/노련/명인/달인. Stats print
+  힘/손재주/맷집/재치/감응/평판 (감응 stays as the 지맥 sense). The
+  sensory room recipe (2–4 sentences, ≥2 senses, one object) is
+  unchanged. PLAN.md historical essays are not rewritten.
+- Consequences: CONTENT-STYLE voice is everyday, not literary. Tests
+  assert the new sentences. `엿장수 가위질`, `고시문`, `교정쇄`,
+  `분견대`, `언변` as a typed verb, and remaining 문어체 in live YAML
+  or Go player strings are defects.

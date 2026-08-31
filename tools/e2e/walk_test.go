@@ -19,10 +19,10 @@ var dalbitgolWalk = []struct {
 }{
 	{"북", "dalbitgol:gate-road", "수레바퀴 자국"},
 	{"w", "dalbitgol:ditch", "함석 바가지"},
-	{"n", "dalbitgol:creek-bridge", "판석 네 장"},
+	{"n", "dalbitgol:creek-bridge", "넓적한 돌 네 장"},
 	{"n", "dalbitgol:creek", "손을 담그면 찬물"},
 	{"e", "dalbitgol:printshop", "닳은 활자"},
-	{"e", "dalbitgol:type-yard", "교정쇄 압착기"},
+	{"e", "dalbitgol:type-yard", "인쇄기가 젖은 원지"},
 	{"e", "dalbitgol:cafe-baekya", "볶은 보리차"},
 	{"s", "dalbitgol:school-lane", "석판이 기대어"},
 }

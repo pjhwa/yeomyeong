@@ -42,13 +42,13 @@ sets `difficulty` to `max(0, rank-25)` (easy, almost no gain at mid-rank).
 | band | ko | range |
 |---|---|---|
 | raw | 초보 | 0–19 |
-| trained | 수련 | 20–44 |
+| trained | 익숙 | 20–44 |
 | able | 능숙 | 45–69 |
 | veteran | 노련 | 70–89 |
 | master | 명인 | 90–99 |
-| peak | 경지 | 100 |
+| peak | 달인 | 100 |
 
-경지 is not globally unique in M2 (no server-wide slot table yet).
+달인 is not globally unique in M2 (no server-wide slot table yet).
 
 ## Growth
 
@@ -77,7 +77,8 @@ Macro-grinding an easy station at high rank must measure `p ≈ 0`.
 ## Stats
 
 Six stats, 0–100 each, **sum cap 300**: 힘 `str`, 손재주 `dex`, 맷집 `vit`,
-기지 `wit`, 감응 `sense`, 인망 `fame`.
+재치 `wit`, 감응 `sense`, 평판 `fame`. 감응 is the 지맥 sense (setting
+term). Player-facing labels are everyday Korean (D-045).
 
 On a successful skill gain, the tagged stat increases by 1 with
 `p = 0.25 * (1 - stat/100)`, refused if the sum would exceed 300.
