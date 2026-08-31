@@ -272,15 +272,71 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	if _, ok := w.Rooms.Room("solgol:market"); !ok {
 		t.Fatal("solgol:market missing")
 	}
+	if _, ok := w.NPCs.Find("청람"); !ok {
+		t.Fatal("cheongram npc missing")
+	}
+	if _, ok := w.Objects.FindInRoom("dalbitgol:market", "신문"); !ok {
+		t.Fatal("market newspaper object missing")
+	}
 }
 
 func TestNoHardcodedRooms(t *testing.T) {
-	src, err := os.ReadFile("load.go")
+	for _, name := range []string{"load.go", "story.go", "items.go"} {
+		src, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(src, []byte("dalbitgol:market")) {
+			t.Fatalf("%s: do not hardcode village rooms", name)
+		}
+	}
+}
+
+func TestLoadStoryYAML(t *testing.T) {
+	w, err := LoadWorld(fixture("valid"), "test:start")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Contains(src, []byte("dalbitgol:market")) {
-		t.Fatal("do not hardcode village rooms")
+	if w.NPCs.Len() != 1 {
+		t.Fatalf("npcs=%d", w.NPCs.Len())
+	}
+	n, ok := w.NPCs.FindInRoom("test:start", "훈장")
+	if !ok || n.ID != "tutor" || !strings.Contains(n.TalkFirst.KO, "처음") {
+		t.Fatalf("tutor: %+v %v", n, ok)
+	}
+	if w.Objects.Len() != 1 {
+		t.Fatalf("objects=%d", w.Objects.Len())
+	}
+	o, ok := w.Objects.FindInRoom("test:yard", "신문")
+	if !ok || !strings.Contains(o.Description.KO, "활자") || !strings.Contains(o.Description.KO, "한벽일보") {
+		t.Fatalf("paper: %+v %v", o, ok)
+	}
+}
+
+func TestLoadStoryErrors(t *testing.T) {
+	root := writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "objects.yaml", "- id: ghost-paper\n  room: test:missing\n  name: 신문\n  aliases: [신문]\n  description: 설명이다.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "unknown room") {
+		t.Fatalf("unknown object room: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "talk.second") {
+		t.Fatalf("missing second talk: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "objects.yaml", "- id: bad-fs\n  room: test:start\n  name: 신문\n  aliases: [신문]\n  description: 설명이다.\n  foreshadow: [FS-999]\n")
+	_, err := LoadWorld(root, "test:start")
+	if err == nil || (!errors.Is(err, ErrUnknownForeshadow) && !strings.Contains(err.Error(), "FORESHADOW.md")) {
+		t.Fatalf("unknown fs: %v", err)
+	}
+}
+
+func writeStoryFile(t *testing.T, root, name, yaml string) {
+	t.Helper()
+	path := filepath.Join(root, "zones", "test", name)
+	if err := os.WriteFile(path, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 

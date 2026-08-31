@@ -1,8 +1,7 @@
 # CONTENT-SCHEMA
 
-WORLD ↔ ENGINE / GAMEPLAY. Rooms, NPCs, and items are YAML only
-(PLAN.md §4.4, principle 5). M1 defines **rooms**. NPC/item schemas wait
-for later milestones.
+WORLD ↔ ENGINE / GAMEPLAY. Rooms, NPCs, objects, and items are YAML only
+(PLAN.md §4.4, principle 5).
 
 Related: [CONTENT-STYLE.md](CONTENT-STYLE.md), [FORESHADOW.md](FORESHADOW.md),
 [EVENT-BUS.md](EVENT-BUS.md).
@@ -23,9 +22,11 @@ content/craft/recipes.yaml     # consume/produce (M3)
 content/economy/markets.yaml   # regional price tables (M3)
 content/zones/<zone>/rooms.yaml
 content/zones/<zone>/spawns.yaml   # extra flags + ground item ids
+content/zones/<zone>/objects.yaml  # examine targets (보다)
+content/zones/<zone>/npcs.yaml     # T0 scripted NPCs (대화)
 ```
 
-`npcs.yaml` and `quests.yaml` remain reserved.
+`quests.yaml` remains reserved.
 
 ## Localized string
 
@@ -79,6 +80,58 @@ The loader canonicalizes both forms to `{ko, en}`.
 | `heat_modifier` | no | Float, default `1.0`. Unused in M1; stored for M5. |
 | `ambient` | no | List of localized strings. Flavor only in M1. |
 | `foreshadow` | no | List of `FS-NNN` that **already exist** in `docs/FORESHADOW.md`. Unknown ID = load error. |
+
+## Examine target (`content/zones/<zone>/objects.yaml`)
+
+Scenery, not inventory. `보다 신문` matches an alias in the current room.
+
+```yaml
+- id: hanbyeok-ilbo
+  room: dalbitgol:market
+  name: { ko: "한벽일보" }
+  aliases: [한벽일보, 신문, 게시판]
+  description:
+    ko: >
+      한벽일보 한 줄에 같은 활자가 두 번 찍혀 있다.
+  foreshadow: [FS-001, FS-014]
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `id` | yes | `[a-z][a-z0-9-]*`, unique across the load |
+| `room` | yes | existing room id; zone must match the directory |
+| `name` | yes | Localized. Non-empty `ko` |
+| `aliases` | no | `보다` / `look` targets. Also matches `id` and `name` |
+| `description` | yes | Localized. 2–4 sentences, ≥2 senses (style) |
+| `foreshadow` | no | existing `FS-NNN` ids |
+
+## Scripted NPC (`content/zones/<zone>/npcs.yaml`)
+
+T0 YAML dialogue. Not LLM. `대화 청람` / `talk 청람` / `말걸다`.
+
+```yaml
+- id: cheongram
+  name: { ko: "청람 선생" }
+  room: dalbitgol:school
+  aliases: [청람, 선생]
+  look: { ko: "낡은 코트 소매에 잉크가 묻어 있다." }
+  talk:
+    first: { ko: "처음 보는 얼굴이군, 자네." }
+    second: { ko: "또 왔군, 자네." }
+  foreshadow: [FS-016]
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `id` | yes | `[a-z][a-z0-9-]*`, unique. First talk sets sheet flag `{id}_talked` |
+| `room` | yes | existing room id; zone must match the directory |
+| `name` | yes | Localized. Shown on the room card (`사람:`) |
+| `aliases` | yes | at least one. `대화` / `보다` targets |
+| `look` | yes | `보다 <alias>` blurb |
+| `talk.first` / `talk.second` | yes | Korean. Second line is for a player who already talked |
+| `foreshadow` | no | existing `FS-NNN` ids |
+
+Unknown NPC: `여기는 그 사람이 없어요.`
 
 ## Item object (`content/items/*.yaml`)
 

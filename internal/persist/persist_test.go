@@ -167,6 +167,7 @@ func testAccountStore(t *testing.T, s AccountStore) {
 		Bag:    []world.Stack{{ID: "pebble", Qty: 2}},
 		Equip:  world.Equipment{MainHand: "rod"},
 		Nyang:  12,
+		Flags:  map[string]int{"cheongram_talked": 1},
 	}
 	if err := s.SaveSheet(ctx, acc.ID, want); err != nil {
 		t.Fatal(err)
@@ -174,12 +175,14 @@ func testAccountStore(t *testing.T, s AccountStore) {
 	gotSheet, err := s.LoadSheet(ctx, acc.ID)
 	if err != nil || gotSheet.Skills["smith"] != 4 || gotSheet.Stats["str"] != 1 ||
 		len(gotSheet.Bag) != 1 || gotSheet.Bag[0] != (world.Stack{ID: "pebble", Qty: 2}) ||
-		gotSheet.Equip.MainHand != "rod" || gotSheet.Nyang != 12 {
+		gotSheet.Equip.MainHand != "rod" || gotSheet.Nyang != 12 ||
+		gotSheet.Flags["cheongram_talked"] != 1 {
 		t.Fatalf("load sheet: %+v %v", gotSheet, err)
 	}
+	gotSheet.Flags["cheongram_talked"] = 9
 	gotSheet.Bag[0].ID = "hacked"
 	again, err := s.LoadSheet(ctx, acc.ID)
-	if err != nil || again.Bag[0].ID != "pebble" {
+	if err != nil || again.Bag[0].ID != "pebble" || again.Flags["cheongram_talked"] != 1 {
 		t.Fatalf("sheet must copy: %+v %v", again, err)
 	}
 	if _, err := s.LoadSheet(ctx, "missing-account"); !errors.Is(err, ErrNotFound) {
@@ -315,6 +318,7 @@ func TestMigrationHasRequiredSchema(t *testing.T) {
 		"CREATE TABLE IF NOT EXISTS sessions",
 		"token", "account_id", "expires_at",
 		"skills JSONB", "stats JSONB", "bag JSONB", "equipment JSONB",
+		"flags JSONB",
 	} {
 		if !strings.Contains(s, need) {
 			t.Errorf("migrations missing %q", need)

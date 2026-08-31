@@ -369,7 +369,14 @@ func (s *session) dispatch(line string) error {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
 	case isLook(low, verb):
-		if !s.loop.Submit(engine.Look{ConnID: s.id}) {
+		if !s.loop.Submit(engine.Look{ConnID: s.id, Target: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case isTalk(low, verb):
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Talk{ConnID: s.id, NPC: rest}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
 	case low == "go" || verb == "가다":
@@ -550,6 +557,9 @@ func formatRoom(e engine.Room) []string {
 	if len(e.Who) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomHere, strings.Join(e.Who, ", ")))
 	}
+	if len(e.NPCs) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomNPCs, strings.Join(e.NPCs, ", ")))
+	}
 	if len(e.Ground) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomGround, strings.Join(e.Ground, ", ")))
 	}
@@ -576,6 +586,10 @@ func formatExits(exits map[string]string) string {
 
 func isLook(low, verb string) bool {
 	return low == "look" || low == "l" || verb == "보다" || verb == "살펴"
+}
+
+func isTalk(low, verb string) bool {
+	return low == "talk" || verb == "대화" || verb == "말걸다"
 }
 
 var telnetDir = map[string]string{

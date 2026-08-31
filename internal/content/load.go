@@ -192,16 +192,27 @@ func toRoom(yr yamlRoom, zone string) (world.Room, error) {
 	}, nil
 }
 
-func checkForeshadow(root string, rooms []world.Room) error {
+func checkForeshadow(root string, rooms []world.Room, extra ...[]string) error {
 	used := make([]string, 0)
 	seen := make(map[string]struct{})
+	add := func(id string) {
+		if id == "" {
+			return
+		}
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		used = append(used, id)
+	}
 	for _, r := range rooms {
 		for _, id := range r.Foreshadow {
-			if _, ok := seen[id]; ok {
-				continue
-			}
-			seen[id] = struct{}{}
-			used = append(used, id)
+			add(id)
+		}
+	}
+	for _, list := range extra {
+		for _, id := range list {
+			add(id)
 		}
 	}
 	if len(used) == 0 {

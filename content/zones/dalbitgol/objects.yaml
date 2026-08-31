@@ -1,0 +1,51 @@
+# Scenery examine targets. Not inventory. Aliases are 보다 / look targets.
+
+- id: hanbyeok-ilbo
+  room: dalbitgol:market
+  name:
+    ko: 한벽일보
+  aliases: [한벽일보, 신문, 게시판]
+  description:
+    ko: >
+      게시판 맨 앞장 관아 안내문은 모퉁이가 손가락 넓이로 찢겨 있고, 풀자국이
+      손톱에 끈적하다. 그 아래 한벽일보 한 줄에는 같은 활자가 두 번 찍혀
+      비뚤어져 있으며, 잉크가 아직 손가락에 묻는다. 난 쪽에 무허가 보부상
+      강포가 사흘째 안 보인다는 짧은 기사가 있고, 활자 냄새가 코를 찌른다.
+  foreshadow: [FS-001, FS-014, FS-016]
+
+- id: gangpo-pack
+  room: dalbitgol:warehouse
+  name:
+    ko: 보부상 봇짐
+  aliases: [보부상, 강포, 봇짐, 짚단, 짐]
+  description:
+    ko: >
+      짚단 밑이 한 층 떠 있어 손바닥이 허공에 빠지고, 그 틈에 찻잔 받침 패가
+      차갑게 끼어 있다. 보부상 강포의 봇짐 끈은 끊어진 채 겨 냄새가 배어 있고,
+      거짓 바닥 사이로 마른 짚이 부스러진다. 장정은 안 보이고, 서까래만 가끔
+      짧게 삐걱인다.
+  foreshadow: [FS-016]
+
+- id: face-down-plate
+  room: dalbitgol:school
+  name:
+    ko: 접시
+  aliases: [접시, 그릇]
+  description:
+    ko: >
+      창가에 접시 하나가 엎어져 있고, 먼지를 문지르면 손가락이 하얘진다.
+      뒤집지 않은 밑바닥은 차갑고, 금 간 테두리로 바람이 스친다. 누가 오래
+      손대지 않은 자리라, 분필 가루 냄새만 남아 있다.
+  foreshadow: [FS-007]
+
+- id: worn-type
+  room: dalbitgol:printshop
+  name:
+    ko: 닳은 활자
+  aliases: [활자, 닳은 활자]
+  description:
+    ko: >
+      상자 한쪽에 닳은 활자가 한 줌 따로 모여 있고, 만지면 납이 손가락에
+      차갑다. 같은 글자 몸이 두 개나 닳아 머리가 뭉툭하고, 기름 냄새에 목이
+      메인다. 옆 쟁반에서 활자가 달그락거린다.
+  foreshadow: [FS-001]

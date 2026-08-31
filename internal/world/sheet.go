@@ -13,6 +13,7 @@ type Sheet struct {
 	Bag    []Stack        `json:"bag"`
 	Equip  Equipment      `json:"equipment"`
 	Nyang  int            `json:"nyang,omitempty"`
+	Flags  map[string]int `json:"flags,omitempty"`
 }
 
 // CloneSheet deep-copies a sheet. Nil maps become empty maps; nil bag becomes empty.
@@ -27,6 +28,7 @@ func CloneSheet(s Sheet) Sheet {
 		Bag:    CloneStacks(s.Bag),
 		Equip:  s.Equip,
 		Nyang:  nyang,
+		Flags:  CloneInts(s.Flags),
 	}
 }
 

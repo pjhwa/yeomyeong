@@ -36,11 +36,14 @@ type yamlSpawn struct {
 	Items    []string `yaml:"items"`
 }
 
-// World is rooms + items + boot ground piles (ground is world state).
+// World is rooms + items + boot ground piles (ground is world state)
+// plus immutable NPC and examine-target catalogs.
 type World struct {
-	Rooms  *world.Catalog
-	Items  *world.Items
-	Ground map[string][]world.Stack
+	Rooms   *world.Catalog
+	Items   *world.Items
+	Ground  map[string][]world.Stack
+	NPCs    *world.NPCs
+	Objects *world.Objects
 }
 
 // LoadWorld loads rooms, optional items/, and optional zone spawns.yaml.
@@ -60,7 +63,15 @@ func LoadWorld(root, spawnID string) (*World, error) {
 	for i, r := range order {
 		order[i] = rooms[r.ID]
 	}
-	if err := checkForeshadow(root, order); err != nil {
+	objects, err := loadObjects(root, rooms)
+	if err != nil {
+		return nil, err
+	}
+	npcs, err := loadNPCs(root, rooms)
+	if err != nil {
+		return nil, err
+	}
+	if err := checkForeshadow(root, order, foreshadowOf(npcs, objects)); err != nil {
 		return nil, err
 	}
 	cat, err := world.NewCatalog(order, spawnID)
@@ -70,7 +81,15 @@ func LoadWorld(root, spawnID string) (*World, error) {
 	if err := checkReachable(cat, spawnID); err != nil {
 		return nil, err
 	}
-	return &World{Rooms: cat, Items: items, Ground: ground}, nil
+	npcCat, err := world.NewNPCs(npcs)
+	if err != nil {
+		return nil, err
+	}
+	objCat, err := world.NewObjects(objects)
+	if err != nil {
+		return nil, err
+	}
+	return &World{Rooms: cat, Items: items, Ground: ground, NPCs: npcCat, Objects: objCat}, nil
 }
 
 func loadRooms(root, spawnID string) (map[string]world.Room, []world.Room, error) {

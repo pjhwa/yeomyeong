@@ -13,18 +13,18 @@ import (
 
 // LoadSheet returns a copy of the account sheet. Missing accounts are ErrNotFound.
 func (p *Postgres) LoadSheet(ctx context.Context, accountID string) (world.Sheet, error) {
-	var skills, stats, bag, equip []byte
+	var skills, stats, bag, equip, flags []byte
 	var nyang int
 	err := p.pool.QueryRow(ctx, `
-		SELECT skills, stats, bag, equipment, nyang FROM accounts WHERE id = $1
-	`, accountID).Scan(&skills, &stats, &bag, &equip, &nyang)
+		SELECT skills, stats, bag, equipment, nyang, flags FROM accounts WHERE id = $1
+	`, accountID).Scan(&skills, &stats, &bag, &equip, &nyang, &flags)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return world.Sheet{}, ErrNotFound
 	}
 	if err != nil {
 		return world.Sheet{}, err
 	}
-	sh, err := decodeSheet(skills, stats, bag, equip)
+	sh, err := decodeSheet(skills, stats, bag, equip, flags)
 	if err != nil {
 		return world.Sheet{}, err
 	}
@@ -54,12 +54,20 @@ func (p *Postgres) SaveSheet(ctx context.Context, accountID string, sheet world.
 	if err != nil {
 		return err
 	}
+	flagsMap := sh.Flags
+	if flagsMap == nil {
+		flagsMap = map[string]int{}
+	}
+	flags, err := json.Marshal(flagsMap)
+	if err != nil {
+		return err
+	}
 	nyang := sh.Nyang
 	if nyang < 0 {
 		nyang = 0
 	}
-	tag, err := p.pool.Exec(ctx, `UPDATE accounts SET skills=$2, stats=$3, bag=$4, equipment=$5, nyang=$6 WHERE id=$1`,
-		accountID, skills, stats, bag, equip, nyang)
+	tag, err := p.pool.Exec(ctx, `UPDATE accounts SET skills=$2, stats=$3, bag=$4, equipment=$5, nyang=$6, flags=$7 WHERE id=$1`,
+		accountID, skills, stats, bag, equip, nyang, flags)
 	if err != nil {
 		return err
 	}
@@ -69,7 +77,7 @@ func (p *Postgres) SaveSheet(ctx context.Context, accountID string, sheet world.
 	return nil
 }
 
-func decodeSheet(skills, stats, bag, equip []byte) (world.Sheet, error) {
+func decodeSheet(skills, stats, bag, equip, flags []byte) (world.Sheet, error) {
 	sh := world.CloneSheet(world.Sheet{})
 	if err := unmarshalJSON(skills, &sh.Skills); err != nil {
 		return world.Sheet{}, err
@@ -81,6 +89,9 @@ func decodeSheet(skills, stats, bag, equip []byte) (world.Sheet, error) {
 		return world.Sheet{}, err
 	}
 	if err := unmarshalJSON(equip, &sh.Equip); err != nil {
+		return world.Sheet{}, err
+	}
+	if err := unmarshalJSON(flags, &sh.Flags); err != nil {
 		return world.Sheet{}, err
 	}
 	return world.CloneSheet(sh), nil

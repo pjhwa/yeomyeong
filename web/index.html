@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>여명 · YEOMYEONG</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="masthead">
+      <p class="kicker">한벽일보 · 달빛골 통신</p>
+      <h1>여명 · YEOMYEONG</h1>
+      <p class="lede">싸우지 않고 10분. 장터 신문, 서당의 선생.</p>
+    </header>
+
+    <section id="auth" class="panel">
+      <label>이름
+        <input id="user" autocomplete="username" maxlength="16">
+      </label>
+      <label>비밀번호
+        <input id="pass" type="password" autocomplete="current-password">
+      </label>
+      <div class="row">
+        <button type="button" id="create">새로 만들기</button>
+        <button type="button" id="login">들어가기</button>
+      </div>
+      <p id="auth-err" class="err" hidden></p>
+      <p class="hint">연결되면 마을문에서 북쪽으로 장터까지 걷고, <kbd>보다 신문</kbd> · <kbd>대화 청람</kbd>.</p>
+    </section>
+
+    <section id="term" hidden>
+      <pre id="out" aria-live="polite"></pre>
+      <form id="cmd-form">
+        <span class="prompt">&gt;</span>
+        <input id="cmd" autocomplete="off" spellcheck="false" aria-label="명령">
+      </form>
+    </section>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

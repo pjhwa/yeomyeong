@@ -304,6 +304,45 @@ func TestWSDisconnectRemovesFromRoster(t *testing.T) {
 	waitRoster(t, loop, 0)
 }
 
+func TestWSTalkAndLookTarget(t *testing.T) {
+	_, loop, store := startStoryServer(t)
+	addr := startWS(t, loop, store)
+	a := dialWS(t, addr)
+	a.send(t, typeAuthCreate, "c1", map[string]string{"username": "갑을", "password": "password1"})
+	_ = a.readType(t, typeAuthOK)
+	room := decodeRoom(t, a.readType(t, typeRoom))
+	if len(room.Who) != 0 {
+		t.Fatalf("who: %v", room.Who)
+	}
+	a.send(t, typeCmdLook, "l0", map[string]any{})
+	look := decodeRoom(t, a.readType(t, typeRoom))
+	if len(look.NPCs) != 1 || look.NPCs[0] != "훈장" {
+		t.Fatalf("npcs: %+v", look)
+	}
+
+	a.send(t, typeCmdTalk, "t1", map[string]string{"npc": "훈장"})
+	a.waitText(t, engine.ChannelSys, "", "처음 보는 얼굴이군.")
+	a.send(t, typeCmdTalk, "t2", map[string]string{"npc": "선생"})
+	a.waitText(t, engine.ChannelSys, "", "또 왔군, 자네.")
+
+	b := dialWS(t, addr)
+	b.send(t, typeAuthCreate, "c2", map[string]string{"username": "병정", "password": "password2"})
+	_ = b.readType(t, typeAuthOK)
+	_ = b.readType(t, typeRoom)
+	b.send(t, typeCmdTalk, "tb", map[string]string{"npc": "훈장"})
+	b.waitText(t, engine.ChannelSys, "", "처음 보는 얼굴이군.")
+
+	a.send(t, typeCmdMove, "m1", map[string]string{"dir": "north"})
+	_ = a.readType(t, typeRoom)
+	a.send(t, typeCmdLook, "ln", map[string]string{"target": "신문"})
+	a.waitText(t, engine.ChannelSys, "", "한벽일보", "활자", "두 번")
+
+	a.send(t, typeCmdTalk, "empty", map[string]string{"npc": ""})
+	if payloadString(t, a.readType(t, typeSys), "code") != codeBadFrame {
+		t.Fatal("empty talk")
+	}
+}
+
 func TestWSOnlyGetWS(t *testing.T) {
 	_, loop, store := startServerStore(t)
 	addr := startWS(t, loop, store)
@@ -312,10 +351,19 @@ func TestWSOnlyGetWS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _ = io.Copy(io.Discard, resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("GET / status=%d", resp.StatusCode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("GET / status=%d body=%q", resp.StatusCode, body)
+	}
+	if !strings.Contains(string(body), "여명") && !strings.Contains(string(body), "YEOMYEONG") {
+		t.Fatalf("GET / body=%q", body)
+	}
+	if ct := resp.Header.Get("Content-Type"); !strings.Contains(ct, "text/html") {
+		t.Fatalf("GET / content-type=%q", ct)
 	}
 	resp, err = client.Get("http://" + addr + wsPath)
 	if err != nil {
@@ -489,6 +537,7 @@ type roomPayload struct {
 	Description string            `json:"description"`
 	Exits       map[string]string `json:"exits"`
 	Who         []string          `json:"who"`
+	NPCs        []string          `json:"npcs"`
 }
 
 func decodeRoom(t *testing.T, f inFrame) roomPayload {

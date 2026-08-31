@@ -80,6 +80,9 @@ const (
 	BuyHeavy        = "buy.heavy"
 	TollPay         = "toll.pay"
 	TollTake        = "toll.take"
+	TalkMissing     = "talk.missing"
+	ExamineMissing  = "examine.missing"
+	RoomNPCs        = "room.npcs"
 )
 
 // Sys codes for inventory (additive; WIRE-PROTOCOL M1 codes unchanged).
@@ -166,6 +169,9 @@ var catalog = map[string]entry{
 	BuyHeavy:        {ko: "너무 무거워서 살 수 없어요."},
 	TollPay:         {ko: "검문에서 짐을 보더니 통행세 %d냥을 받아 갔어요."},
 	TollTake:        {ko: "검문에서 짐을 보더니 %s%s 놓고 가라고 했어요."},
+	TalkMissing:     {ko: "여기는 그 사람이 없어요."},
+	ExamineMissing:  {ko: "여기엔 그런 게 없어요."},
+	RoomNPCs:        {ko: "사람: %s"},
 }
 
 var dirKey = map[string]string{
