@@ -327,11 +327,11 @@ func (c *telnetClient) createUserUntilPrompt(t *testing.T, user, pass string) st
 	c.send(t, user)
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	seated := c.readUntil(t, user+" 님이 들어왔습니다.")
+	seated := c.readUntil(t, user+" 님이 들어왔어요.")
 	prompt := c.readUntil(t, ">")
 	return seated + prompt
 }

@@ -23,9 +23,9 @@ const (
 	// StatSumCap is the maximum sum of all stats.
 	StatSumCap = 300
 
-	groupCombat, groupCraft, groupSocial = "combat", "craft", "social"
-	statStr, statDex, statVit            = "str", "dex", "vit"
-	statWit, statSense, statFame         = "wit", "sense", "fame"
+	groupCombat, groupCraft, groupSocial, groupGather = "combat", "craft", "social", "gather"
+	statStr, statDex, statVit                         = "str", "dex", "vit"
+	statWit, statSense, statFame                      = "wit", "sense", "fame"
 )
 
 // Localized is a canonical {ko, en} string. Missing en falls back to ko.
@@ -65,14 +65,14 @@ type Catalog struct {
 var (
 	skillIDRe   = regexp.MustCompile(`^(?:test:)?[a-z][a-z0-9-]*$`)
 	titleIDRe   = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
-	knownGroups = map[string]struct{}{groupCombat: {}, groupCraft: {}, groupSocial: {}}
+	knownGroups = map[string]struct{}{groupCombat: {}, groupCraft: {}, groupSocial: {}, groupGather: {}}
 	knownStats  = map[string]struct{}{
 		statStr: {}, statDex: {}, statVit: {}, statWit: {}, statSense: {}, statFame: {},
 	}
 	knownFlags = map[string]struct{}{
 		"safe": {}, "town": {}, "market": {}, "indoor": {}, "dark": {},
 		"forge": {}, "kitchen": {}, "press": {}, "clinic": {}, "yard": {},
-		"salon": {},
+		"salon": {}, "checkpoint": {},
 	}
 	reservedVerbs = map[string]struct{}{
 		"n": {}, "s": {}, "e": {}, "w": {}, "u": {}, "d": {},
@@ -80,15 +80,18 @@ var (
 		"북": {}, "남": {}, "동": {}, "서": {}, "위": {}, "아래": {},
 		"look": {}, "l": {}, "보다": {}, "살펴": {},
 		"say": {}, "말": {}, "quit": {}, "종료": {},
-		"skills": {}, "숙련": {}, "inv": {}, "소지": {},
+		"skills": {}, "숙련": {}, "기술": {}, "inv": {}, "소지": {}, "가방": {},
 		"practice": {}, "익히다": {},
 		"get": {}, "집다": {}, "drop": {}, "놓다": {},
 		"equip": {}, "들다": {}, "unequip": {}, "벗다": {},
 		"go": {}, "가다": {},
+		"craft": {}, "만들다": {}, "sell": {}, "팔다": {},
+		"buy": {}, "사다": {}, "quote": {}, "시세": {},
+		"gather": {},
 	}
 	statNameKO = map[string]string{
 		statStr: "힘", statDex: "손재주", statVit: "맷집",
-		statWit: "기지", statSense: "감응", statFame: "인망",
+		statWit: "재치", statSense: "감응", statFame: "평판",
 	}
 )
 
@@ -395,7 +398,7 @@ func LineAt(lines []string, rank int) string {
 func Band(rank int) string {
 	switch {
 	case rank >= 100:
-		return "경지"
+		return "달인"
 	case rank >= 90:
 		return "명인"
 	case rank >= 70:
@@ -403,7 +406,7 @@ func Band(rank int) string {
 	case rank >= 45:
 		return "능숙"
 	case rank >= 20:
-		return "수련"
+		return "익숙"
 	default:
 		return "초보"
 	}

@@ -15,3 +15,24 @@
   slot: main_hand
   skills: [unarmed]
   weight: 3
+- id: herb
+  name: { ko: "쑥" }
+  description: { ko: "테스트용 쑥이다." }
+  slot: none
+  weight: 1
+- id: ore
+  name: { ko: "쇠조각" }
+  description: { ko: "테스트용 쇠조각이다." }
+  slot: none
+  weight: 1
+- id: nail
+  name: { ko: "쇠못" }
+  description: { ko: "테스트용 쇠못이다." }
+  slot: none
+  weight: 1
+- id: hammer
+  name: { ko: "쇠망치" }
+  description: { ko: "테스트용 쇠망치다." }
+  slot: main_hand
+  skills: [smith]
+  weight: 1

@@ -36,7 +36,7 @@ var knownDirs = map[string]struct{}{
 var knownFlags = map[string]struct{}{
 	"safe": {}, "town": {}, "market": {}, "indoor": {}, "dark": {},
 	"forge": {}, "kitchen": {}, "press": {}, "clinic": {}, "yard": {},
-	"salon": {},
+	"salon": {}, "checkpoint": {},
 }
 
 // loc is a YAML localized string: a bare Korean scalar or {ko, en}.

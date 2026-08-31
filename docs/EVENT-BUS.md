@@ -13,8 +13,9 @@ The game-loop goroutine is the **only** goroutine that:
 - inserts / removes players on the in-memory roster
 - reads the roster to decide who receives a `say`
 - writes `Player.RoomID` (position)
-- writes skill ranks, stats, bag, equipment, and room ground piles
-- changes any future world field (heat, prices, …)
+- writes skill ranks, stats, bag, equipment, room ground piles, nyang
+- writes market stock and gather-node remaining
+- changes any future world field (heat, …)
 
 The **room catalog** loaded from YAML is immutable after boot. The loop
 reads it; it does not mutate room definitions. Positions are world state.
@@ -29,7 +30,7 @@ conn goroutine ──Command──▶ game loop ──Event──▶ per-conn ou
                      └── persist / auth happens BEFORE EnterWorld
 ```
 
-## Commands (M0–M1)
+## Commands (M0–M3)
 
 Enqueued by adapters (`internal/net`). Value types, no shared pointers into
 the world.
@@ -45,7 +46,11 @@ the world.
 | `Drop` | `ConnID`, `ItemID` | net | Move one bag stack to ground |
 | `Equip` | `ConnID`, `ItemID` | net | Bag → slot if `slot` is wearable |
 | `Unequip` | `ConnID`, `Slot` | net | Slot → bag |
-| `Sheet` | `ConnID` | net | Emit skills/title/stats/inv text |
+| `Sheet` | `ConnID` | net | Emit skills/title/stats/inv/purse text |
+| `Gather` | `ConnID`, `Query`, `Skill` | net | Harvest a YAML node; write bag + forage rank |
+| `Craft` | `ConnID`, `Query` | net | Consume a YAML recipe; write bag + craft rank |
+| `Sell` / `Buy` | `ConnID`, `Query`, `Qty` | net | Trade at the room's `market` slug; write nyang + stock |
+| `Quote` | `ConnID` | net | Emit current stall prices |
 | `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Persist sheet; delete roster; emit `Sys` to remaining **in that room** |
 
 Auth create/login is **not** a loop command. Hashing and store I/O run in
@@ -67,10 +72,12 @@ the adapter drains.
 
 ## Tick
 
-Period: **100ms**. M1 tick work:
+Period: **100ms**. Tick work:
 
 1. Drain the command channel (bounded; see below).
-2. No combat, weather, NPC, or price work yet.
+2. Regen gather nodes whose `regen_ticks` divide the tick count.
+3. Every 10 ticks, walk each market good one step toward `target` (NPC flow).
+4. No combat, weather, or NPC AI yet.
 
 If the drain exceeds the tick budget, log a warning and continue. Do not
 spawn extra loop goroutines.
@@ -97,5 +104,8 @@ Do not implement these in M1; names are reserved so GAMEPLAY/ECONOMY do
 not invent parallel buses:
 
 - `UseSkill`, `CombatIntent`
-- `PriceTick`, `HeatTick`, `WeatherTick`
+- `HeatTick`, `WeatherTick`
 - `DialogueRequest` / `DialogueResult` (AINPC workers → loop)
+
+Price drift is not a command. The loop calls `Book.Tick` on its own
+goroutine (D-043).

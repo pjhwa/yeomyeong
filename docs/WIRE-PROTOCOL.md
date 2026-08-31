@@ -45,6 +45,11 @@ All client frames:
 | `cmd.drop` | `{ "item" }` | After `auth.ok` |
 | `cmd.equip` | `{ "item" }` | After `auth.ok` |
 | `cmd.unequip` | `{ "slot" }` | After `auth.ok`. `slot` is `main_hand` or `body` |
+| `cmd.gather` | `{ "item"?, "skill"? }` | After `auth.ok`. Telnet: `캐다` / `줍다` |
+| `cmd.craft` | `{ "item"? }` | After `auth.ok`. Telnet: `만들다` / `만들다 쇠못` |
+| `cmd.sell` | `{ "item", "n"? }` | After `auth.ok`. Telnet: `팔다 쑥` / `팔다 쑥 2` |
+| `cmd.buy` | `{ "item", "n"? }` | After `auth.ok`. Telnet: `사다 쑥` |
+| `cmd.quote` | `{}` | After `auth.ok`. Telnet: `시세` |
 | `cmd.quit` | `{}` | Any time after connect |
 
 Username rules (server-enforced): 2–16 runes; Hangul syllables (`가`–`힣`),
@@ -100,6 +105,12 @@ When the room has ground items, Telnet adds:
 | `bad_frame` | JSON/schema/`v` |
 | `rate_limited` | more than 20 commands in any rolling 1s |
 | `internal` | unexpected |
+| `no_market` | `시세` / `팔다` / `사다` outside a stall, or unlisted good |
+| `no_stock` | gather node empty, or stall has nothing to sell |
+| `too_poor` | `사다` with not enough 냥 |
+| `no_node` | `캐다` in a room with no gather node |
+| `no_recipe` | unknown `만들다` target, or wrong station |
+| `need_mat` | missing recipe inputs, or sell qty short |
 
 ## Telnet — line protocol
 
@@ -117,7 +128,7 @@ Server speaks Korean. Bytes are UTF-8.
 If the name is unknown:
 
 ```
-없는 이름입니다. 새로 만드시겠습니까? (y/n)
+없는 이름이에요. 새로 만들까요? (y/n)
 ```
 
 `y` → prompt for the password again as the new password, create, enter world.  
@@ -126,14 +137,14 @@ If the name is unknown:
 If the name exists, the typed password is verified. Failure:
 
 ```
-이름이나 비밀번호가 맞지 않습니다.
+이름이나 비밀번호가 안 맞아요.
 이름:
 ```
 
 On success:
 
 ```
-<username> 님이 들어왔습니다.
+<username> 님이 들어왔어요.
 >
 ```
 
@@ -147,17 +158,17 @@ After the prompt:
 | `북` `남` `동` `서` `위` `아래` | `Move` |
 | `north` `south` `east` `west` `up` `down` | `Move` |
 | `go <dir>` / `가다 <dir>` | `Move` |
-| `skills` / `숙련` / `기술` | `Sheet` |
+| `skills` / `기술` / `숙련` / `가방` / `소지` | `Sheet` |
 | `practice <skill>` / `익히다 <skill>` | `Practice` (hidden alias) |
-| `두드리다` `벼리다` `이야기하다` … | `Practice` — YAML `verbs` for that skill (D-040) |
-| `inv` / `소지` | `Sheet` (inventory section) |
+| `두드리다` `이야기하다` `캐다` … | `Practice` / gather — YAML `verbs` (D-040, D-045) |
+| `inv` / `가방` / `소지` | `Sheet` (inventory section) |
 | `get <item>` / `집다 <item>` | `Get` |
 | `drop <item>` / `놓다 <item>` | `Drop` |
 | `equip <item>` / `들다 <item>` | `Equip` |
 | `unequip <slot>` / `벗다 <slot>` | `Unequip` |
 | `quit` / `종료` | `Quit` (close after a farewell line) |
 | empty line | ignore |
-| anything else | `sys` equivalent: keyed `cmd.unknown` (Korean wording unchanged from M0) |
+| anything else | `sys` equivalent: keyed `cmd.unknown` (`무슨 말인지 모르겠어요. 보다, 종료`) |
 
 On a successful login the server emits the spawn room card (`dalbitgol:gate`)
 immediately after the seated line.
@@ -165,7 +176,7 @@ immediately after the seated line.
 Failed move (no exit):
 
 ```
-그쪽으로는 갈 수 없습니다.
+그쪽으로는 갈 수 없어요.
 ```
 
 Broadcast format (every logged-in connection, including the speaker):
@@ -182,7 +193,7 @@ same `Command` values as WebSocket.
 ## Rate limit
 
 20 commands per connection per rolling second (PLAN.md §4.5), counted
-**before** enqueue. Excess is dropped and the client is told `너무 빨리 입력했습니다. 잠깐만 기다리세요.` (code `rate_limited`).
+**before** enqueue. Excess is dropped and the client is told `너무 빨리 입력했어요. 잠깐만 기다리세요.` (code `rate_limited`).
 The game loop never sees the dropped command.
 
 ## What this document is not

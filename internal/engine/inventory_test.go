@@ -74,7 +74,8 @@ func TestMemoryReconnectRestoresBag(t *testing.T) {
 	store := newMemSheets()
 	l, _ := startInv(t, store)
 	mustAttach(t, l, "a")
-	l.Submit(EnterWorld{ConnID: "a", AccountID: "acc-1", Username: "갑", Session: "s1"})
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "acc-1", Username: "갑", Session: "s1",
+		Sheet: yworld.Sheet{Nyang: 7}})
 	l.Submit(Get{ConnID: "a", ItemID: "pebble"})
 	l.Submit(Get{ConnID: "a", ItemID: "rod"})
 	l.Submit(Equip{ConnID: "a", ItemID: "rod"})
@@ -87,7 +88,7 @@ func TestMemoryReconnectRestoresBag(t *testing.T) {
 	mustAttach(t, l, "b")
 	l.Submit(EnterWorld{ConnID: "b", AccountID: "acc-1", Username: "갑", Session: "s2", Sheet: saved})
 	snap := mustSnapshot(t, l)
-	if len(snap.Players) != 1 || qtyOf(snap.Players[0].Bag, "pebble") != 1 || snap.Players[0].Equip.MainHand != "rod" {
+	if len(snap.Players) != 1 || qtyOf(snap.Players[0].Bag, "pebble") != 1 || snap.Players[0].Equip.MainHand != "rod" || snap.Players[0].Nyang != 7 {
 		t.Fatalf("reconnect %+v saved %+v", snap.Players, saved)
 	}
 }

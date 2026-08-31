@@ -14,16 +14,25 @@ import (
 // LoadSheet returns a copy of the account sheet. Missing accounts are ErrNotFound.
 func (p *Postgres) LoadSheet(ctx context.Context, accountID string) (world.Sheet, error) {
 	var skills, stats, bag, equip []byte
+	var nyang int
 	err := p.pool.QueryRow(ctx, `
-		SELECT skills, stats, bag, equipment FROM accounts WHERE id = $1
-	`, accountID).Scan(&skills, &stats, &bag, &equip)
+		SELECT skills, stats, bag, equipment, nyang FROM accounts WHERE id = $1
+	`, accountID).Scan(&skills, &stats, &bag, &equip, &nyang)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return world.Sheet{}, ErrNotFound
 	}
 	if err != nil {
 		return world.Sheet{}, err
 	}
-	return decodeSheet(skills, stats, bag, equip)
+	sh, err := decodeSheet(skills, stats, bag, equip)
+	if err != nil {
+		return world.Sheet{}, err
+	}
+	if nyang < 0 {
+		nyang = 0
+	}
+	sh.Nyang = nyang
+	return sh, nil
 }
 
 // SaveSheet replaces the account sheet. Missing accounts are ErrNotFound.
@@ -45,8 +54,12 @@ func (p *Postgres) SaveSheet(ctx context.Context, accountID string, sheet world.
 	if err != nil {
 		return err
 	}
-	tag, err := p.pool.Exec(ctx, `UPDATE accounts SET skills=$2, stats=$3, bag=$4, equipment=$5 WHERE id=$1`,
-		accountID, skills, stats, bag, equip)
+	nyang := sh.Nyang
+	if nyang < 0 {
+		nyang = 0
+	}
+	tag, err := p.pool.Exec(ctx, `UPDATE accounts SET skills=$2, stats=$3, bag=$4, equipment=$5, nyang=$6 WHERE id=$1`,
+		accountID, skills, stats, bag, equip, nyang)
 	if err != nil {
 		return err
 	}

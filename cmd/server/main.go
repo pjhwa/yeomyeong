@@ -74,6 +74,14 @@ func run(ctx context.Context, log *slog.Logger, cfg config.Config) error {
 	defer saver.Close()
 
 	loop := engine.NewWithWorld(log, cat, items, ground, saver).WithSkills(skills)
+	if cat != nil {
+		liv, err := content.LoadLivelihood(contentRoot, cat, items, skills)
+		if err != nil {
+			return err
+		}
+		loop = loop.WithCraft(liv.Craft).WithMarkets(liv.Markets)
+		log.Info("livelihood loaded", "nodes", len(liv.Craft.Nodes()), "recipes", len(liv.Craft.Recipes()), "markets", len(liv.Markets.IDs()))
+	}
 	loopDone := make(chan struct{})
 	go func() {
 		defer close(loopDone)

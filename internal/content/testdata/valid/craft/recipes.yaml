@@ -1,0 +1,7 @@
+- id: nail
+  skill: smith
+  flag: forge
+  in: [{id: ore, n: 2}]
+  out: {id: nail, n: 1}
+  gain: ["못이 됐다. 모루가 뜨겁다."]
+  miss: ["쇠가 비틀렸다."]

@@ -36,6 +36,7 @@ var schemaStmts = []string{
 	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS stats JSONB NOT NULL DEFAULT '{}'::jsonb`,
 	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS bag JSONB NOT NULL DEFAULT '[]'::jsonb`,
 	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS equipment JSONB NOT NULL DEFAULT '{}'::jsonb`,
+	`ALTER TABLE accounts ADD COLUMN IF NOT EXISTS nyang INTEGER NOT NULL DEFAULT 0`,
 }
 
 // Postgres is the PostgreSQL AccountStore. Used only when DATABASE_URL is set.

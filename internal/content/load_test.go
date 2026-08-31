@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
@@ -52,6 +53,36 @@ func TestLoadItemsAndSpawns(t *testing.T) {
 	}
 }
 
+func TestLoadLivelihood(t *testing.T) {
+	w, err := LoadWorld(fixture("valid"), "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sk, err := skill.Load(filepath.Join("..", "..", "content", "skills"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	liv, err := LoadLivelihood(fixture("valid"), w.Rooms, w.Items, sk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := liv.Craft.NodesIn("test:start"); len(n) != 1 || n[0].Item != "herb" {
+		t.Fatalf("nodes %+v", n)
+	}
+	if _, ok := liv.Craft.LookupRecipe("nail"); !ok {
+		t.Fatal("nail recipe")
+	}
+	ids := liv.Markets.IDs()
+	if len(ids) != 2 || !liv.Markets.HasMarket("test") || !liv.Markets.HasMarket("test-east") {
+		t.Fatalf("markets %v", ids)
+	}
+	p1, _ := liv.Markets.Quote("test", "herb")
+	p2, _ := liv.Markets.Quote("test-east", "herb")
+	if p1 >= p2 {
+		t.Fatalf("want regional spread %d %d", p1, p2)
+	}
+}
+
 func TestLoadValidGraph(t *testing.T) {
 	cat, err := Load(fixture("valid"), "test:start")
 	if err != nil {
@@ -75,7 +106,7 @@ func TestLoadValidGraph(t *testing.T) {
 		t.Fatalf("yard extras: %+v", yard)
 	}
 	shop, ok := cat.Room("test:shop")
-	if !ok || shop.HeatModifier != 0 {
+	if !ok || shop.HeatModifier != 0 || shop.Market != "test-east" {
 		t.Fatalf("explicit 0 heat: %+v", shop)
 	}
 	if dest, ok := cat.Exit("test:shop", "south"); !ok || dest != "test:cliff" {
@@ -222,6 +253,24 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	}
 	if cat.Spawn() != world.SpawnID || cat.Len() == 0 {
 		t.Fatalf("spawn=%s len=%d", cat.Spawn(), cat.Len())
+	}
+	w, err := LoadWorld(root, world.SpawnID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sk, err := skill.Load(filepath.Join(root, "skills"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	liv, err := LoadLivelihood(root, w.Rooms, w.Items, sk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(liv.Craft.Nodes()) == 0 || len(liv.Craft.Recipes()) != 4 || len(liv.Markets.IDs()) != 2 {
+		t.Fatalf("livelihood nodes=%d recipes=%d markets=%v", len(liv.Craft.Nodes()), len(liv.Craft.Recipes()), liv.Markets.IDs())
+	}
+	if _, ok := w.Rooms.Room("solgol:market"); !ok {
+		t.Fatal("solgol:market missing")
 	}
 }
 

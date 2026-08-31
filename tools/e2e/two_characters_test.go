@@ -25,7 +25,7 @@ const (
 	smithTitle  = "달빛골의 대장장이"
 	speechTitle = "말 잘하는 사람"
 
-	rateLimited = "너무 빨리 입력했습니다"
+	rateLimited = "너무 빨리 입력했어요"
 )
 
 func TestTwoCharactersPlayDifferently(t *testing.T) {
@@ -115,8 +115,8 @@ func loadRealPracticeWorld(t *testing.T) (*content.World, *skill.Catalog) {
 	if _, ok := skills.Lookup("smith"); !ok {
 		t.Fatal("smith missing")
 	}
-	if _, ok := skills.Lookup("언변"); !ok {
-		t.Fatal("speech/언변 missing")
+	if _, ok := skills.Lookup("말걸다"); !ok {
+		t.Fatal("speech/말걸다 missing")
 	}
 	if skills.Title(skills.NewSheet().WithRank("smith", 15)).KO != smithTitle {
 		t.Fatalf("smith-15 title=%q want %q", skills.Title(skills.NewSheet().WithRank("smith", 15)).KO, smithTitle)
@@ -157,11 +157,11 @@ func pickAndEquip(t *testing.T, c *telnetClient, names ...string) {
 	var last string
 	for _, name := range names {
 		c.sendPaced(t, "get "+name)
-		got, hit := c.readUntilAny(t, "집었습니다", "여기엔 그런 게 없습니다")
+		got, hit := c.readUntilAny(t, "집었어요", "여기엔 그런 게 없어요")
 		last = got
-		if hit == "집었습니다" {
+		if hit == "집었어요" {
 			c.sendPaced(t, "equip "+name)
-			c.expectLine(t, "들었습니다")
+			c.expectLine(t, "들었어요")
 			return
 		}
 	}
@@ -175,13 +175,13 @@ func practiceUntilTitle(t *testing.T, c *telnetClient, skills *skill.Catalog, cm
 		c.h.failf(t, "%s lookup %q", c.name, cmd)
 	}
 	needles := append(append([]string{}, sk.Gain...), sk.Miss...)
-	needles = append(needles, rateLimited, "그런 기술은 없습니다", "무슨 말인지")
+	needles = append(needles, rateLimited, "그런 기술은 없어요", "무슨 말인지")
 	loops := 0
 	for loops < maxPractice {
 		c.sendPaced(t, cmd)
 		got, hit := c.readUntilAny(t, needles...)
 		switch hit {
-		case "그런 기술은 없습니다", "무슨 말인지":
+		case "그런 기술은 없어요", "무슨 말인지":
 			c.h.failf(t, "%s unknown skill for %q\nlast recv: %q", c.name, cmd, got)
 		case rateLimited:
 			time.Sleep(200 * time.Millisecond)

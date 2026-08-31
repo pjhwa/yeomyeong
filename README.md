@@ -60,9 +60,10 @@ strange typesetting error, and a retired schoolmaster who knows more than he
 admits. The secret society called **새벽회 (the Dawn Circle)** is looking for
 people who notice things.
 
-> 좁은 흙길 양옆으로 좌판이 늘어섰다. 말린 명태와 삼베 냄새가 뒤섞이고,
-> 엿장수의 가위질 소리가 장단을 맞춘다. 장터 어귀의 게시판에는 총독부
-> 고시문이 붙어 있는데, 누군가 모퉁이를 찢어 갔다.
+> 장터 어귀 게시판에 관아 안내문이 겹쳐 붙었고, 맨 앞장 모퉁이만 손가락
+> 넓이로 찢어져 있다. 그 아래 한벽일보에는 같은 활자가 한 줄에서 두 번
+> 어긋나 있다. 좌판 저울추가 나무판을 치는 소리가 일정하고, 참기름
+> 고소한 냄새가 난다.
 
 *All nations, organizations, and characters are fictional. This project draws on
 the spirit of resistance-era history without depicting real people or groups.*

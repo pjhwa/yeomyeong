@@ -49,7 +49,7 @@ func TestTwoClientsExchangeSay(t *testing.T) {
 	}
 
 	a.send(t, "quit")
-	if !strings.Contains(b.readUntil(t, "갑을 님이 나갔습니다."), "갑을 님이 나갔습니다.") {
+	if !strings.Contains(b.readUntil(t, "갑을 님이 나갔어요."), "갑을 님이 나갔어요.") {
 		t.Fatal("remaining player missed leave line")
 	}
 	waitRoster(t, loop, 1)
@@ -63,17 +63,17 @@ func TestUnknownUserCreatePrompt(t *testing.T) {
 	c.send(t, "새유저")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "없는 이름입니다. 새로 만드시겠습니까? (y/n)")
+	c.readUntil(t, "없는 이름이에요. 새로 만들까요? (y/n)")
 	c.send(t, "n")
 	c.readUntil(t, "이름:")
 	c.send(t, "새유저")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "새유저 님이 들어왔습니다.")
+	c.readUntil(t, "새유저 님이 들어왔어요.")
 	c.readUntil(t, ">")
 	waitRoster(t, loop, 1)
 }
@@ -90,16 +90,16 @@ func TestBadPassword(t *testing.T) {
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "wrongpass")
 	got := c.readUntil(t, "이름:")
-	if !strings.Contains(got, "이름이나 비밀번호가 맞지 않습니다.") {
+	if !strings.Contains(got, "이름이나 비밀번호가 안 맞아요.") {
 		t.Fatalf("want bad-creds line, got %q", got)
 	}
-	if strings.Contains(got, "새로 만드시겠습니까") {
+	if strings.Contains(got, "새로 만들까요") {
 		t.Fatal("existing user must not see create prompt")
 	}
 	c.send(t, "갑을")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "갑을 님이 들어왔습니다.")
+	c.readUntil(t, "갑을 님이 들어왔어요.")
 }
 
 func TestUnknownCommandEmptyAndRateLimit(t *testing.T) {
@@ -109,15 +109,15 @@ func TestUnknownCommandEmptyAndRateLimit(t *testing.T) {
 
 	c.send(t, "")
 	c.send(t, "xyzzy")
-	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠습니다. 보다, 종료"), "무슨 말인지 모르겠습니다. 보다, 종료") {
+	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠어요. 보다, 종료"), "무슨 말인지 모르겠어요. 보다, 종료") {
 		t.Fatal("missing help line")
 	}
 
 	for i := 0; i < 25; i++ {
 		c.send(t, "say x")
 	}
-	if !strings.Contains(c.readUntil(t, "너무 빨리 입력했습니다"), "너무 빨리 입력했습니다") {
-		t.Fatal("want 너무 빨리 입력했습니다")
+	if !strings.Contains(c.readUntil(t, "너무 빨리 입력했어요"), "너무 빨리 입력했어요") {
+		t.Fatal("want 너무 빨리 입력했어요")
 	}
 }
 
@@ -157,14 +157,14 @@ func TestPasswordHiddenUsernameEchoed(t *testing.T) {
 		t.Fatalf("username must be echoed, got %q", nameChunk)
 	}
 	c.send(t, "s3cretPW")
-	passChunk := c.readUntil(t, "새로 만드시겠습니까?")
+	passChunk := c.readUntil(t, "새로 만들까요?")
 	if strings.Contains(passChunk, "s3cretPW") {
 		t.Fatalf("password must not be echoed, got %q", passChunk)
 	}
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "s3cretPW")
-	createChunk := c.readUntil(t, "갑을 님이 들어왔습니다.")
+	createChunk := c.readUntil(t, "갑을 님이 들어왔어요.")
 	if strings.Contains(createChunk, "s3cretPW") {
 		t.Fatalf("create password must not be echoed, got %q", createChunk)
 	}
@@ -185,11 +185,11 @@ func TestBackspaceAndControlChars(t *testing.T) {
 	}
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "갑을 님이 들어왔습니다.")
+	c.readUntil(t, "갑을 님이 들어왔어요.")
 	waitRoster(t, loop, 1)
 }
 
@@ -207,7 +207,7 @@ func TestExistingLoginAndIAC(t *testing.T) {
 	c.send(t, "갑을")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "갑을 님이 들어왔습니다.")
+	c.readUntil(t, "갑을 님이 들어왔어요.")
 }
 
 func TestReadLineCRLFAndIAC(t *testing.T) {
@@ -290,7 +290,7 @@ func TestLookMoveAndNoExit(t *testing.T) {
 	}
 
 	a.send(t, "s")
-	if !strings.Contains(a.readUntil(t, "그쪽으로는 갈 수 없습니다."), "그쪽으로는 갈 수 없습니다.") {
+	if !strings.Contains(a.readUntil(t, "그쪽으로는 갈 수 없어요."), "그쪽으로는 갈 수 없어요.") {
 		t.Fatal("missing no_exit")
 	}
 
@@ -510,11 +510,11 @@ func loginNew(t *testing.T, c *testConn, name, pass string) {
 	c.send(t, name)
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	c.readUntil(t, name+" 님이 들어왔습니다.")
+	c.readUntil(t, name+" 님이 들어왔어요.")
 	c.readUntil(t, ">")
 }
 
@@ -564,28 +564,28 @@ func TestPracticeSkillsInvVerbs(t *testing.T) {
 	loginNew(t, c, "갑을", "password1")
 
 	c.send(t, "skills")
-	if !strings.Contains(c.readUntil(t, "가진 것:"), "가진 것:") {
+	if !strings.Contains(c.readUntil(t, "가방:"), "가방:") {
 		t.Fatal("skills")
 	}
 	c.send(t, "숙련")
 	c.readUntil(t, "몸:")
 	c.send(t, "inv")
-	c.readUntil(t, "가진 것:")
+	c.readUntil(t, "가방:")
 	c.send(t, "소지")
 	c.readUntil(t, "들고 있는 것:")
 
 	c.send(t, "practice nope")
-	if !strings.Contains(c.readUntil(t, "숙련할 기술 중에 그런 기술은 없습니다."), "숙련할 기술 중에 그런 기술은 없습니다.") {
+	if !strings.Contains(c.readUntil(t, "그런 기술은 없어요."), "그런 기술은 없어요.") {
 		t.Fatal("practice unknown")
 	}
 	c.send(t, "익히다")
-	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠습니다. 보다, 종료"), "무슨 말인지 모르겠습니다. 보다, 종료") {
+	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠어요. 보다, 종료"), "무슨 말인지 모르겠어요. 보다, 종료") {
 		t.Fatal("practice empty")
 	}
 
 	c.send(t, "두드리다")
 	got := c.readUntil(t, "모루")
-	if strings.Contains(got, "모르는 말입니다") || strings.Contains(got, "숙련할 기술 중에 그런 기술은 없습니다") {
+	if strings.Contains(got, "모르는 말입니다") || strings.Contains(got, "그런 기술은 없어요") {
 		t.Fatalf("두드리다 should practice smith, got %q", got)
 	}
 	if strings.Contains(got, "숙련이 늘었습니다") || strings.Contains(got, "smith") {
@@ -593,21 +593,21 @@ func TestPracticeSkillsInvVerbs(t *testing.T) {
 	}
 
 	c.send(t, "get 없는물건")
-	c.readUntil(t, "여기엔 그런 게 없습니다.")
+	c.readUntil(t, "여기엔 그런 게 없어요.")
 	c.send(t, "집다 x")
-	c.readUntil(t, "여기엔 그런 게 없습니다.")
+	c.readUntil(t, "여기엔 그런 게 없어요.")
 	c.send(t, "drop 없는물건")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "놓다 x")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "equip 없는물건")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "들다 x")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "unequip main_hand")
-	c.readUntil(t, "거기엔 아무것도 없습니다.")
+	c.readUntil(t, "거기엔 아무것도 없어요.")
 	c.send(t, "벗다 몸")
-	c.readUntil(t, "거기엔 아무것도 없습니다.")
+	c.readUntil(t, "거기엔 아무것도 없어요.")
 }
 
 func TestAdaptersNeverWriteRoomID(t *testing.T) {

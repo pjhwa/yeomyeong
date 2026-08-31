@@ -15,6 +15,7 @@ type Player struct {
 	Stats     map[string]int
 	Bag       []yworld.Stack
 	Equip     yworld.Equipment
+	Nyang     int
 }
 
 // Snapshot is a copy of the roster produced by the loop (EVENT-BUS.md).
@@ -53,5 +54,5 @@ func clonePlayer(p Player) Player {
 }
 
 func (p Player) sheet() yworld.Sheet {
-	return yworld.Sheet{Skills: p.Skills, Stats: p.Stats, Bag: p.Bag, Equip: p.Equip}
+	return yworld.Sheet{Skills: p.Skills, Stats: p.Stats, Bag: p.Bag, Equip: p.Equip, Nyang: p.Nyang}
 }
