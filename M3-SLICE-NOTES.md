@@ -82,10 +82,10 @@ of 2냥 toll, or one unit left behind if the purse is empty.
 - Three-axis reputation (새벽회 / 제국 수배 / 상계)
 - Seasonal/weather/event shocks to prices
 - Player-to-player trade
-- Split gather skills (채광·벌목·약초·낚시·수렵)
+- Split gather skills (채광·나무 베기·약초·낚시·사냥)
 - Equipment wear, repair sink, masterwork-only-from-players
 - Inflation metrics / QA dashboards
-- Hireable escorts, detours via 독도법
+- Hireable escorts, detours via 길 찾기
 
 M4 narrative can start; livelihood should keep running beside it. Do not
 advertise M3 as done until shops or a second trade loop (smuggling) exist.

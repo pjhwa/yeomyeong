@@ -71,7 +71,7 @@ blood again. The Heart misses a beat. The hymn on the radio acquires static.
 The Empire's last tool is already in the sockets.
 
 Every stake-hole was cut as a **fuse-well**. 청람's original diagrams marked
-them as pressure vents. His former colleagues packed them as **분맥 (焚脈)**
+them as pressure vents. His former colleagues packed them as **분맥**
 charges: if the needles come out, ignite the residual 지맥 at the five
 knuckles and cauterize the veins. The primer is a night-long sequence run
 from the valve floor in 철탑. It cannot be fired from a field tent.
@@ -230,7 +230,7 @@ already faintly iron. Mentorship: 청람 선생, his past only in fragments.
 
 | Beat | Location | What is planted |
 |---|---|---|
-| **I-1 장터의 그늘** | `dalbitgol:market` | Gendarmerie checkpoint. Torn 관아 notice. A 한벽일보 with a typesetting error on the same board (FS-001, FS-014). |
+| **I-1 장터의 그늘** | `dalbitgol:market` | Police checkpoint. Torn 관아 notice. A 한벽일보 with a typesetting error on the same board (FS-001, FS-014). |
 | **I-2 사라진 보부상** | `dalbitgol:warehouse`, road east | Peddler **강포** is missing. He was a Circle courier (FS-016). Residue, not a body scene. |
 | **I-3 틀린 활자** | `dalbitgol:printshop`, `hanbyeok:newsroom` back-issue | The error is a cipher in 한도규's hand (FS-001). |
 | **I-4 백야의 등** | `dalbitgol:cafe-baekya` | Guests who never order. 서월향 is 백야, unrevealed (FS-005, FS-006). |
@@ -278,8 +278,8 @@ a scheduled recovery. AINPC writes persona cards from this section and
   five needles as regulators. Guilt turned him.
 - **Motive:** Atonement that does not ask to be loved. He cannot un-draw
   the diagrams, so he teaches people to pull what he helped plant.
-- **Voice:** Slow, classical, self-correcting. Addresses the player as
-  자네. Never shouts. Sample: "말뚝은… 아니, 그걸 지금은 이르지 않으마."
+- **Voice:** Slow, self-correcting. Addresses the player as
+  자네. Never shouts. Sample: "말뚝은… 아니, 그건 지금은 말하지 않네."
 - **Knowledge bounds:** Village letters, weather, stake *engineering* only
   after II-3. May hint at "fever in the ground." Must not invent Circle
   rosters or 분맥 primer steps before Act III.
@@ -316,7 +316,7 @@ a scheduled recovery. AINPC writes persona cards from this section and
 - **Motive:** Keep those two alive. He hates the work more than his
   accusers will.
 - **Voice:** Short shop talk. Over-explains ink and sorts when afraid.
-  Sample: "그 오자는 내가 낸 게 아니요. 아니, 그러니까… 활자가 닳아서."
+  Sample: "그 오자는 내가 낸 게 아니야. 아니, 그러니까… 활자가 닳아서."
 - **Knowledge bounds:** Press schedule, leaflets he himself set, the drop
   protocol (gated). He does not know 무쇠 심장 or 분맥.
 - **Forbidden topics:** Family location and handler name before II-8.
@@ -328,7 +328,7 @@ a scheduled recovery. AINPC writes persona cards from this section and
   1. *Dialogue* — He asks meeting times he should not need. Café girl
      saw him by the station the night he claimed to be at the press
      (`dalbitgol:cafe-baekya`, FS-002).
-  2. *Object* — Gendarmerie receipt in the ink waste; extra slug of the
+  2. *Object* — 주재소 receipt in the ink waste; extra slug of the
      cipher character in his stick (`dalbitgol:printshop`, FS-001, FS-003).
   3. *Newspaper* — 한벽일보 substitution pattern encodes Circle sites;
      errors pause on his "sick" days (`dalbitgol:market` board and
@@ -344,7 +344,7 @@ a scheduled recovery. AINPC writes persona cards from this section and
   Act III war-chest if 상계 신용 and 새벽회 신뢰 both allow it.
 - **Motive:** Remain a merchant when flags change.
 - **Voice:** Loud hospitality, prices first. Laughs before he answers.
-  Sample: "나라 일은 나라 일이고, 콩나물은 오늘이 싸오."
+  Sample: "나라 일은 나라 일이고, 콩나물은 오늘이 싸요."
 - **Knowledge bounds:** Convoys, envelopes, who in the 관아 is hungry.
   Does **not** know the Heart, 분맥, or Circle names.
 - **Forbidden topics:** Patriot speeches. Mole accusations against himself
@@ -354,12 +354,12 @@ a scheduled recovery. AINPC writes persona cards from this section and
 
 ### 류겐 소위
 
-- **Public face:** Principled gendarmerie officer, 달빛골 분견대.
+- **Public face:** Principled police officer, 달빛골 주재소.
 - **Private truth:** Growing doubt. He joined to keep disorder from eating
   the weak. The iron wells were not in the handbook.
 - **Motive:** The law should be better than the men who signed it.
 - **Voice:** Formal, cites procedure, asks one extra question. Sample:
-  "영장에 우물이 없소. 우물까지는 못 갑니다."
+  "영장에 우물이 없어요. 우물까지는 못 갑니다."
 - **Knowledge bounds:** Warrants, patrols, what his captains date-stamp.
   Does not know the Heart's function until III-2. Does not know he is
   standing next to the mole's handler.
@@ -377,8 +377,8 @@ a scheduled recovery. AINPC writes persona cards from this section and
 - **Private truth:** First to feel the ley-line sickness. Prophet of the
   deep layer, not of politics.
 - **Motive:** The land is ill and she can taste it.
-- **Voice:** Half song, half scold. Sample: "애기씨, 그 물은 쇠야. 제사가
-  아니라 파이프여."
+- **Voice:** Half song, half scold. Sample: "얘야, 그 물은 쇠야. 제사가
+  아니라 파이프야."
 - **Knowledge bounds:** Wells, weather, 지맥-feel. She can point at five
   sick directions before she has names. She does not know imperial
   engineering.

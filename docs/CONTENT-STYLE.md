@@ -22,9 +22,8 @@ and touch — **everyday modern Korean** (D-045). The setting is 1910s–1920s
   count.
 - **No repeated clichés.** If a smell, cry, or notice has been spent, invent
   the next room from a different sense and a different object.
-- **Spent, do not reuse:** the README (and the schema's illustration) already
-  used *말린 명태와 삼베 냄새* and the taffy-seller's scissors. That sentence
-  is retired for live rooms.
+- **Spent, do not reuse:** the old market sentence (*말린 명태와 삼베 냄새*,
+  엿장수 가위질) is retired. Do not put it in live rooms or new samples.
 - **Words people use now.** Prefer 가게 / 시장 / 길 / 경찰 / 검문 / 돈 /
   가방 / 만들다 / 캐다. Cut rare 한자어, 고어, and 문어체 (엿장수 가위질,
   윗도리, 문설주, 오래라, 한 켜, 품귀). Commands are common verbs a player
