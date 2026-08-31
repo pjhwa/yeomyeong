@@ -546,3 +546,59 @@ Format:
 - Consequences: Tests assert the new sentences. `그대`, `장부`,
   `호칭`, `주손`, `을(를)`, and English `rate_limited` as a player
   line are defects.
+
+## D-042 — M3 is a livelihood slice, not the full §3.4 economy
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md M3 lists gathering, crafting, regional prices,
+  transport risk, smuggling, player shops, and three-axis reputation.
+  COMMISSIONER.md §9 done-when is gather → craft → sell/carry with no
+  combat. Shipping the whole section would explode the line budget.
+- Decision: Ship a vertical slice: YAML gather nodes, YAML recipes on
+  the four M2 craft skills, two markets (달빛골 / 솔골) with live
+  stock, a purse in 냥, and one gather skill `forage` (채집, verbs
+  `캐다` `줍다`). Practice verbs (`두드리다`, `썰다`, …) still do not
+  consume or produce. `만들다` is the consume/produce command.
+  Splitting 채광/약초/낚시, player shops, smuggling, and reputation
+  wait. Do not mark the M3 checkbox done.
+- Consequences: Titles `못 벼리는 사람` (smith 8), `보부상` (haggle 8),
+  `달빛골의 채집꾼` (forage 8) sit under the M2 15-rank titles.
+  Packages are `internal/craft` and `internal/economy`. The loop is
+  still the only writer.
+
+## D-043 — Posted prices come from stock and demand, not a shop NPC
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: COMMISSIONER.md asks whether prices feel dynamic. Hardcoded
+  buy/sell lists would be a fixed stall.
+- Decision: Each market lists `base`, `stock`, `target`, `demand` in
+  YAML. The quote is
+  `max(1, round(base * demand * (1 + 0.5 * (target - stock) / max(target,1))))`
+  with a 0.2 factor floor. Selling raises stock (price eases). Buying
+  lowers it. Every 10 loop ticks, stock walks one step toward `target`
+  (quiet NPC flow). `시세` prints the Korean stall name, a 냥 figure,
+  and a flavor clause (흔하다 / 잠잠하다 / 품귀). No English player
+  line; no rank numbers.
+- Consequences: The same good must quote differently at 달빛골 vs 솔골
+  at boot. Tests lock that spread and that a sell drops the next quote.
+
+## D-044 — Checkpoint toll when carrying bulk; no player shops
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md wants transport risk on the trade road. Full bandit
+  encounters or player storefronts are out of slice scope.
+- Decision: Rooms may take flag `checkpoint` (달빛골 정거장, 솔골
+  고갯길). Walking **into** one while the bag holds **4+** units of
+  any market-listed good rolls `P=0.35`. On a hit, pay 2냥 if the
+  purse can; otherwise one traded unit is left at the post. No combat,
+  no heat, no smuggling skill check. Player shops are not in this
+  slice.
+- Consequences: The 보부상 loop is gather/craft in 달빛골, walk east
+  from the station, sell dearer in 솔골 — with a chance the post
+  skims the load.

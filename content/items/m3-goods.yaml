@@ -1,0 +1,43 @@
+# M3 livelihood goods. Tools stay in m2-tools.yaml.
+
+- id: mugwort
+  name: { ko: "쑥" }
+  description: { ko: "뿌리가 흙투성이인 쑥이다. 비린 풀 냄새가 손가락에 남는다." }
+  slot: none
+  weight: 1
+
+- id: scrap-iron
+  name: { ko: "쇠조각" }
+  description: { ko: "녹슨 쇠조각이다. 모서리가 혀끝을 시리게 한다." }
+  slot: none
+  weight: 1
+
+- id: hanji
+  name: { ko: "한지" }
+  description: { ko: "방앗간에서 건진 한지 한 장이다. 겨가 섬유 사이에 끼어 꺼끌하다." }
+  slot: none
+  weight: 1
+
+- id: iron-nail
+  name: { ko: "쇠못" }
+  description: { ko: "머리가 살짝 기운 쇠못이다. 아직 모루 열이 손바닥에 남아 있다." }
+  slot: none
+  weight: 1
+
+- id: mugwort-cake
+  name: { ko: "쑥떡" }
+  description: { ko: "쑥을 넣어 찐 떡이다. 손안에 따뜻하고 잎 냄새가 올라온다." }
+  slot: none
+  weight: 1
+
+- id: leaflet
+  name: { ko: "전단" }
+  description: { ko: "활자가 조금 기운 전단이다. 잉크가 손가락에 묻을 만큼 덜 말랐다." }
+  slot: none
+  weight: 1
+
+- id: poultice
+  name: { ko: "약첩" }
+  description: { ko: "쑥을 갈아 접은 약첩이다. 쓴내가 종이 틈으로 샌다." }
+  slot: none
+  weight: 1

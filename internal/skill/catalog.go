@@ -23,9 +23,9 @@ const (
 	// StatSumCap is the maximum sum of all stats.
 	StatSumCap = 300
 
-	groupCombat, groupCraft, groupSocial = "combat", "craft", "social"
-	statStr, statDex, statVit            = "str", "dex", "vit"
-	statWit, statSense, statFame         = "wit", "sense", "fame"
+	groupCombat, groupCraft, groupSocial, groupGather = "combat", "craft", "social", "gather"
+	statStr, statDex, statVit                         = "str", "dex", "vit"
+	statWit, statSense, statFame                      = "wit", "sense", "fame"
 )
 
 // Localized is a canonical {ko, en} string. Missing en falls back to ko.
@@ -65,14 +65,14 @@ type Catalog struct {
 var (
 	skillIDRe   = regexp.MustCompile(`^(?:test:)?[a-z][a-z0-9-]*$`)
 	titleIDRe   = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
-	knownGroups = map[string]struct{}{groupCombat: {}, groupCraft: {}, groupSocial: {}}
+	knownGroups = map[string]struct{}{groupCombat: {}, groupCraft: {}, groupSocial: {}, groupGather: {}}
 	knownStats  = map[string]struct{}{
 		statStr: {}, statDex: {}, statVit: {}, statWit: {}, statSense: {}, statFame: {},
 	}
 	knownFlags = map[string]struct{}{
 		"safe": {}, "town": {}, "market": {}, "indoor": {}, "dark": {},
 		"forge": {}, "kitchen": {}, "press": {}, "clinic": {}, "yard": {},
-		"salon": {},
+		"salon": {}, "checkpoint": {},
 	}
 	reservedVerbs = map[string]struct{}{
 		"n": {}, "s": {}, "e": {}, "w": {}, "u": {}, "d": {},
@@ -85,6 +85,9 @@ var (
 		"get": {}, "집다": {}, "drop": {}, "놓다": {},
 		"equip": {}, "들다": {}, "unequip": {}, "벗다": {},
 		"go": {}, "가다": {},
+		"craft": {}, "만들다": {}, "sell": {}, "팔다": {},
+		"buy": {}, "사다": {}, "quote": {}, "시세": {},
+		"gather": {},
 	}
 	statNameKO = map[string]string{
 		statStr: "힘", statDex: "손재주", statVit: "맷집",

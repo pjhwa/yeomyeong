@@ -45,6 +45,11 @@ All client frames:
 | `cmd.drop` | `{ "item" }` | After `auth.ok` |
 | `cmd.equip` | `{ "item" }` | After `auth.ok` |
 | `cmd.unequip` | `{ "slot" }` | After `auth.ok`. `slot` is `main_hand` or `body` |
+| `cmd.gather` | `{ "item"?, "skill"? }` | After `auth.ok`. Telnet: `캐다` / `줍다` |
+| `cmd.craft` | `{ "item"? }` | After `auth.ok`. Telnet: `만들다` / `만들다 쇠못` |
+| `cmd.sell` | `{ "item", "n"? }` | After `auth.ok`. Telnet: `팔다 쑥` / `팔다 쑥 2` |
+| `cmd.buy` | `{ "item", "n"? }` | After `auth.ok`. Telnet: `사다 쑥` |
+| `cmd.quote` | `{}` | After `auth.ok`. Telnet: `시세` |
 | `cmd.quit` | `{}` | Any time after connect |
 
 Username rules (server-enforced): 2–16 runes; Hangul syllables (`가`–`힣`),
@@ -100,6 +105,12 @@ When the room has ground items, Telnet adds:
 | `bad_frame` | JSON/schema/`v` |
 | `rate_limited` | more than 20 commands in any rolling 1s |
 | `internal` | unexpected |
+| `no_market` | `시세` / `팔다` / `사다` outside a stall, or unlisted good |
+| `no_stock` | gather node empty, or stall has nothing to sell |
+| `too_poor` | `사다` with not enough 냥 |
+| `no_node` | `캐다` in a room with no gather node |
+| `no_recipe` | unknown `만들다` target, or wrong station |
+| `need_mat` | missing recipe inputs, or sell qty short |
 
 ## Telnet — line protocol
 

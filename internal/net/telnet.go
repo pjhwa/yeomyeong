@@ -419,6 +419,34 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Unequip{ConnID: s.id, Slot: rest}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
+	case low == "gather":
+		if !s.loop.Submit(engine.Gather{ConnID: s.id, Query: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "craft" || verb == "만들다":
+		if !s.loop.Submit(engine.Craft{ConnID: s.id, Query: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "sell" || verb == "팔다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		name, qty := engine.ParseNameQty(rest)
+		if !s.loop.Submit(engine.Sell{ConnID: s.id, Query: name, Qty: qty}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "buy" || verb == "사다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		name, qty := engine.ParseNameQty(rest)
+		if !s.loop.Submit(engine.Buy{ConnID: s.id, Query: name, Qty: qty}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "quote" || verb == "시세":
+		if !s.loop.Submit(engine.Quote{ConnID: s.id}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
 	case low == "quit" || verb == "종료":
 		if s.user != "" {
 			_ = s.writeLine(text.T(text.Default, text.SysLeave, s.user))
@@ -428,6 +456,12 @@ func (s *session) dispatch(line string) error {
 	default:
 		if dir, ok := parseTelnetDir(verb); ok && rest == "" {
 			if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
+				return s.writeLine(text.T(text.Default, text.SysRateLimit))
+			}
+			return nil
+		}
+		if _, ok := s.loop.GatherSkill(verb); ok {
+			if !s.loop.Submit(engine.Gather{ConnID: s.id, Query: rest, Skill: verb}) {
 				return s.writeLine(text.T(text.Default, text.SysRateLimit))
 			}
 			return nil

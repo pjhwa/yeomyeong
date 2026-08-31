@@ -1,0 +1,63 @@
+# 솔골 — hill hamlet one stop from 달빛골 정거장. Second market (D-042).
+
+- id: solgol:ridge
+  name:
+    ko: "솔골 고갯길"
+    en: "Solgol Ridge"
+  description:
+    ko: >
+      솔골로 넘어가는 고갯길에 통행증을 받는 나무 막이 가로놓여 있다. 막
+      위에 먹으로 솔골이라 적힌 널빤지가 비에 번졌고, 만지면 송진이 끈적하다.
+      아래쪽 선로에서 기적이 한 번 울리고, 솔잎 냄새가 바람과 함께 올라온다.
+  exits:
+    west: dalbitgol:station
+    east: solgol:market
+    north: solgol:slope
+  flags: [checkpoint]
+  heat_modifier: 1.2
+  ambient:
+    - ko: "막대기 끝이 수레 덮개를 한 번 두드린다."
+
+- id: solgol:market
+  name:
+    ko: "솔골 장터"
+    en: "Solgol Market"
+  description:
+    ko: >
+      솔골 장터는 장대 두 개에 광목을 친 그늘뿐이다. 저울추가 작아서 손바닥에
+      올라오고, 만지면 아직 차갑다. 솔방울 태운 연기가 눈시울을 찌르고, 멀리서
+      도끼질 소리가 골짜기를 친다.
+  exits:
+    west: solgol:ridge
+    north: solgol:pinery
+  flags: [safe, town, market]
+  market: solgol
+  heat_modifier: 0.7
+  ambient:
+    - ko: "광주리 안에서 솔방울이 굴러 부딪힌다."
+
+- id: solgol:slope
+  name:
+    ko: "솔골 비탈"
+    en: "Solgol Slope"
+  description:
+    ko: >
+      비탈에 붉은 흙이 드러난 자리가 있다. 손가락으로 긁으면 쇳가루가 손톱
+      밑에 끼고, 혀끝에 쇠맛이 남는다. 메마른 풀이 신발에 걸리고, 돌멩이가
+      굴러 내려가는 소리가 짧다.
+  exits:
+    south: solgol:ridge
+  heat_modifier: 0.6
+
+- id: solgol:pinery
+  name:
+    ko: "솔골 솔밭"
+    en: "Solgol Pinery"
+  description:
+    ko: >
+      솔밭 그늘은 한낮에도 서늘하다. 떨어진 솔방울이 발목을 차고, 송진 냄새가
+      코를 막는다. 누군가 껍질을 벗긴 소나무 밑동에 흰 칼자국이 남아 손을
+      대면 끈적하다.
+  exits:
+    south: solgol:market
+  heat_modifier: 0.5

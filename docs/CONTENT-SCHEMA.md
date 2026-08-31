@@ -18,6 +18,9 @@ content/zones/<zone>/rooms.yaml
 ```
 content/skills/*.yaml          # GAMEPLAY — ranks, titles (SKILL-TABLE.md)
 content/items/*.yaml           # WORLD names + ENGINE slots
+content/craft/nodes.yaml       # gather points (M3)
+content/craft/recipes.yaml     # consume/produce (M3)
+content/economy/markets.yaml   # regional price tables (M3)
 content/zones/<zone>/rooms.yaml
 content/zones/<zone>/spawns.yaml   # extra flags + ground item ids
 ```
@@ -71,8 +74,8 @@ The loader canonicalizes both forms to `{ko, en}`.
 | `name` | yes | Localized. Non-empty `ko`. |
 | `description` | yes | Localized. 2–4 sentences in `ko` (style, not schema). |
 | `exits` | no | Keys: `north` `south` `east` `west` `up` `down`. Values: existing room ids (checked after the full load). |
-| `flags` | no | Closed set: `safe`, `town`, `market`, `indoor`, `dark`, `forge`, `kitchen`, `press`, `clinic`, `yard`, `salon`. Unknown flag = load error. |
-| `market` | no | Slug of a price table. Unused in M1; stored for M3. |
+| `flags` | no | Closed set: `safe`, `town`, `market`, `indoor`, `dark`, `forge`, `kitchen`, `press`, `clinic`, `yard`, `salon`, `checkpoint`. Unknown flag = load error. |
+| `market` | no | Slug of a price table in `content/economy/markets.yaml`. 시세/팔다/사다 use this stall. |
 | `heat_modifier` | no | Float, default `1.0`. Unused in M1; stored for M5. |
 | `ambient` | no | List of localized strings. Flavor only in M1. |
 | `foreshadow` | no | List of `FS-NNN` that **already exist** in `docs/FORESHADOW.md`. Unknown ID = load error. |
@@ -111,6 +114,73 @@ Does not rewrite room prose. Applied after rooms load.
 | `room` | yes | existing room id |
 | `flags_add` | no | subset of the closed flag set |
 | `items` | no | item ids that exist. Copied onto the **room ground** at boot (world state), not into the catalog |
+
+## Gather node (`content/craft/nodes.yaml`)
+
+```yaml
+- room: dalbitgol:barley-field
+  skill: forage
+  item: mugwort
+  stock: 6
+  regen_ticks: 40
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `room` | yes | existing room id |
+| `skill` | yes | skill id, group `gather` |
+| `item` | yes | item id |
+| `stock` | no | boot remaining and max, default 4, ≥ 0 |
+| `regen_ticks` | no | restore 1 toward max every N loop ticks (100ms), default 50. 0 = no regen |
+
+Player verbs are the skill's YAML `verbs` (`캐다`, `줍다`). Empty node → wait; wrong room → `여기서는 집을 게 없다.`
+
+## Recipe (`content/craft/recipes.yaml`)
+
+```yaml
+- id: iron-nail
+  skill: smith
+  flag: forge
+  tool: hammer
+  in: [{id: scrap-iron, n: 2}]
+  out: {id: iron-nail, n: 1}
+  gain: ["쇠못 머리가 둥글게 잡혔다. 모루가 아직 뜨겁다."]
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `id` | yes | unique slug |
+| `skill` | yes | existing skill id (use-based gain on success) |
+| `flag` | no | station: `forge` `kitchen` `press` `clinic`. Hard gate. |
+| `tool` | no | item that must be held (bag or slot), not consumed |
+| `in` | yes | consumed piles |
+| `out` | yes | produced pile |
+| `gain` / `miss` | no | Korean prose, no rank numbers |
+
+`만들다` lists recipes the room can host. Practice verbs (`두드리다`) do **not** consume (D-042).
+
+## Market (`content/economy/markets.yaml`)
+
+```yaml
+- id: dalbitgol
+  name: 달빛골 장터
+  goods:
+    - {id: mugwort, base: 3, stock: 18, target: 16, demand: 0.7}
+```
+
+| Field | Required | Rules |
+|---|---|---|
+| `id` | yes | slug; rooms point here with `market:` |
+| `name` | yes | Korean stall name |
+| `goods[].id` | yes | item id |
+| `goods[].base` | yes | ≥ 1. Not the posted price — quote uses D-043 |
+| `goods[].stock` | no | live pile, default 0 |
+| `goods[].target` | no | NPC restock level, default stock |
+| `goods[].demand` | no | > 0, default 1 |
+
+At least two markets so the same good can quote differently. Selling raises stock (price eases); buying lowers it. Tick walks stock one step toward `target`.
+
+Rooms with flag `checkpoint` may take a toll when a player walks in carrying **4+** units of market goods (D-044).
 
 ## Graph rules
 

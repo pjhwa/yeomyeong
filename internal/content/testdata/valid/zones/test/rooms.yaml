@@ -26,7 +26,8 @@
   name: "가게"
   description: "좁은 가게다. 문은 서쪽과 남쪽으로 열린다."
   exits: {west: test:start, south: test:cliff}
-  flags: [market, town]
+  flags: [market, town, checkpoint]
+  market: test-east
   heat_modifier: 0
 - id: test:cliff
   name: "벼랑"

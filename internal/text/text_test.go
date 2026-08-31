@@ -30,6 +30,9 @@ func TestTKoreanAndFallback(t *testing.T) {
 	if got := T(Default, SheetTitle, "아무개"); got != "불리는 이름: 아무개" {
 		t.Fatalf("title: %q", got)
 	}
+	if got := T(Default, SheetWallet, 12); got != "주머니: 12냥" {
+		t.Fatalf("wallet: %q", got)
+	}
 	if EulReul("쇠망치") != "를" || EulReul("식칼") != "을" {
 		t.Fatalf("eul/reul: %s %s", EulReul("쇠망치"), EulReul("식칼"))
 	}

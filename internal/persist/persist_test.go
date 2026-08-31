@@ -166,6 +166,7 @@ func testAccountStore(t *testing.T, s AccountStore) {
 		Stats:  map[string]int{"str": 1},
 		Bag:    []world.Stack{{ID: "pebble", Qty: 2}},
 		Equip:  world.Equipment{MainHand: "rod"},
+		Nyang:  12,
 	}
 	if err := s.SaveSheet(ctx, acc.ID, want); err != nil {
 		t.Fatal(err)
@@ -173,7 +174,7 @@ func testAccountStore(t *testing.T, s AccountStore) {
 	gotSheet, err := s.LoadSheet(ctx, acc.ID)
 	if err != nil || gotSheet.Skills["smith"] != 4 || gotSheet.Stats["str"] != 1 ||
 		len(gotSheet.Bag) != 1 || gotSheet.Bag[0] != (world.Stack{ID: "pebble", Qty: 2}) ||
-		gotSheet.Equip.MainHand != "rod" {
+		gotSheet.Equip.MainHand != "rod" || gotSheet.Nyang != 12 {
 		t.Fatalf("load sheet: %+v %v", gotSheet, err)
 	}
 	gotSheet.Bag[0].ID = "hacked"

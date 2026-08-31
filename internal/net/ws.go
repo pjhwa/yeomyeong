@@ -36,6 +36,11 @@ const (
 	typeCmdDrop     = "cmd.drop"
 	typeCmdEquip    = "cmd.equip"
 	typeCmdUnequip  = "cmd.unequip"
+	typeCmdGather   = "cmd.gather"
+	typeCmdCraft    = "cmd.craft"
+	typeCmdSell     = "cmd.sell"
+	typeCmdBuy      = "cmd.buy"
+	typeCmdQuote    = "cmd.quote"
 	typeCmdQuit     = "cmd.quit"
 	typeAuthOK      = "auth.ok"
 	typeAuthErr     = "auth.err"
@@ -249,7 +254,8 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 	}
 	switch f.Type {
 	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdLook, typeCmdMove, typeCmdQuit,
-		typeCmdPractice, typeCmdSkills, typeCmdInv, typeCmdGet, typeCmdDrop, typeCmdEquip, typeCmdUnequip:
+		typeCmdPractice, typeCmdSkills, typeCmdInv, typeCmdGet, typeCmdDrop, typeCmdEquip, typeCmdUnequip,
+		typeCmdGather, typeCmdCraft, typeCmdSell, typeCmdBuy, typeCmdQuote:
 		if !s.lim.allow(time.Now()) {
 			return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 		}
@@ -279,6 +285,16 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.doEquip(f)
 	case typeCmdUnequip:
 		return s.doUnequip(f)
+	case typeCmdGather:
+		return s.doGather(f)
+	case typeCmdCraft:
+		return s.doCraft(f)
+	case typeCmdSell:
+		return s.doTrade(f, true)
+	case typeCmdBuy:
+		return s.doTrade(f, false)
+	case typeCmdQuote:
+		return s.doQuote(f)
 	case typeCmdQuit:
 		return s.doQuit()
 	default:
@@ -450,6 +466,76 @@ func (s *wsSession) submitItem(f inFrame, cmd func(string) engine.Command) error
 		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
 	}
 	if !s.loop.Submit(cmd(strings.TrimSpace(p.Item))) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doGather(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Item  string `json:"item"`
+		Skill string `json:"skill"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(engine.Gather{ConnID: s.id, Query: strings.TrimSpace(p.Item), Skill: strings.TrimSpace(p.Skill)}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doCraft(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Item string `json:"item"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(engine.Craft{ConnID: s.id, Query: strings.TrimSpace(p.Item)}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doTrade(f inFrame, sell bool) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Item string `json:"item"`
+		N    int    `json:"n"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil || strings.TrimSpace(p.Item) == "" {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	qty := p.N
+	if qty < 1 {
+		qty = 1
+	}
+	var cmd engine.Command
+	if sell {
+		cmd = engine.Sell{ConnID: s.id, Query: strings.TrimSpace(p.Item), Qty: qty}
+	} else {
+		cmd = engine.Buy{ConnID: s.id, Query: strings.TrimSpace(p.Item), Qty: qty}
+	}
+	if !s.loop.Submit(cmd) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doQuote(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	if !s.loop.Submit(engine.Quote{ConnID: s.id}) {
 		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 	}
 	return nil

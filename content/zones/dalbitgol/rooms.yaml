@@ -511,7 +511,8 @@
   exits:
     west: dalbitgol:east-alley
     north: dalbitgol:station-yard
-  flags: [town]
+    east: solgol:ridge
+  flags: [town, checkpoint]
   heat_modifier: 1.2
   ambient:
     - ko: "개찰 쪽문이 쇠로 한 번 닫힌다."

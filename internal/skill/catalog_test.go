@@ -50,10 +50,10 @@ func TestLoadM2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cat.Len() != 14 {
+	if cat.Len() != 15 {
 		t.Fatalf("skills=%d", cat.Len())
 	}
-	var n [3]int
+	var n [4]int
 	for _, id := range cat.IDs() {
 		sk, _ := cat.Skill(id)
 		if sk.Name.KO == "" || strings.HasPrefix(id, "test:") {
@@ -66,11 +66,13 @@ func TestLoadM2(t *testing.T) {
 			n[1]++
 		case groupSocial:
 			n[2]++
+		case groupGather:
+			n[3]++
 		default:
 			t.Fatalf("group %s", sk.Group)
 		}
 	}
-	if n != [3]int{6, 4, 4} {
+	if n != [4]int{6, 4, 4, 1} {
 		t.Fatalf("groups %v", n)
 	}
 	rules := cat.TitleRules()

@@ -165,6 +165,19 @@ skills:
     miss:
       - 송곳이 미끄러졌다. 쇠만 차갑다.
 
+# M3 slice (D-042). One gather skill; split 채광/약초 later.
+  - id: forage
+    name: 채집
+    group: gather
+    stat: sense
+    verbs: [캐다, 줍다]
+    gain:
+      - 손에 흙이 묻는다. 풀 냄새가 난다.
+      - 뿌리가 뽑혔다. 손끝이 시리다.
+    miss:
+      - 흙만 묻었다. 가진 것은 없다.
+      - 손이 빗나갔다. 풀만 꺾였다.
+
 titles:
   - id: smith-local
     require: {smith: 15}
@@ -174,6 +187,18 @@ titles:
     require: {speech: 15}
     title: {ko: 말 잘하는 사람}
     announce: 다방에서 이제 말 잘하는 사람이라고 부릅니다.
+  - id: nailer
+    require: {smith: 8}
+    title: {ko: 못 벼리는 사람}
+    announce: 사람들이 이제 못 벼리는 사람이라고 부릅니다.
+  - id: peddler
+    require: {haggle: 8}
+    title: {ko: 보부상}
+    announce: 사람들이 이제 보부상이라고 부릅니다.
+  - id: forager
+    require: {forage: 8}
+    title: {ko: 달빛골의 채집꾼}
+    announce: 사람들이 이제 달빛골의 채집꾼이라고 부릅니다.
   - id: nobody
     require: {}
     title: {ko: 아무개}
