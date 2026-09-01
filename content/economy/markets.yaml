@@ -1,0 +1,23 @@
+# Two stalls. Prices are not listed here as quotes — stock/demand move them.
+
+- id: dalbitgol
+  name: 달빛골 장터
+  goods:
+    - {id: mugwort, base: 3, stock: 18, target: 16, demand: 0.7}
+    - {id: scrap-iron, base: 4, stock: 10, target: 10, demand: 1.0}
+    - {id: hanji, base: 2, stock: 12, target: 10, demand: 0.8}
+    - {id: iron-nail, base: 10, stock: 6, target: 8, demand: 1.3}
+    - {id: mugwort-cake, base: 6, stock: 8, target: 8, demand: 1.0}
+    - {id: leaflet, base: 5, stock: 4, target: 6, demand: 1.4}
+    - {id: poultice, base: 8, stock: 5, target: 6, demand: 1.1}
+
+- id: solgol
+  name: 솔골 장터
+  goods:
+    - {id: mugwort, base: 3, stock: 4, target: 6, demand: 1.6}
+    - {id: scrap-iron, base: 4, stock: 16, target: 14, demand: 0.6}
+    - {id: hanji, base: 2, stock: 6, target: 8, demand: 1.1}
+    - {id: iron-nail, base: 10, stock: 3, target: 5, demand: 1.7}
+    - {id: mugwort-cake, base: 6, stock: 3, target: 5, demand: 1.5}
+    - {id: leaflet, base: 5, stock: 8, target: 8, demand: 0.7}
+    - {id: poultice, base: 8, stock: 4, target: 6, demand: 1.2}

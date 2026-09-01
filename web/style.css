@@ -1,0 +1,98 @@
+:root {
+  --ink: #e8d9c3;
+  --muted: #8a7b68;
+  --paper: #120f0c;
+  --rule: #7a1f1f;
+  --panel: #1b1612;
+  --key: #c4a574;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: radial-gradient(1200px 600px at 50% -10%, #2a1c14 0%, var(--paper) 55%);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", "Noto Sans KR", ui-monospace, monospace;
+}
+.frame {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+.masthead {
+  border-bottom: 3px double var(--rule);
+  padding-bottom: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+.kicker {
+  letter-spacing: 0.28em;
+  font-size: 0.7rem;
+  color: var(--rule);
+  margin: 0 0 0.4rem;
+  text-transform: uppercase;
+}
+h1 {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-size: 1.8rem;
+  margin: 0;
+}
+.lede { color: var(--muted); margin: 0.4rem 0 0; font-size: 0.95rem; }
+.panel {
+  background: var(--panel);
+  border: 1px solid #3a2f26;
+  padding: 1rem;
+}
+label { display: block; margin: 0.6rem 0; color: var(--muted); font-size: 0.85rem; }
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  background: #0c0a08;
+  color: var(--ink);
+  border: 1px solid #4a3b30;
+  padding: 0.45rem 0.55rem;
+  font: inherit;
+}
+.row { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+button {
+  flex: 1;
+  background: var(--rule);
+  color: var(--ink);
+  border: 0;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+.err { color: #e07a6a; font-size: 0.9rem; }
+.hint { color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
+kbd {
+  font: inherit;
+  color: var(--key);
+  border-bottom: 1px dotted var(--key);
+}
+#term { display: flex; flex-direction: column; min-height: 70vh; }
+#out {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0 0 0.75rem;
+  min-height: 18rem;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+#cmd-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-top: 1px solid #3a2f26;
+  padding-top: 0.6rem;
+}
+.prompt { color: var(--rule); }
+#cmd-form input { margin: 0; border: 0; background: transparent; }
+[hidden] { display: none !important; }
+@media (max-width: 640px) {
+  h1 { font-size: 1.4rem; }
+  .frame { padding: 1rem 0.8rem 2rem; }
+}

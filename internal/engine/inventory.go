@@ -111,6 +111,7 @@ func (l *Loop) sheet(c Sheet) {
 	if title := l.playerTitle(p); title != "" {
 		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetTitle, title)})
 	}
+	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetWallet, p.Nyang)})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetInv, joinStacks(p.Bag, l.itemName))})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetEquip, l.formatEquip(p.Equip))})
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: text.T(text.Default, text.SheetSkills, l.formatSkills(p.Skills))})

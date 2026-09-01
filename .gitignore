@@ -48,3 +48,6 @@ Thumbs.db
 .golangci-lint-cache/
 tmp/
 *.log
+
+# Local playtest captures (do not commit)
+playtest-transcripts/

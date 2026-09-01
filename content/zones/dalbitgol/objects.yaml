@@ -1,0 +1,104 @@
+# Scenery examine targets. Not inventory. Aliases are 보다 / look targets.
+
+- id: hanbyeok-ilbo
+  room: dalbitgol:market
+  name:
+    ko: 한벽일보
+  aliases: [한벽일보, 신문, 게시판]
+  description:
+    ko: >
+      게시판 맨 앞장 관아 안내문은 모퉁이가 손가락 넓이로 찢겨 있고, 풀자국이
+      손톱에 끈적하다. 그 아래 한벽일보 한 줄에는 같은 활자가 두 번 찍혀
+      비뚤어져 있으며, 잉크가 아직 손가락에 묻는다. 난 쪽에 무허가 보부상
+      강포가 사흘째 안 보인다는 짧은 기사가 있고, 활자 냄새가 코를 찌른다.
+  when:
+    - flag: first_market_sale
+      ko: >
+        게시판 맨 앞장 관아 안내문 찢긴 모퉁이 옆에, 연필로 「정거장 화물마당」
+        네 글자가 덧씌워져 있다. 그 아래 한벽일보에는 같은 활자가 두 번 찍혀
+        비뚤어져 있고, 강포가 사흘째 안 보인다는 줄 옆에 수레 자국을 따라가
+        보라는 낙서가 번져 있다. 풀자국이 손톱에 끈적하고, 활자 냄새가 코를
+        찌른다.
+  foreshadow: [FS-001, FS-014, FS-016]
+
+- id: gangpo-pack
+  room: dalbitgol:warehouse
+  name:
+    ko: 보부상 봇짐
+  aliases: [보부상, 강포, 봇짐, 짚단, 짐]
+  description:
+    ko: >
+      짚단 밑이 한 층 떠 있어 손바닥이 허공에 빠지고, 그 틈에 찻잔 받침 패가
+      차갑게 끼어 있다. 거짓 바닥 사이로 마른 짚이 부스러지며 겨 냄새가 나고,
+      접혀 찢어진 한벽일보 조각이 봇짐 끈 밑에서 나온다. 난 쪽에 무허가 보부상
+      강포가 사흘째 안 보인다는 줄이 있고, 같은 활자가 두 번 찍혀 비뚤어져
+      있다. 잉크가 손가락에 묻고, 끈은 끊어진 채다.
+  after_examine:
+    ko: >
+      바깥 골목에서 수레 축이 짧게 신음하고, 서까래 먼지가 목덜미에 내려앉는다.
+      봇짐 끈에 마른 쑥 잎이 끼어 있다. 장터에서 시세를 보거나, 캐다·만들다로
+      손을 놀려 보면 길이 조금 열릴지도 모른다.
+  foreshadow: [FS-001, FS-014, FS-016]
+
+- id: cart-ruts
+  room: dalbitgol:warehouse-lane
+  name:
+    ko: 수레 자국
+  aliases: [수레, 자국, 수레자국, 바퀴, 수레 자국]
+  description:
+    ko: >
+      흙바닥에 바퀴 자국이 흐릿하다. 발이 미끄러질 만큼 진흙이 남아 있고,
+      마른 풀 냄새가 난다. 어디로 이어지는지는 잘 안 보인다.
+  when:
+    - flag: first_market_sale
+      ko: >
+        흙에 파인 바퀴 자국 안에 짚과 진흙이 엉겨 있고, 발끝으로 건드리면
+        축 기름이 미끄럽다. 기름 냄새가 코를 찌르고, 자국은 정거장 화물마당
+        쪽으로 이어진다. 바퀴가 긁고 간 돌은 아직 따뜻하다.
+  after_examine:
+    ko: 축 기름이 돌 위에 한 방울 떨어지고, 먼 덧문이 닫힌다.
+  foreshadow: [FS-016]
+
+- id: cargo-chit
+  room: dalbitgol:packing-shed
+  name:
+    ko: 화물 꼬리표
+  aliases: [꼬리표, 화물, 가마니, 표]
+  description:
+    ko: >
+      빈 가마니 끈에 꼬리표가 축 늘어져 있다. 글씨가 번져 잘 읽히지 않고,
+      끈이 손가락에 차갑다. 겨 냄새만 남았다.
+  when:
+    - flag: first_market_sale
+      ko: >
+        빈 가마니 끈에 만석상회 도장이 찍힌 꼬리표가 한 장 매달려 있고,
+        모서리가 젖어 손가락에 차갑다. 연필로 정거장에서 확인하라고 갈겨 쓴
+        줄이 번져 있고, 겨 냄새가 끈에 배어 있다. 옆 수레 바닥은 비어
+        정거장 쪽으로 바퀴 자국만 남았다.
+  after_examine:
+    ko: 가마니 끈이 팽팽히 튕기며 짧게 스냅 소리를 내고, 겨가 소매에 앉는다.
+  foreshadow: [FS-016]
+
+- id: face-down-plate
+  room: dalbitgol:school
+  name:
+    ko: 접시
+  aliases: [접시, 그릇]
+  description:
+    ko: >
+      창가에 접시 하나가 엎어져 있고, 먼지를 문지르면 손가락이 하얘진다.
+      뒤집지 않은 밑바닥은 차갑고, 금 간 테두리로 바람이 스친다. 누가 오래
+      손대지 않은 자리라, 분필 가루 냄새만 남아 있다.
+  foreshadow: [FS-007]
+
+- id: worn-type
+  room: dalbitgol:printshop
+  name:
+    ko: 닳은 활자
+  aliases: [활자, 닳은 활자]
+  description:
+    ko: >
+      상자 한쪽에 닳은 활자가 한 줌 따로 모여 있고, 만지면 납이 손가락에
+      차갑다. 같은 글자 몸이 두 개나 닳아 머리가 뭉툭하고, 기름 냄새에 목이
+      메인다. 옆 쟁반에서 활자가 달그락거린다.
+  foreshadow: [FS-001]

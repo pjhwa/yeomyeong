@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pjhwa/yeomyeong/internal/craft"
+	"github.com/pjhwa/yeomyeong/internal/economy"
 	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/text"
 	yworld "github.com/pjhwa/yeomyeong/internal/world"
@@ -26,6 +28,14 @@ const (
 	OutboundSize = 64
 	// BagCap is the carried-weight limit (CONTENT-SCHEMA). Equipped items count.
 	BagCap = 20
+	// TradeBulk is how many market goods trigger a checkpoint roll (D-043).
+	TradeBulk = 4
+	// TollNyang is the checkpoint fee when the purse can pay.
+	TollNyang = 2
+	// TollChance is P(stop) when carrying bulk into a checkpoint room.
+	TollChance = 0.35
+	// MarketTickEvery is game ticks between NPC stock drift (10 × 100ms).
+	MarketTickEvery = 10
 )
 
 // SheetSink receives a cloned sheet from LeaveWorld. The impl must not block
@@ -43,12 +53,18 @@ type Loop struct {
 	// catalog/items/skills are immutable after construction. nil means none loaded.
 	catalog *yworld.Catalog
 	items   *yworld.Items
+	npcs    *yworld.NPCs
+	objects *yworld.Objects
 	skills  *skill.Catalog
+	craft   *craft.Catalog
+	markets *economy.Book
 	rng     func() float64
 	sheets  SheetSink
 
 	// Owned exclusively by the Run goroutine.
 	world    world
+	nodes    *craft.Stock
+	ticks    uint64
 	outbound map[ConnID]chan Event
 }
 
@@ -85,6 +101,18 @@ func (l *Loop) WithSkills(cat *skill.Catalog) *Loop {
 	return l
 }
 
+// WithNPCs attaches scripted characters. Call before Run.
+func (l *Loop) WithNPCs(n *yworld.NPCs) *Loop {
+	l.npcs = n
+	return l
+}
+
+// WithObjects attaches scenery examine targets. Call before Run.
+func (l *Loop) WithObjects(o *yworld.Objects) *Loop {
+	l.objects = o
+	return l
+}
+
 // KnowsSkill reports whether q is a skill id, Korean name, or practice verb.
 func (l *Loop) KnowsSkill(q string) bool {
 	if l == nil || l.skills == nil {
@@ -92,6 +120,33 @@ func (l *Loop) KnowsSkill(q string) bool {
 	}
 	_, ok := l.skills.Lookup(q)
 	return ok
+}
+
+// GatherSkill reports whether q is a gather-group skill (id, name, or verb).
+func (l *Loop) GatherSkill(q string) (skill.Skill, bool) {
+	if l == nil || l.skills == nil {
+		return skill.Skill{}, false
+	}
+	sk, ok := l.skills.Lookup(q)
+	if !ok || sk.Group != "gather" {
+		return skill.Skill{}, false
+	}
+	return sk, true
+}
+
+// WithCraft attaches gather nodes and recipes. Call before Run.
+func (l *Loop) WithCraft(cat *craft.Catalog) *Loop {
+	l.craft = cat
+	if cat != nil {
+		l.nodes = cat.NewStock()
+	}
+	return l
+}
+
+// WithMarkets attaches the live price book. Call before Run.
+func (l *Loop) WithMarkets(book *economy.Book) *Loop {
+	l.markets = book
+	return l
 }
 
 // WithRand injects the Practice rng. Nil uses skill.DefaultRand. Call before Run.
@@ -130,7 +185,9 @@ func (l *Loop) Run(ctx context.Context) {
 			l.handle(cmd)
 		case <-ticker.C:
 			start := time.Now()
+			l.ticks++
 			n := l.drain()
+			l.livelihoodTick()
 			if d := time.Since(start); d > Tick {
 				l.log.Warn("tick overran", "dur", d, "commands", n)
 			}
@@ -219,6 +276,8 @@ func (l *Loop) handle(cmd Command) {
 		l.say(c)
 	case Look:
 		l.look(c)
+	case Talk:
+		l.talk(c)
 	case Move:
 		l.move(c)
 	case LeaveWorld:
@@ -235,6 +294,16 @@ func (l *Loop) handle(cmd Command) {
 		l.sheet(c)
 	case Practice:
 		l.practice(c)
+	case Gather:
+		l.gather(c)
+	case Craft:
+		l.doCraft(c)
+	case Sell:
+		l.sell(c)
+	case Buy:
+		l.buy(c)
+	case Quote:
+		l.quote(c)
 	case attachReq:
 		c.resp <- l.ensureOut(c.id)
 	case detachReq:
@@ -277,6 +346,8 @@ func (l *Loop) enter(c EnterWorld) {
 		Stats:     sh.Stats,
 		Bag:       sh.Bag,
 		Equip:     sh.Equip,
+		Nyang:     sh.Nyang,
+		Flags:     sh.Flags,
 	}
 	l.world.roster[c.ConnID] = p
 	// Room card first so adapters that return on seated (awaitSeated +
@@ -305,6 +376,10 @@ func (l *Loop) look(c Look) {
 	if !ok {
 		return
 	}
+	if q := strings.TrimSpace(c.Target); q != "" {
+		l.examine(p, q)
+		return
+	}
 	l.emit(l.roomCard(p))
 }
 
@@ -327,8 +402,12 @@ func (l *Loop) move(c Move) {
 		return
 	}
 	p.RoomID = dest
+	toll := l.maybeToll(&p, dest)
 	l.world.roster[c.ConnID] = p
 	l.emit(l.roomCard(p))
+	if toll != "" {
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: toll})
+	}
 }
 
 func (l *Loop) leave(c LeaveWorld) {
@@ -354,11 +433,13 @@ func (l *Loop) sysInRoom(roomID, body string) {
 func (l *Loop) roomCard(viewer Player) Room {
 	who := l.whoElse(viewer)
 	card := Room{
-		ConnID: viewer.ConnID,
-		ID:     viewer.RoomID,
-		Exits:  map[string]string{},
-		Who:    who,
-		Ground: l.groundNames(viewer.RoomID),
+		ConnID:  viewer.ConnID,
+		ID:      viewer.RoomID,
+		Exits:   map[string]string{},
+		Who:     who,
+		NPCs:    l.npcNames(viewer.RoomID),
+		Objects: l.objectNames(viewer.RoomID),
+		Ground:  l.groundNames(viewer.RoomID),
 	}
 	if l.catalog == nil {
 		return card
@@ -368,7 +449,7 @@ func (l *Loop) roomCard(viewer Player) Room {
 		return card
 	}
 	card.Name = strings.TrimSpace(r.Name.Text(text.Default))
-	card.Description = strings.TrimSpace(r.Description.Text(text.Default))
+	card.Description = pickRoomDesc(r, viewer.Flags)
 	for dir, destID := range r.Exits {
 		name := destID
 		if dest, ok := l.catalog.Room(destID); ok {
@@ -377,6 +458,36 @@ func (l *Loop) roomCard(viewer Player) Room {
 		card.Exits[dir] = name
 	}
 	return card
+}
+
+func (l *Loop) npcNames(roomID string) []string {
+	names := make([]string, 0)
+	if l.npcs == nil {
+		return names
+	}
+	for _, n := range l.npcs.InRoom(roomID) {
+		name := strings.TrimSpace(n.Name.Text(text.Default))
+		if name == "" {
+			name = n.ID
+		}
+		names = append(names, name)
+	}
+	return names
+}
+
+func (l *Loop) objectNames(roomID string) []string {
+	names := make([]string, 0)
+	if l.objects == nil {
+		return names
+	}
+	for _, o := range l.objects.InRoom(roomID) {
+		name := strings.TrimSpace(o.Name.Text(text.Default))
+		if name == "" {
+			name = o.ID
+		}
+		names = append(names, name)
+	}
+	return names
 }
 
 func (l *Loop) whoElse(viewer Player) []string {

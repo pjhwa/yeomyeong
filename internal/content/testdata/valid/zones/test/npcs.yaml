@@ -1,0 +1,13 @@
+- id: tutor
+  name: 훈장
+  room: test:start
+  aliases: [훈장, 선생]
+  look: 낡은 코트 소매에 잉크가 묻어 있다.
+  talk:
+    first: 처음 보는 얼굴이군.
+    second: 또 왔군, 자네.
+    when:
+      - flag: examined:test-paper
+        ko: 신문을 봤군, 자네.
+      - flag: other-flag
+        ko: 다른 단서를 봤군.

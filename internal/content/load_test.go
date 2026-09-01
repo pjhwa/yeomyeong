@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/world"
 )
 
@@ -52,6 +53,36 @@ func TestLoadItemsAndSpawns(t *testing.T) {
 	}
 }
 
+func TestLoadLivelihood(t *testing.T) {
+	w, err := LoadWorld(fixture("valid"), "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sk, err := skill.Load(filepath.Join("..", "..", "content", "skills"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	liv, err := LoadLivelihood(fixture("valid"), w.Rooms, w.Items, sk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := liv.Craft.NodesIn("test:start"); len(n) != 1 || n[0].Item != "herb" {
+		t.Fatalf("nodes %+v", n)
+	}
+	if _, ok := liv.Craft.LookupRecipe("nail"); !ok {
+		t.Fatal("nail recipe")
+	}
+	ids := liv.Markets.IDs()
+	if len(ids) != 2 || !liv.Markets.HasMarket("test") || !liv.Markets.HasMarket("test-east") {
+		t.Fatalf("markets %v", ids)
+	}
+	p1, _ := liv.Markets.Quote("test", "herb")
+	p2, _ := liv.Markets.Quote("test-east", "herb")
+	if p1 >= p2 {
+		t.Fatalf("want regional spread %d %d", p1, p2)
+	}
+}
+
 func TestLoadValidGraph(t *testing.T) {
 	cat, err := Load(fixture("valid"), "test:start")
 	if err != nil {
@@ -75,7 +106,7 @@ func TestLoadValidGraph(t *testing.T) {
 		t.Fatalf("yard extras: %+v", yard)
 	}
 	shop, ok := cat.Room("test:shop")
-	if !ok || shop.HeatModifier != 0 {
+	if !ok || shop.HeatModifier != 0 || shop.Market != "test-east" {
 		t.Fatalf("explicit 0 heat: %+v", shop)
 	}
 	if dest, ok := cat.Exit("test:shop", "south"); !ok || dest != "test:cliff" {
@@ -223,15 +254,142 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	if cat.Spawn() != world.SpawnID || cat.Len() == 0 {
 		t.Fatalf("spawn=%s len=%d", cat.Spawn(), cat.Len())
 	}
-}
-
-func TestNoHardcodedRooms(t *testing.T) {
-	src, err := os.ReadFile("load.go")
+	w, err := LoadWorld(root, world.SpawnID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Contains(src, []byte("dalbitgol:market")) {
-		t.Fatal("do not hardcode village rooms")
+	sk, err := skill.Load(filepath.Join(root, "skills"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	liv, err := LoadLivelihood(root, w.Rooms, w.Items, sk)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(liv.Craft.Nodes()) == 0 || len(liv.Craft.Recipes()) != 4 || len(liv.Markets.IDs()) != 2 {
+		t.Fatalf("livelihood nodes=%d recipes=%d markets=%v", len(liv.Craft.Nodes()), len(liv.Craft.Recipes()), liv.Markets.IDs())
+	}
+	if _, ok := w.Rooms.Room("solgol:market"); !ok {
+		t.Fatal("solgol:market missing")
+	}
+	if n, ok := w.NPCs.Find("청람"); !ok {
+		t.Fatal("cheongram npc missing")
+	} else if len(n.TalkWhen) < 2 || n.TalkWhen[0].Flag != "first_market_sale" || n.TalkWhen[1].Flag != "examined:gangpo-pack" {
+		t.Fatalf("cheongram talk.when: %+v", n.TalkWhen)
+	}
+	if n, ok := w.NPCs.FindInRoom("dalbitgol:packing-shed", "오씨"); !ok || n.ID != "clerk-oh" {
+		t.Fatalf("clerk-oh: %+v %v", n, ok)
+	}
+	if _, ok := w.Objects.FindInRoom("dalbitgol:market", "신문"); !ok {
+		t.Fatal("market newspaper object missing")
+	}
+	pack, ok := w.Objects.FindInRoom("dalbitgol:warehouse", "짐")
+	if !ok || pack.ID != "gangpo-pack" {
+		t.Fatalf("warehouse pack: %+v %v", pack, ok)
+	}
+	if !strings.Contains(pack.Description.KO, "한벽일보") || strings.TrimSpace(pack.AfterExamine.KO) == "" {
+		t.Fatalf("warehouse pack clue: %+v", pack)
+	}
+	if !strings.Contains(pack.AfterExamine.KO, "시세") || !strings.Contains(pack.AfterExamine.KO, "쑥") {
+		t.Fatalf("warehouse pack livelihood bridge: %+v", pack.AfterExamine)
+	}
+	ruts, ok := w.Objects.FindInRoom("dalbitgol:warehouse-lane", "자국")
+	if !ok || ruts.ID != "cart-ruts" || !strings.Contains(ruts.Description.KO, "흐릿") {
+		t.Fatalf("cart-ruts bland: %+v %v", ruts, ok)
+	}
+	if len(ruts.DescWhen) == 0 || ruts.DescWhen[0].Flag != "first_market_sale" || !strings.Contains(ruts.DescWhen[0].Line.KO, "화물마당") {
+		t.Fatalf("cart-ruts when: %+v", ruts.DescWhen)
+	}
+	chit, ok := w.Objects.FindInRoom("dalbitgol:packing-shed", "꼬리표")
+	if !ok || chit.ID != "cargo-chit" || !strings.Contains(chit.Description.KO, "잘 읽히지") {
+		t.Fatalf("cargo-chit bland: %+v %v", chit, ok)
+	}
+	if len(chit.DescWhen) == 0 || chit.DescWhen[0].Flag != "first_market_sale" || !strings.Contains(chit.DescWhen[0].Line.KO, "만석상회") {
+		t.Fatalf("cargo-chit when: %+v", chit.DescWhen)
+	}
+}
+
+func TestNoHardcodedRooms(t *testing.T) {
+	for _, name := range []string{"load.go", "story.go", "items.go"} {
+		src, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(src, []byte("dalbitgol:market")) {
+			t.Fatalf("%s: do not hardcode village rooms", name)
+		}
+	}
+}
+
+func TestLoadStoryYAML(t *testing.T) {
+	w, err := LoadWorld(fixture("valid"), "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w.NPCs.Len() != 1 {
+		t.Fatalf("npcs=%d", w.NPCs.Len())
+	}
+	n, ok := w.NPCs.FindInRoom("test:start", "훈장")
+	if !ok || n.ID != "tutor" || !strings.Contains(n.TalkFirst.KO, "처음") {
+		t.Fatalf("tutor: %+v %v", n, ok)
+	}
+	if len(n.TalkWhen) != 2 || n.TalkWhen[0].Flag != "examined:test-paper" || !strings.Contains(n.TalkWhen[0].Line.KO, "신문을 봤군") {
+		t.Fatalf("tutor when: %+v", n.TalkWhen)
+	}
+	if n.TalkWhen[1].Flag != "other-flag" {
+		t.Fatalf("tutor when[1]: %+v", n.TalkWhen)
+	}
+	if w.Objects.Len() != 1 {
+		t.Fatalf("objects=%d", w.Objects.Len())
+	}
+	o, ok := w.Objects.FindInRoom("test:yard", "신문")
+	if !ok || !strings.Contains(o.Description.KO, "활자") || !strings.Contains(o.Description.KO, "한벽일보") {
+		t.Fatalf("paper: %+v %v", o, ok)
+	}
+	if !strings.Contains(o.AfterExamine.KO, "사다리") {
+		t.Fatalf("after_examine: %+v", o)
+	}
+}
+
+func TestLoadStoryErrors(t *testing.T) {
+	root := writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "objects.yaml", "- id: ghost-paper\n  room: test:missing\n  name: 신문\n  aliases: [신문]\n  description: 설명이다.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "unknown room") {
+		t.Fatalf("unknown object room: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "talk.second") {
+		t.Fatalf("missing second talk: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n    second: 또.\n    when:\n      - flag: \"\"\n        ko: 단서.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "empty flag") {
+		t.Fatalf("empty when.flag: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n    second: 또.\n    when:\n      - ko: 단서.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "empty flag") {
+		t.Fatalf("missing when.flag: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n    second: 또.\n    when:\n      - flag: examined:ghost\n        ko: \"\"\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "ko is required") {
+		t.Fatalf("empty when.ko: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "objects.yaml", "- id: bad-fs\n  room: test:start\n  name: 신문\n  aliases: [신문]\n  description: 설명이다.\n  foreshadow: [FS-999]\n")
+	_, err := LoadWorld(root, "test:start")
+	if err == nil || (!errors.Is(err, ErrUnknownForeshadow) && !strings.Contains(err.Error(), "FORESHADOW.md")) {
+		t.Fatalf("unknown fs: %v", err)
+	}
+}
+
+func writeStoryFile(t *testing.T, root, name, yaml string) {
+	t.Helper()
+	path := filepath.Join(root, "zones", "test", name)
+	if err := os.WriteFile(path, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 

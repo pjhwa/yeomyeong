@@ -102,10 +102,10 @@ func TestLeaveRemovesPlayerAndNotifiesRemaining(t *testing.T) {
 	if len(snap.Players) != 1 || snap.Players[0].ConnID != "b" {
 		t.Fatalf("want only 을 remaining, got %+v", snap.Players)
 	}
-	if hasText(drain(outA), ChannelSys, "", "갑 님이 나갔습니다.") {
+	if hasText(drain(outA), ChannelSys, "", "갑 님이 나갔어요.") {
 		t.Fatal("leaver must not receive their own leave sys line")
 	}
-	if !hasText(drain(outB), ChannelSys, "", "갑 님이 나갔습니다.") {
+	if !hasText(drain(outB), ChannelSys, "", "갑 님이 나갔어요.") {
 		t.Fatal("remaining player missing leave sys line")
 	}
 }
@@ -124,7 +124,7 @@ func TestNoopsAndReenter(t *testing.T) {
 	}
 	n := 0
 	for _, ev := range drain(out) {
-		if tx, ok := ev.(Text); ok && tx.Channel == ChannelSys && strings.Contains(tx.Body, "들어왔습니다") {
+		if tx, ok := ev.(Text); ok && tx.Channel == ChannelSys && strings.Contains(tx.Body, "들어왔어요") {
 			n++
 		}
 	}
@@ -227,7 +227,7 @@ func TestEnterEmitsRoomBeforeSeated(t *testing.T) {
 		if _, ok := ev.(Room); ok && roomI < 0 {
 			roomI = i
 		}
-		if tx, ok := ev.(Text); ok && tx.Channel == ChannelSys && strings.Contains(tx.Body, "들어왔습니다") && seatedI < 0 {
+		if tx, ok := ev.(Text); ok && tx.Channel == ChannelSys && strings.Contains(tx.Body, "들어왔어요") && seatedI < 0 {
 			seatedI = i
 		}
 	}
@@ -251,7 +251,7 @@ func TestEnterSeatsAtSpawnAndLookShowsOthers(t *testing.T) {
 			t.Fatalf("want spawn test:start, got %+v", p)
 		}
 	}
-	if !hasText(drain(outA), ChannelSys, "", "갑 님이 들어왔습니다.") {
+	if !hasText(drain(outA), ChannelSys, "", "갑 님이 들어왔어요.") {
 		t.Fatal("newcomer missing seated")
 	}
 	if findRoom(drain(outB)) == nil {
@@ -282,7 +282,7 @@ func TestMoveOnlyViaLoopAndNoExit(t *testing.T) {
 	l.Submit(Move{ConnID: "a", Dir: "south"})
 	_ = mustSnapshot(t, l)
 	evs := drain(out)
-	if !hasText(evs, ChannelSys, "", "그쪽으로는 갈 수 없습니다.") {
+	if !hasText(evs, ChannelSys, "", "그쪽으로는 갈 수 없어요.") {
 		t.Fatalf("want no_exit, got %#v", evs)
 	}
 	if code := textCode(evs, text.CodeNoExit); code == nil {
@@ -347,10 +347,10 @@ func TestLeaveOnlyNotifiesSameRoom(t *testing.T) {
 	drain(outC)
 	l.Submit(LeaveWorld{ConnID: "a"})
 	_ = mustSnapshot(t, l)
-	if !hasText(drain(outB), ChannelSys, "", "갑 님이 나갔습니다.") {
+	if !hasText(drain(outB), ChannelSys, "", "갑 님이 나갔어요.") {
 		t.Fatal("same-room peer missed leave")
 	}
-	if hasText(drain(outC), ChannelSys, "", "갑 님이 나갔습니다.") {
+	if hasText(drain(outC), ChannelSys, "", "갑 님이 나갔어요.") {
 		t.Fatal("leave leaked to another room")
 	}
 }

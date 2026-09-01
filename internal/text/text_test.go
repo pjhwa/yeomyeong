@@ -3,19 +3,19 @@ package text
 import "testing"
 
 func TestTKoreanAndFallback(t *testing.T) {
-	if got := T(LocaleKO, CmdUnknown); got != "무슨 말인지 모르겠습니다. 보다, 종료" {
+	if got := T(LocaleKO, CmdUnknown); got != "무슨 말인지 모르겠어요. 보다, 종료" {
 		t.Fatalf("unknown: %q", got)
 	}
-	if got := T(LocaleEN, MoveNoExit); got != "그쪽으로는 갈 수 없습니다." {
+	if got := T(LocaleEN, MoveNoExit); got != "그쪽으로는 갈 수 없어요." {
 		t.Fatalf("en fallback: %q", got)
 	}
-	if got := T(Default, SysSeated, "갑"); got != "갑 님이 들어왔습니다." {
+	if got := T(Default, SysSeated, "갑"); got != "갑 님이 들어왔어요." {
 		t.Fatalf("seated: %q", got)
 	}
-	if got := T(Default, SysLeave, "을"); got != "을 님이 나갔습니다." {
+	if got := T(Default, SysLeave, "을"); got != "을 님이 나갔어요." {
 		t.Fatalf("leave: %q", got)
 	}
-	if got := T(Default, SysRateLimit); got != "너무 빨리 입력했습니다. 잠깐만 기다리세요." {
+	if got := T(Default, SysRateLimit); got != "너무 빨리 입력했어요. 잠깐만 기다리세요." {
 		t.Fatalf("rate: %q", got)
 	}
 	if got := T(Default, PracticeGain); got != "조금 익숙해진 것 같다." {
@@ -24,11 +24,20 @@ func TestTKoreanAndFallback(t *testing.T) {
 	if got := T(Default, PracticeMiss); got != "아직 손에 안 익는다." {
 		t.Fatalf("miss: %q", got)
 	}
-	if got := T(Default, PracticeUnknown); got != "숙련할 기술 중에 그런 기술은 없습니다." {
+	if got := T(Default, PracticeUnknown); got != "그런 기술은 없어요." {
 		t.Fatalf("unknown skill: %q", got)
 	}
 	if got := T(Default, SheetTitle, "아무개"); got != "불리는 이름: 아무개" {
 		t.Fatalf("title: %q", got)
+	}
+	if got := T(Default, SheetWallet, 12); got != "주머니: 12냥" {
+		t.Fatalf("wallet: %q", got)
+	}
+	if got := T(Default, TalkMissing); got != "여기는 그 사람이 없어요." {
+		t.Fatalf("talk missing: %q", got)
+	}
+	if got := T(Default, RoomObjects, "보부상 봇짐"); got != "살펴볼 것: 보부상 봇짐" {
+		t.Fatalf("room objects: %q", got)
 	}
 	if EulReul("쇠망치") != "를" || EulReul("식칼") != "을" {
 		t.Fatalf("eul/reul: %s %s", EulReul("쇠망치"), EulReul("식칼"))

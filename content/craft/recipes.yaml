@@ -1,0 +1,49 @@
+# Craft recipes. Practice verbs (두드리다) do not consume; 만들다 does.
+
+- id: iron-nail
+  skill: smith
+  flag: forge
+  tool: hammer
+  in:
+    - {id: scrap-iron, n: 2}
+  out: {id: iron-nail, n: 1}
+  gain:
+    - 쇠못 머리가 둥글게 잡혔다. 모루가 아직 뜨겁다.
+    - 못대가리가 한 번에 눌렸다. 손등이 그을린 냄새가 난다.
+  miss:
+    - 쇠가 비틀렸다. 못은 안 된다.
+
+- id: mugwort-cake
+  skill: cook
+  flag: kitchen
+  tool: kitchen-knife
+  in:
+    - {id: mugwort, n: 1}
+  out: {id: mugwort-cake, n: 1}
+  gain:
+    - 쑥떡에서 김이 오른다. 잎 냄새가 손목에 묻는다.
+  miss:
+    - 떡이 붙지 않는다. 쑥만 남았다.
+
+- id: leaflet
+  skill: print
+  flag: press
+  tool: composing-stick
+  in:
+    - {id: hanji, n: 1}
+  out: {id: leaflet, n: 1}
+  gain:
+    - 전단이 기계에서 나왔다. 잉크가 손톱 밑에 묻는다.
+  miss:
+    - 활자가 빗나갔다. 종이만 찢어졌다.
+
+- id: poultice
+  skill: remedy
+  flag: clinic
+  in:
+    - {id: mugwort, n: 2}
+  out: {id: poultice, n: 1}
+  gain:
+    - 약첩을 접었다. 쓴내가 손바닥에 남는다.
+  miss:
+    - 가루가 흩어졌다. 약은 안 된다.

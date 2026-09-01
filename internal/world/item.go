@@ -2,6 +2,7 @@ package world
 
 import (
 	"fmt"
+	"sort"
 )
 
 // Wear slots on the M2 sheet (CONTENT-SCHEMA).
@@ -62,6 +63,36 @@ func (c *Items) Len() int {
 		return 0
 	}
 	return len(c.byID)
+}
+
+// IDs returns sorted item ids.
+func (c *Items) IDs() []string {
+	if c == nil {
+		return nil
+	}
+	ids := make([]string, 0, len(c.byID))
+	for id := range c.byID {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	return ids
+}
+
+// Find looks up by id or Korean/English name.
+func (c *Items) Find(q string) (Item, bool) {
+	if c == nil {
+		return Item{}, false
+	}
+	if it, ok := c.Get(q); ok {
+		return it, true
+	}
+	for _, id := range c.IDs() {
+		it := c.byID[id]
+		if it.Name.KO == q || it.Name.EN == q {
+			return cloneItem(it), true
+		}
+	}
+	return Item{}, false
 }
 
 func cloneItem(it Item) Item {

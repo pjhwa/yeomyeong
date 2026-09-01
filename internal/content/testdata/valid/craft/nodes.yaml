@@ -1,0 +1,2 @@
+- {room: test:start, skill: forage, item: herb, stock: 3, regen_ticks: 5}
+- {room: test:loft, skill: forage, item: ore, stock: 4, regen_ticks: 5}

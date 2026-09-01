@@ -49,7 +49,7 @@ func TestTwoClientsExchangeSay(t *testing.T) {
 	}
 
 	a.send(t, "quit")
-	if !strings.Contains(b.readUntil(t, "갑을 님이 나갔습니다."), "갑을 님이 나갔습니다.") {
+	if !strings.Contains(b.readUntil(t, "갑을 님이 나갔어요."), "갑을 님이 나갔어요.") {
 		t.Fatal("remaining player missed leave line")
 	}
 	waitRoster(t, loop, 1)
@@ -63,17 +63,17 @@ func TestUnknownUserCreatePrompt(t *testing.T) {
 	c.send(t, "새유저")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "없는 이름입니다. 새로 만드시겠습니까? (y/n)")
+	c.readUntil(t, "없는 이름이에요. 새로 만들까요? (y/n)")
 	c.send(t, "n")
 	c.readUntil(t, "이름:")
 	c.send(t, "새유저")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "새유저 님이 들어왔습니다.")
+	c.readUntil(t, "새유저 님이 들어왔어요.")
 	c.readUntil(t, ">")
 	waitRoster(t, loop, 1)
 }
@@ -90,16 +90,16 @@ func TestBadPassword(t *testing.T) {
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "wrongpass")
 	got := c.readUntil(t, "이름:")
-	if !strings.Contains(got, "이름이나 비밀번호가 맞지 않습니다.") {
+	if !strings.Contains(got, "이름이나 비밀번호가 안 맞아요.") {
 		t.Fatalf("want bad-creds line, got %q", got)
 	}
-	if strings.Contains(got, "새로 만드시겠습니까") {
+	if strings.Contains(got, "새로 만들까요") {
 		t.Fatal("existing user must not see create prompt")
 	}
 	c.send(t, "갑을")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "갑을 님이 들어왔습니다.")
+	c.readUntil(t, "갑을 님이 들어왔어요.")
 }
 
 func TestUnknownCommandEmptyAndRateLimit(t *testing.T) {
@@ -109,15 +109,15 @@ func TestUnknownCommandEmptyAndRateLimit(t *testing.T) {
 
 	c.send(t, "")
 	c.send(t, "xyzzy")
-	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠습니다. 보다, 종료"), "무슨 말인지 모르겠습니다. 보다, 종료") {
+	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠어요. 보다, 종료"), "무슨 말인지 모르겠어요. 보다, 종료") {
 		t.Fatal("missing help line")
 	}
 
 	for i := 0; i < 25; i++ {
 		c.send(t, "say x")
 	}
-	if !strings.Contains(c.readUntil(t, "너무 빨리 입력했습니다"), "너무 빨리 입력했습니다") {
-		t.Fatal("want 너무 빨리 입력했습니다")
+	if !strings.Contains(c.readUntil(t, "너무 빨리 입력했어요"), "너무 빨리 입력했어요") {
+		t.Fatal("want 너무 빨리 입력했어요")
 	}
 }
 
@@ -157,14 +157,14 @@ func TestPasswordHiddenUsernameEchoed(t *testing.T) {
 		t.Fatalf("username must be echoed, got %q", nameChunk)
 	}
 	c.send(t, "s3cretPW")
-	passChunk := c.readUntil(t, "새로 만드시겠습니까?")
+	passChunk := c.readUntil(t, "새로 만들까요?")
 	if strings.Contains(passChunk, "s3cretPW") {
 		t.Fatalf("password must not be echoed, got %q", passChunk)
 	}
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "s3cretPW")
-	createChunk := c.readUntil(t, "갑을 님이 들어왔습니다.")
+	createChunk := c.readUntil(t, "갑을 님이 들어왔어요.")
 	if strings.Contains(createChunk, "s3cretPW") {
 		t.Fatalf("create password must not be echoed, got %q", createChunk)
 	}
@@ -185,11 +185,11 @@ func TestBackspaceAndControlChars(t *testing.T) {
 	}
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "갑을 님이 들어왔습니다.")
+	c.readUntil(t, "갑을 님이 들어왔어요.")
 	waitRoster(t, loop, 1)
 }
 
@@ -207,7 +207,7 @@ func TestExistingLoginAndIAC(t *testing.T) {
 	c.send(t, "갑을")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, "password1")
-	c.readUntil(t, "갑을 님이 들어왔습니다.")
+	c.readUntil(t, "갑을 님이 들어왔어요.")
 }
 
 func TestReadLineCRLFAndIAC(t *testing.T) {
@@ -271,6 +271,45 @@ func readLineSoon(t *testing.T, r *bufio.Reader, w stdnet.Conn, payload []byte) 
 	}
 }
 
+func TestTalkAndExamine(t *testing.T) {
+	addr, _, _ := startStoryServer(t)
+	c := dial(t, addr)
+	loginNew(t, c, "갑을", "password1")
+
+	c.send(t, "보다")
+	got := c.readUntil(t, "사람: 훈장")
+	if !strings.Contains(got, "시작 마당") {
+		t.Fatalf("look npcs: %q", got)
+	}
+
+	c.send(t, "대화 훈장")
+	if !strings.Contains(c.readUntil(t, "처음 보는 얼굴이군."), "처음 보는 얼굴이군.") {
+		t.Fatal("first talk")
+	}
+	c.send(t, "talk 선생")
+	if !strings.Contains(c.readUntil(t, "또 왔군, 자네."), "또 왔군, 자네.") {
+		t.Fatal("second talk")
+	}
+
+	c.send(t, "보다 훈장")
+	if !strings.Contains(c.readUntil(t, "낡은 코트"), "낡은 코트") {
+		t.Fatal("examine npc")
+	}
+
+	c.send(t, "대화 청람")
+	if !strings.Contains(c.readUntil(t, "여기는 그 사람이 없어요."), "여기는 그 사람이 없어요.") {
+		t.Fatal("missing npc")
+	}
+
+	c.send(t, "n")
+	c.readUntil(t, "우물이 가운데 있다.")
+	c.send(t, "보다 신문")
+	got = c.readUntil(t, "두 번")
+	if !strings.Contains(got, "한벽일보") || !strings.Contains(got, "활자") {
+		t.Fatalf("newspaper: %q", got)
+	}
+}
+
 func TestLookMoveAndNoExit(t *testing.T) {
 	addr, loop := startServer(t)
 
@@ -290,7 +329,7 @@ func TestLookMoveAndNoExit(t *testing.T) {
 	}
 
 	a.send(t, "s")
-	if !strings.Contains(a.readUntil(t, "그쪽으로는 갈 수 없습니다."), "그쪽으로는 갈 수 없습니다.") {
+	if !strings.Contains(a.readUntil(t, "그쪽으로는 갈 수 없어요."), "그쪽으로는 갈 수 없어요.") {
 		t.Fatal("missing no_exit")
 	}
 
@@ -353,6 +392,21 @@ func TestSplitCmdAndFormat(t *testing.T) {
 	if len(lines) != 4 || lines[2] != "출구: 북쪽(안마당), 동쪽(가게)" || lines[3] != "여기: 병정" {
 		t.Fatalf("room format: %#v", lines)
 	}
+	withNPC := formatRoom(engine.Room{
+		Name: "서당", Description: "마루.", NPCs: []string{"청람 선생"},
+	})
+	if len(withNPC) != 3 || withNPC[2] != "사람: 청람 선생" {
+		t.Fatalf("npc line: %#v", withNPC)
+	}
+	withObj := formatRoom(engine.Room{
+		Name: "창고", Description: "짚단.", Objects: []string{"보부상 봇짐"},
+	})
+	if len(withObj) != 3 || withObj[2] != "살펴볼 것: 보부상 봇짐" {
+		t.Fatalf("object line: %#v", withObj)
+	}
+	if !isTalk("talk", "talk") || !isTalk("대화", "대화") || !isTalk("말걸다", "말걸다") {
+		t.Fatal("talk verbs")
+	}
 	if n := formatRoom(engine.Room{Name: "벼랑", Description: "끝."}); len(n) != 2 {
 		t.Fatalf("omit empty chrome: %#v", n)
 	}
@@ -391,7 +445,17 @@ func startServer(t *testing.T) (addr string, loop *engine.Loop) {
 	return addr, loop
 }
 
+func startStoryServer(t *testing.T) (string, *engine.Loop, *persist.Memory) {
+	t.Helper()
+	return startServerStoreOpts(t, true)
+}
+
 func startServerStore(t *testing.T) (string, *engine.Loop, *persist.Memory) {
+	t.Helper()
+	return startServerStoreOpts(t, false)
+}
+
+func startServerStoreOpts(t *testing.T, story bool) (string, *engine.Loop, *persist.Memory) {
 	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	loop := engine.NewWithCatalog(log, testCatalog(t))
@@ -399,6 +463,10 @@ func startServerStore(t *testing.T) (string, *engine.Loop, *persist.Memory) {
 		t.Fatal(err)
 	} else {
 		loop = loop.WithSkills(skills)
+	}
+	if story {
+		npcs, objs := testStoryCatalogs(t)
+		loop = loop.WithNPCs(npcs).WithObjects(objs)
 	}
 	store := persist.NewMemory()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -510,11 +578,11 @@ func loginNew(t *testing.T, c *testConn, name, pass string) {
 	c.send(t, name)
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	c.readUntil(t, name+" 님이 들어왔습니다.")
+	c.readUntil(t, name+" 님이 들어왔어요.")
 	c.readUntil(t, ">")
 }
 
@@ -536,6 +604,29 @@ func waitRoster(t *testing.T, loop *engine.Loop, n int) engine.Snapshot {
 	}
 	t.Fatalf("roster want %d got %d (%+v)", n, len(last.Players), last.Players)
 	return last
+}
+
+func testStoryCatalogs(t *testing.T) (*world.NPCs, *world.Objects) {
+	t.Helper()
+	npcs, err := world.NewNPCs([]world.NPC{{
+		ID: "tutor", Room: "test:start",
+		Name: world.Localized{KO: "훈장"}, Aliases: []string{"훈장", "선생"},
+		Look:       world.Localized{KO: "낡은 코트 소매에 잉크가 묻어 있다."},
+		TalkFirst:  world.Localized{KO: "처음 보는 얼굴이군."},
+		TalkSecond: world.Localized{KO: "또 왔군, 자네."},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	objs, err := world.NewObjects([]world.Object{{
+		ID: "test-paper", Room: "test:yard",
+		Name: world.Localized{KO: "한벽일보"}, Aliases: []string{"한벽일보", "신문", "게시판"},
+		Description: world.Localized{KO: "한벽일보 한 줄에 같은 활자가 두 번 찍혀 어긋나 있다. 잉크가 손가락에 묻고, 활자 냄새가 난다."},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return npcs, objs
 }
 
 func testCatalog(t *testing.T) *world.Catalog {
@@ -564,28 +655,28 @@ func TestPracticeSkillsInvVerbs(t *testing.T) {
 	loginNew(t, c, "갑을", "password1")
 
 	c.send(t, "skills")
-	if !strings.Contains(c.readUntil(t, "가진 것:"), "가진 것:") {
+	if !strings.Contains(c.readUntil(t, "가방:"), "가방:") {
 		t.Fatal("skills")
 	}
 	c.send(t, "숙련")
 	c.readUntil(t, "몸:")
 	c.send(t, "inv")
-	c.readUntil(t, "가진 것:")
+	c.readUntil(t, "가방:")
 	c.send(t, "소지")
 	c.readUntil(t, "들고 있는 것:")
 
 	c.send(t, "practice nope")
-	if !strings.Contains(c.readUntil(t, "숙련할 기술 중에 그런 기술은 없습니다."), "숙련할 기술 중에 그런 기술은 없습니다.") {
+	if !strings.Contains(c.readUntil(t, "그런 기술은 없어요."), "그런 기술은 없어요.") {
 		t.Fatal("practice unknown")
 	}
 	c.send(t, "익히다")
-	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠습니다. 보다, 종료"), "무슨 말인지 모르겠습니다. 보다, 종료") {
+	if !strings.Contains(c.readUntil(t, "무슨 말인지 모르겠어요. 보다, 종료"), "무슨 말인지 모르겠어요. 보다, 종료") {
 		t.Fatal("practice empty")
 	}
 
 	c.send(t, "두드리다")
 	got := c.readUntil(t, "모루")
-	if strings.Contains(got, "모르는 말입니다") || strings.Contains(got, "숙련할 기술 중에 그런 기술은 없습니다") {
+	if strings.Contains(got, "모르는 말입니다") || strings.Contains(got, "그런 기술은 없어요") {
 		t.Fatalf("두드리다 should practice smith, got %q", got)
 	}
 	if strings.Contains(got, "숙련이 늘었습니다") || strings.Contains(got, "smith") {
@@ -593,21 +684,21 @@ func TestPracticeSkillsInvVerbs(t *testing.T) {
 	}
 
 	c.send(t, "get 없는물건")
-	c.readUntil(t, "여기엔 그런 게 없습니다.")
+	c.readUntil(t, "여기엔 그런 게 없어요.")
 	c.send(t, "집다 x")
-	c.readUntil(t, "여기엔 그런 게 없습니다.")
+	c.readUntil(t, "여기엔 그런 게 없어요.")
 	c.send(t, "drop 없는물건")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "놓다 x")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "equip 없는물건")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "들다 x")
-	c.readUntil(t, "그런 물건이 없습니다.")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "unequip main_hand")
-	c.readUntil(t, "거기엔 아무것도 없습니다.")
+	c.readUntil(t, "거기엔 아무것도 없어요.")
 	c.send(t, "벗다 몸")
-	c.readUntil(t, "거기엔 아무것도 없습니다.")
+	c.readUntil(t, "거기엔 아무것도 없어요.")
 }
 
 func TestAdaptersNeverWriteRoomID(t *testing.T) {

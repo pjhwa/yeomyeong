@@ -28,8 +28,8 @@ const (
 	banner       = "여명 · YEOMYEONG"
 	promptName   = "이름:"
 	promptPass   = "비밀번호:"
-	promptCreate = "없는 이름입니다. 새로 만드시겠습니까? (y/n)"
-	msgBadCreds  = "이름이나 비밀번호가 맞지 않습니다."
+	promptCreate = "없는 이름이에요. 새로 만들까요? (y/n)"
+	msgBadCreds  = "이름이나 비밀번호가 안 맞아요."
 	promptCmd    = ">"
 
 	maxLine   = 4096
@@ -369,7 +369,14 @@ func (s *session) dispatch(line string) error {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
 	case isLook(low, verb):
-		if !s.loop.Submit(engine.Look{ConnID: s.id}) {
+		if !s.loop.Submit(engine.Look{ConnID: s.id, Target: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case isTalk(low, verb):
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		if !s.loop.Submit(engine.Talk{ConnID: s.id, NPC: rest}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
 	case low == "go" || verb == "가다":
@@ -419,6 +426,34 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Unequip{ConnID: s.id, Slot: rest}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
+	case low == "gather":
+		if !s.loop.Submit(engine.Gather{ConnID: s.id, Query: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "craft" || verb == "만들다":
+		if !s.loop.Submit(engine.Craft{ConnID: s.id, Query: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "sell" || verb == "팔다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		name, qty := engine.ParseNameQty(rest)
+		if !s.loop.Submit(engine.Sell{ConnID: s.id, Query: name, Qty: qty}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "buy" || verb == "사다":
+		if rest == "" {
+			return s.writeLine(text.T(text.Default, text.CmdUnknown))
+		}
+		name, qty := engine.ParseNameQty(rest)
+		if !s.loop.Submit(engine.Buy{ConnID: s.id, Query: name, Qty: qty}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
+	case low == "quote" || verb == "시세":
+		if !s.loop.Submit(engine.Quote{ConnID: s.id}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
 	case low == "quit" || verb == "종료":
 		if s.user != "" {
 			_ = s.writeLine(text.T(text.Default, text.SysLeave, s.user))
@@ -428,6 +463,12 @@ func (s *session) dispatch(line string) error {
 	default:
 		if dir, ok := parseTelnetDir(verb); ok && rest == "" {
 			if !s.loop.Submit(engine.Move{ConnID: s.id, Dir: dir}) {
+				return s.writeLine(text.T(text.Default, text.SysRateLimit))
+			}
+			return nil
+		}
+		if _, ok := s.loop.GatherSkill(verb); ok {
+			if !s.loop.Submit(engine.Gather{ConnID: s.id, Query: rest, Skill: verb}) {
 				return s.writeLine(text.T(text.Default, text.SysRateLimit))
 			}
 			return nil
@@ -516,6 +557,12 @@ func formatRoom(e engine.Room) []string {
 	if len(e.Who) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomHere, strings.Join(e.Who, ", ")))
 	}
+	if len(e.NPCs) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomNPCs, strings.Join(e.NPCs, ", ")))
+	}
+	if len(e.Objects) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomObjects, strings.Join(e.Objects, ", ")))
+	}
 	if len(e.Ground) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomGround, strings.Join(e.Ground, ", ")))
 	}
@@ -542,6 +589,10 @@ func formatExits(exits map[string]string) string {
 
 func isLook(low, verb string) bool {
 	return low == "look" || low == "l" || verb == "보다" || verb == "살펴"
+}
+
+func isTalk(low, verb string) bool {
+	return low == "talk" || verb == "대화" || verb == "말걸다"
 }
 
 var telnetDir = map[string]string{

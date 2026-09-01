@@ -13,8 +13,9 @@ The game-loop goroutine is the **only** goroutine that:
 - inserts / removes players on the in-memory roster
 - reads the roster to decide who receives a `say`
 - writes `Player.RoomID` (position)
-- writes skill ranks, stats, bag, equipment, and room ground piles
-- changes any future world field (heat, prices, …)
+- writes skill ranks, stats, bag, equipment, room ground piles, nyang, player flags
+- writes market stock and gather-node remaining
+- changes any future world field (heat, …)
 
 The **room catalog** loaded from YAML is immutable after boot. The loop
 reads it; it does not mutate room definitions. Positions are world state.
@@ -29,7 +30,7 @@ conn goroutine ──Command──▶ game loop ──Event──▶ per-conn ou
                      └── persist / auth happens BEFORE EnterWorld
 ```
 
-## Commands (M0–M1)
+## Commands (M0–M3)
 
 Enqueued by adapters (`internal/net`). Value types, no shared pointers into
 the world.
@@ -38,14 +39,19 @@ the world.
 |---|---|---|---|
 | `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
 | `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
-| `Look` | `ConnID` | net | Emit `Room` card to that conn (include title + ground items) |
+| `Look` | `ConnID`, `Target?` | net | Empty target: emit `Room` card (NPCs, scenery names, ground). Set: examine NPC/object, emit Description `Text`; object `after_examine` emits a second sys `Text` once (`Flags["examined:<id>"]`) |
+| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First matching `talk.when` whose sheet flag is >0, else first/second (D-046). First talk sets `Sheet.Flags["{id}_talked"]` even if a when-line was used |
 | `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
 | `Practice` | `ConnID`, `SkillID` | net | GAMEPLAY roll; loop writes new ranks/stats; emit Text |
 | `Get` | `ConnID`, `ItemID` | net | Move one ground stack into bag if weight allows |
 | `Drop` | `ConnID`, `ItemID` | net | Move one bag stack to ground |
 | `Equip` | `ConnID`, `ItemID` | net | Bag → slot if `slot` is wearable |
 | `Unequip` | `ConnID`, `Slot` | net | Slot → bag |
-| `Sheet` | `ConnID` | net | Emit skills/title/stats/inv text |
+| `Sheet` | `ConnID` | net | Emit skills/title/stats/inv/purse text |
+| `Gather` | `ConnID`, `Query`, `Skill` | net | Harvest a YAML node; write bag + forage rank |
+| `Craft` | `ConnID`, `Query` | net | Consume a YAML recipe; write bag + craft rank |
+| `Sell` / `Buy` | `ConnID`, `Query`, `Qty` | net | Trade at the room's `market` slug; write nyang + stock |
+| `Quote` | `ConnID` | net | Emit current stall prices |
 | `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Persist sheet; delete roster; emit `Sys` to remaining **in that room** |
 
 Auth create/login is **not** a loop command. Hashing and store I/O run in
@@ -59,7 +65,7 @@ Unknown `ConnID` on `Say` / `LeaveWorld`: no-op (already gone).
 | Name | Fields | Delivery |
 |---|---|---|
 | `Text` | `ConnID` (target), `Channel` (`say`\|`sys`\|`room`), `From`, `Body` | That connection's outbound buffer |
-| `Room` | `ConnID`, `ID`, `Name`, `Description`, `Exits` (dir→display name), `Who` | That connection; adapters format per WIRE-PROTOCOL |
+| `Room` | `ConnID`, `ID`, `Name`, `Description`, `Exits` (dir→display name), `Who`, `NPCs`, `Objects`, `Ground` | That connection; adapters format per WIRE-PROTOCOL |
 | `Drop` | `ConnID` | Adapter closes the socket after flush |
 
 The loop never writes to a socket. It only appends to an outbound queue
@@ -67,10 +73,12 @@ the adapter drains.
 
 ## Tick
 
-Period: **100ms**. M1 tick work:
+Period: **100ms**. Tick work:
 
 1. Drain the command channel (bounded; see below).
-2. No combat, weather, NPC, or price work yet.
+2. Regen gather nodes whose `regen_ticks` divide the tick count.
+3. Every 10 ticks, walk each market good one step toward `target` (NPC flow).
+4. No combat, weather, or NPC AI yet.
 
 If the drain exceeds the tick budget, log a warning and continue. Do not
 spawn extra loop goroutines.
@@ -97,5 +105,8 @@ Do not implement these in M1; names are reserved so GAMEPLAY/ECONOMY do
 not invent parallel buses:
 
 - `UseSkill`, `CombatIntent`
-- `PriceTick`, `HeatTick`, `WeatherTick`
+- `HeatTick`, `WeatherTick`
 - `DialogueRequest` / `DialogueResult` (AINPC workers → loop)
+
+Price drift is not a command. The loop calls `Book.Tick` on its own
+goroutine (D-043).

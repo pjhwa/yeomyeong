@@ -31,8 +31,16 @@ type Say struct {
 }
 
 // Look asks the loop for the caller's current room card.
+// Target, when set, examines an NPC or scenery object instead of the room.
 type Look struct {
 	ConnID ConnID
+	Target string
+}
+
+// Talk is a scripted NPC conversation (T0 YAML, not LLM).
+type Talk struct {
+	ConnID ConnID
+	NPC    string
 }
 
 // Move asks the loop to walk Dir (north/south/east/west/up/down).
@@ -81,9 +89,42 @@ type Practice struct {
 	SkillID string
 }
 
+// Gather harvests a YAML node in the current room.
+type Gather struct {
+	ConnID ConnID
+	Query  string // item id/name or empty (first node)
+	Skill  string // optional gather skill id/verb
+}
+
+// Craft consumes a YAML recipe. Query is recipe id or output name; empty lists options.
+type Craft struct {
+	ConnID ConnID
+	Query  string
+}
+
+// Sell sells Qty of Query at the room's market.
+type Sell struct {
+	ConnID ConnID
+	Query  string
+	Qty    int
+}
+
+// Buy buys Qty of Query at the room's market.
+type Buy struct {
+	ConnID ConnID
+	Query  string
+	Qty    int
+}
+
+// Quote prints the current stall prices.
+type Quote struct {
+	ConnID ConnID
+}
+
 func (EnterWorld) command() {}
 func (Say) command()        {}
 func (Look) command()       {}
+func (Talk) command()       {}
 func (Move) command()       {}
 func (LeaveWorld) command() {}
 func (Get) command()        {}
@@ -92,6 +133,11 @@ func (Equip) command()      {}
 func (Unequip) command()    {}
 func (Sheet) command()      {}
 func (Practice) command()   {}
+func (Gather) command()     {}
+func (Craft) command()      {}
+func (Sell) command()       {}
+func (Buy) command()        {}
+func (Quote) command()      {}
 
 // Control requests served by the same queue so they observe FIFO order
 // relative to world-mutating commands. Not part of the public bus.

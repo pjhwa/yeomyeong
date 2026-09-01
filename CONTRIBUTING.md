@@ -88,7 +88,7 @@ LEAD reviews within 24 hours. Rejections come with a concrete defect list, not "
 
 1. Read `docs/CONTENT-STYLE.md` (written in M1) before any prose.
 2. Every room is 2–4 sentences, at least two senses, no repeated clichés.
-3. Period vocabulary is welcome (전차, 등사기, 고무신, 주재소). Dense Sino-Korean is not.
+3. Everyday modern Korean (D-045). Period objects are welcome when they are in the room (전차, 등사기, 고무신, 주재소). Dense Sino-Korean, 문어체, and 고어 are not.
 4. Register every planted clue in `docs/FORESHADOW.md` in the same change.
 5. Prefer a `good first issue` labelled `type:content` if you are new.
 

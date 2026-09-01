@@ -114,7 +114,7 @@ func TestTitleAnnounceAndKoreanSheet(t *testing.T) {
 	l.Submit(Sheet{ConnID: "a"})
 	_ = mustSnapshot(t, l)
 	evs := drain(out)
-	if !hasBody(evs, "사람들이 이제 달빛골의 대장장이라고 부릅니다.") {
+	if !hasBody(evs, "사람들이 이제 달빛골의 대장장이라고 불러요.") {
 		t.Fatalf("missing title announce: %#v", evs)
 	}
 	if !hasBody(evs, text.T(text.Default, text.SheetTitle, "달빛골의 대장장이")) {

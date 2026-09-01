@@ -21,8 +21,8 @@ Built in Go. Inspired by [DikuMUD](https://dikumud.com) (1990), sharing none of 
 
 ---
 
-> **⚠️ Status: M2 playtest reopened (D-040).** Economy and Act I are still the design
-> target. Follow the [roadmap](#roadmap).
+> **⚠️ Status: M2 playable — the first 10 minutes hook is in.** Economy (M3) and
+> Act I (M4) remain the design target. Follow the [roadmap](#roadmap).
 
 <!-- TODO(M1): replace with asciinema demo GIF — 30s: market → haggle → checkpoint → deliver -->
 <div align="center">
@@ -60,9 +60,10 @@ strange typesetting error, and a retired schoolmaster who knows more than he
 admits. The secret society called **새벽회 (the Dawn Circle)** is looking for
 people who notice things.
 
-> 좁은 흙길 양옆으로 좌판이 늘어섰다. 말린 명태와 삼베 냄새가 뒤섞이고,
-> 엿장수의 가위질 소리가 장단을 맞춘다. 장터 어귀의 게시판에는 총독부
-> 고시문이 붙어 있는데, 누군가 모퉁이를 찢어 갔다.
+> 장터 어귀 게시판에 관아 안내문이 겹쳐 붙었고, 맨 앞장 모퉁이만 손가락
+> 넓이로 찢어져 있다. 그 아래 한벽일보에는 같은 활자가 한 줄에서 두 번
+> 어긋나 있다. 좌판 저울추가 나무판을 치는 소리가 일정하고, 참기름
+> 고소한 냄새가 난다.
 
 *All nations, organizations, and characters are fictional. This project draws on
 the spirit of resistance-era history without depicting real people or groups.*
@@ -72,16 +73,25 @@ the spirit of resistance-era history without depicting real people or groups.*
 ```bash
 git clone https://github.com/pjhwa/yeomyeong.git
 cd yeomyeong
-docker compose up
+go run ./cmd/server          # empty DATABASE_URL = memory store
+# or: docker compose up --build
 ```
 
-Then connect with either:
+Then:
 
 ```bash
+open http://localhost:8080   # browser terminal
 nc localhost 4001            # Hangul-safe classic client
 telnet localhost 4001        # classic (macOS telnet breaks Hangul IME)
-open http://localhost:8080   # web client
 ```
+
+Postgres is optional. `docker compose up` also starts a local Postgres; leave
+`DATABASE_URL` empty for the in-memory demo.
+
+**First 10 minutes (no fighting):** from 달빛골 마을문 walk northish to 장터
+(`n` a few times, then `e`), then `보다 신문`. Continue south to 서당 and
+`대화 청람` twice — he remembers you. A scripted capture lives in
+[`docs/assets/first-10-minutes.txt`](docs/assets/first-10-minutes.txt).
 
 ## Architecture
 

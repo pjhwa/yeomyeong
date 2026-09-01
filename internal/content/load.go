@@ -36,7 +36,7 @@ var knownDirs = map[string]struct{}{
 var knownFlags = map[string]struct{}{
 	"safe": {}, "town": {}, "market": {}, "indoor": {}, "dark": {},
 	"forge": {}, "kitchen": {}, "press": {}, "clinic": {}, "yard": {},
-	"salon": {},
+	"salon": {}, "checkpoint": {},
 }
 
 // loc is a YAML localized string: a bare Korean scalar or {ko, en}.
@@ -74,6 +74,7 @@ type yamlRoom struct {
 	ID           string            `yaml:"id"`
 	Name         loc               `yaml:"name"`
 	Description  loc               `yaml:"description"`
+	When         []yamlTalkWhen    `yaml:"when"`
 	Exits        map[string]string `yaml:"exits"`
 	Flags        []string          `yaml:"flags"`
 	Market       string            `yaml:"market"`
@@ -179,10 +180,15 @@ func toRoom(yr yamlRoom, zone string) (world.Room, error) {
 	if yr.HeatModifier != nil {
 		heat = *yr.HeatModifier
 	}
+	when, err := toTalkWhen(yr.ID, yr.When)
+	if err != nil {
+		return world.Room{}, fmt.Errorf("room %q: %w", yr.ID, err)
+	}
 	return world.Room{
 		ID:           yr.ID,
 		Name:         world.Localized{KO: yr.Name.KO, EN: yr.Name.EN},
 		Description:  world.Localized{KO: yr.Description.KO, EN: yr.Description.EN},
+		DescWhen:     when,
 		Exits:        yr.Exits,
 		Flags:        yr.Flags,
 		Market:       strings.TrimSpace(yr.Market),
@@ -192,16 +198,27 @@ func toRoom(yr yamlRoom, zone string) (world.Room, error) {
 	}, nil
 }
 
-func checkForeshadow(root string, rooms []world.Room) error {
+func checkForeshadow(root string, rooms []world.Room, extra ...[]string) error {
 	used := make([]string, 0)
 	seen := make(map[string]struct{})
+	add := func(id string) {
+		if id == "" {
+			return
+		}
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		used = append(used, id)
+	}
 	for _, r := range rooms {
 		for _, id := range r.Foreshadow {
-			if _, ok := seen[id]; ok {
-				continue
-			}
-			seen[id] = struct{}{}
-			used = append(used, id)
+			add(id)
+		}
+	}
+	for _, list := range extra {
+		for _, id := range list {
+			add(id)
 		}
 	}
 	if len(used) == 0 {

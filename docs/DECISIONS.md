@@ -532,7 +532,7 @@ Format:
 ## D-041 — Player-facing Korean is everyday speech
 
 - Date: 2026-08-16
-- Status: accepted
+- Status: accepted; room diction superseded by D-045
 - Decider: LEAD
 - Context: Commissioner: `그런 숙련은 없습니다` and many other lines are
   not how people talk. D-016 froze M0 wording; that freeze is lifted
@@ -541,8 +541,131 @@ Format:
   practice/title announce use ordinary spoken Korean. Particle `을/를`
   is chosen by the last Hangul batchim, not `을(를)`. Protocol *codes*
   (`rate_limited`) stay English; the visible sentence is Korean.
-  Room descriptions stay literary (CONTENT-STYLE). WIRE-PROTOCOL
-  transcripts follow the new wording.
+  Room descriptions stay literary (CONTENT-STYLE) — **lifted by D-045**.
+  WIRE-PROTOCOL transcripts follow the new wording.
 - Consequences: Tests assert the new sentences. `그대`, `장부`,
   `호칭`, `주손`, `을(를)`, and English `rate_limited` as a player
   line are defects.
+
+## D-042 — M3 is a livelihood slice, not the full §3.4 economy
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md M3 lists gathering, crafting, regional prices,
+  transport risk, smuggling, player shops, and three-axis reputation.
+  COMMISSIONER.md §9 done-when is gather → craft → sell/carry with no
+  combat. Shipping the whole section would explode the line budget.
+- Decision: Ship a vertical slice: YAML gather nodes, YAML recipes on
+  the four M2 craft skills, two markets (달빛골 / 솔골) with live
+  stock, a purse in 냥, and one gather skill `forage` (채집, verbs
+  `캐다` `줍다`). Practice verbs (`두드리다`, `썰다`, …) still do not
+  consume or produce. `만들다` is the consume/produce command.
+  Splitting 채광/약초/낚시, player shops, smuggling, and reputation
+  wait. Do not mark the M3 checkbox done.
+- Consequences: Titles `못 벼리는 사람` (smith 8), `보부상` (haggle 8),
+  `달빛골의 채집꾼` (forage 8) sit under the M2 15-rank titles.
+  Packages are `internal/craft` and `internal/economy`. The loop is
+  still the only writer.
+
+## D-043 — Posted prices come from stock and demand, not a shop NPC
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: COMMISSIONER.md asks whether prices feel dynamic. Hardcoded
+  buy/sell lists would be a fixed stall.
+- Decision: Each market lists `base`, `stock`, `target`, `demand` in
+  YAML. The quote is
+  `max(1, round(base * demand * (1 + 0.5 * (target - stock) / max(target,1))))`
+  with a 0.2 factor floor. Selling raises stock (price eases). Buying
+  lowers it. Every 10 loop ticks, stock walks one step toward `target`
+  (quiet NPC flow). `시세` prints the Korean stall name, a 냥 figure,
+  and a flavor clause (오늘은 흔하다 / 값은 평소랑 비슷하다 / 오늘은
+  귀하다). No English player line; no rank numbers.
+- Consequences: The same good must quote differently at 달빛골 vs 솔골
+  at boot. Tests lock that spread and that a sell drops the next quote.
+
+## D-044 — Checkpoint toll when carrying bulk; no player shops
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: PLAN.md wants transport risk on the trade road. Full bandit
+  encounters or player storefronts are out of slice scope.
+- Decision: Rooms may take flag `checkpoint` (달빛골 정거장, 솔골
+  고갯길). Walking **into** one while the bag holds **4+** units of
+  any market-listed good rolls `P=0.35`. On a hit, pay 2냥 if the
+  purse can; otherwise one traded unit is left at the post. No combat,
+  no heat, no smuggling skill check. Player shops are not in this
+  slice.
+- Consequences: The 보부상 loop is gather/craft in 달빛골, walk east
+  from the station, sell dearer in 솔골 — with a chance the post
+  skims the load.
+
+## D-045 — Rooms and remaining live copy are everyday Korean
+
+- Date: 2026-08-31
+- Status: accepted
+- Decider: LEAD
+- Context: D-041 converted system lines but left rooms literary
+  (CONTENT-STYLE). Live rooms, items, skill verbs, bands, quotes, and
+  tolls still used 문어체, 고어, and rare 한자어 (윗도리, 문설주,
+  고시문, 교정쇄, 분견대, 품귀, 언변, 숙련할 기술 중에…). Players
+  should read the world like contemporary daily speech, not a 1920s
+  textbook, while the occupation setting stays.
+- Decision: All player-facing copy — rooms, items, NPCs, skills, help,
+  commands, and system lines — is everyday modern Korean. Setting
+  nouns stay (달내, 무쇠 제국, 새벽회, 지맥, 쇠말뚝, 관아, 주재소,
+  등사기, 통행증). Prefer 가게/시장/길/경찰/검문/돈/가방/만들다/캐다.
+  Commands are common verbs (`보다`, `캐다`, `만들다`, `팔다`, `사다`,
+  `가방`). Rank bands print 초보/익숙/능숙/노련/명인/달인. Stats print
+  힘/손재주/맷집/재치/감응/평판 (감응 stays as the 지맥 sense). The
+  sensory room recipe (2–4 sentences, ≥2 senses, one object) is
+  unchanged. PLAN.md historical essays are not rewritten.
+- Consequences: CONTENT-STYLE voice is everyday, not literary. Tests
+  assert the new sentences. `엿장수 가위질`, `고시문`, `교정쇄`,
+  `분견대`, `언변` as a typed verb, and remaining 문어체 in live YAML
+  or Go player strings are defects.
+
+## D-046 — Optional `talk.when` flag gates
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: After the warehouse pack examine (`examined:gangpo-pack`,
+  FS-016), Act I needs T0 dialogue that notices the pack without a
+  second NPC verb or a quest VM. Engine talk only had `first` /
+  `second`.
+- Decision: NPC YAML may list optional `talk.when` entries. Each
+  entry is `{flag, ko}` (`en` optional). On `대화`, pick the **first**
+  `when` entry whose `flag` is present and **>0** on the player sheet;
+  otherwise keep today's first/second. Still set `{id}_talked` on the
+  first talk, even if a when-line was used. `talk.first` and
+  `talk.second` stay required. Empty or missing `when.flag` is a load
+  error. The flag string is an opaque sheet key; do not require it to
+  exist at load time.
+- Consequences: CONTENT-SCHEMA documents the field. Loader and the
+  single-writer loop implement it. Do not grow `when` into a predicate
+  language in this slice. Unknown flag names are allowed (they simply
+  never match until something writes that sheet key).
+
+## D-047 — First market sale gates Act I courier soft-hook
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: P0 first-session loop needs livelihood between warehouse pack
+  examine and concrete courier-trail clues. Pack examine alone opened the
+  detective path too early.
+- Decision: After a successful market `팔다` that pays nyang, set sheet flag
+  `first_market_sale` once (also acceptable if `nyang >= 2` after that sell).
+  Concrete trail object `when` lines, 청람/오씨 concrete `talk.when`, and
+  장터 board/room `when` descriptions gate on this flag. Pack examine only
+  bridges to 시세/캐다/만들다. Soft-hook durable surfaces are 청람 talk
+  third and 장터 안내문/묘사 — no 월향 NPC/YAML in this slice. Object and
+  room YAML may list optional `when` entries with the same pick rule as
+  `talk.when` (D-046).
+- Consequences: CONTENT-SCHEMA documents object/room `when`. Smoke and
+  story tests assert bland-before / concrete-after sale.
+

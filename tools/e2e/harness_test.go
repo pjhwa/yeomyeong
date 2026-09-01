@@ -229,26 +229,23 @@ func (c *telnetClient) readUntil(t *testing.T, needle string) string {
 	t.Helper()
 	deadline := time.Now().Add(readWait)
 	_ = c.conn.SetReadDeadline(deadline)
-	tmp := make([]byte, 256)
-	var collected strings.Builder
+	tmp := make([]byte, 4096)
 	for {
+		// Keep unmatched bytes in c.buf so a needle that spans TCP reads still matches.
 		if i := strings.Index(c.buf, needle); i >= 0 {
 			end := i + len(needle)
-			collected.WriteString(c.buf[:end])
+			got := c.buf[:end]
 			c.buf = c.buf[end:]
-			got := collected.String()
 			c.h.tr.add("%s RECV %q", c.name, got)
 			return got
 		}
-		collected.WriteString(c.buf)
-		c.buf = ""
 		n, err := c.conn.Read(tmp)
 		if n > 0 {
 			c.buf += string(tmp[:n])
 			continue
 		}
 		if err != nil {
-			c.h.tr.add("%s RECV %q (error %v, waiting for %q)", c.name, collected.String(), err, needle)
+			c.h.tr.add("%s RECV %q (error %v, waiting for %q)", c.name, c.buf, err, needle)
 			c.h.failf(t, "%s readUntil %q: %v", c.name, needle, err)
 		}
 	}
@@ -270,25 +267,21 @@ func (c *telnetClient) readUntilAny(t *testing.T, needles ...string) (got, match
 	}
 	deadline := time.Now().Add(readWait)
 	_ = c.conn.SetReadDeadline(deadline)
-	tmp := make([]byte, 256)
-	var collected strings.Builder
+	tmp := make([]byte, 4096)
 	for {
 		if needle, end, ok := firstNeedle(c.buf, needles); ok {
-			collected.WriteString(c.buf[:end])
+			got = c.buf[:end]
 			c.buf = c.buf[end:]
-			got = collected.String()
 			c.h.tr.add("%s RECV %q", c.name, got)
 			return got, needle
 		}
-		collected.WriteString(c.buf)
-		c.buf = ""
 		n, err := c.conn.Read(tmp)
 		if n > 0 {
 			c.buf += string(tmp[:n])
 			continue
 		}
 		if err != nil {
-			c.h.tr.add("%s RECV %q (error %v, waiting for %q)", c.name, collected.String(), err, needles)
+			c.h.tr.add("%s RECV %q (error %v, waiting for %q)", c.name, c.buf, err, needles)
 			c.h.failf(t, "%s readUntilAny %q: %v", c.name, needles, err)
 		}
 	}
@@ -319,21 +312,27 @@ func (c *telnetClient) createUser(t *testing.T, user, pass string) {
 	_ = c.createUserUntilPrompt(t, user, pass)
 }
 
-// createUserUntilPrompt registers a new account and returns the bytes from
-// the seated line through the first command prompt (includes the spawn card).
+// createUserUntilPrompt registers a new account and returns the login burst
+// through the first command prompt (spawn room card + enter line + ">").
+// Room desc, "X 님이 들어왔어요.", and prompt often arrive in one TCP write;
+// wait for ">" and require the enter line in that same buffer — do not wait
+// on the enter line as a separate post-login needle.
 func (c *telnetClient) createUserUntilPrompt(t *testing.T, user, pass string) string {
 	t.Helper()
 	c.readUntil(t, "이름:")
 	c.send(t, user)
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	c.readUntil(t, "새로 만드시겠습니까?")
+	c.readUntil(t, "새로 만들까요?")
 	c.send(t, "y")
 	c.readUntil(t, "비밀번호:")
 	c.send(t, pass)
-	seated := c.readUntil(t, user+" 님이 들어왔습니다.")
-	prompt := c.readUntil(t, ">")
-	return seated + prompt
+	burst := c.readUntil(t, ">")
+	enter := user + " 님이 들어왔어요."
+	if !strings.Contains(burst, enter) {
+		c.h.failf(t, "%s spawn burst missing %q\nlast recv: %q", c.name, enter, burst)
+	}
+	return burst
 }
 
 type wsFrame struct {

@@ -1,12 +1,27 @@
-# Local Postgres 16 for persist. The game server service waits for the net PR.
+# Demo: `docker compose up --build` boots the game (memory store) on 8080 / 4001.
+# Postgres is optional. Empty DATABASE_URL (the game service default) selects
+# the in-memory AccountStore (D-014).
 #
-#   DATABASE_URL=postgres://yeomyeong:yeomyeong@127.0.0.1:5432/yeomyeong?sslmode=disable
+# Persistent accounts:
+#   set game.environment.DATABASE_URL to
+#   postgres://yeomyeong:yeomyeong@postgres:5432/yeomyeong?sslmode=disable
+#   and add depends_on: { postgres: { condition: service_healthy } }.
 #
-# Empty DATABASE_URL (the process default) selects the in-memory AccountStore (D-014).
-# First boot applies migrations/ via docker-entrypoint-initdb.d. OpenPostgres also
-# applies the same IF NOT EXISTS DDL so a URL pointed at an empty database works.
+# Local go run (also memory unless DATABASE_URL is set):
+#   go run ./cmd/server
+#   open http://localhost:8080
 
 services:
+  game:
+    build: .
+    ports:
+      - "8080:8080"
+      - "4001:4001"
+    environment:
+      YEOMYEONG_TELNET_ADDR: ":4001"
+      YEOMYEONG_WS_ADDR: ":8080"
+      DATABASE_URL: ""
+
   postgres:
     image: postgres:16
     environment:

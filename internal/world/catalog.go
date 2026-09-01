@@ -29,6 +29,7 @@ type Room struct {
 	ID           string
 	Name         Localized
 	Description  Localized
+	DescWhen     []TalkWhen // optional flag-gated description (room.when)
 	Exits        map[string]string
 	Flags        []string
 	Market       string
@@ -116,6 +117,9 @@ func cloneRoom(r Room) Room {
 	}
 	if r.Flags != nil {
 		out.Flags = append([]string(nil), r.Flags...)
+	}
+	if r.DescWhen != nil {
+		out.DescWhen = append([]TalkWhen(nil), r.DescWhen...)
 	}
 	if r.Ambient != nil {
 		out.Ambient = append([]Localized(nil), r.Ambient...)

@@ -1,0 +1,37 @@
+# Gather nodes. Stock is world state after boot; this file is the maximum.
+
+- room: dalbitgol:barley-field
+  skill: forage
+  item: mugwort
+  stock: 6
+  regen_ticks: 40
+
+- room: dalbitgol:west-field
+  skill: forage
+  item: mugwort
+  stock: 6
+  regen_ticks: 40
+
+- room: dalbitgol:creek
+  skill: forage
+  item: scrap-iron
+  stock: 4
+  regen_ticks: 50
+
+- room: dalbitgol:mill
+  skill: forage
+  item: hanji
+  stock: 4
+  regen_ticks: 50
+
+- room: solgol:slope
+  skill: forage
+  item: scrap-iron
+  stock: 8
+  regen_ticks: 30
+
+- room: solgol:pinery
+  skill: forage
+  item: mugwort
+  stock: 3
+  regen_ticks: 60
