@@ -691,6 +691,8 @@ func TestPracticeSkillsInvVerbs(t *testing.T) {
 	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "놓다 x")
 	c.readUntil(t, "그런 물건이 없어요.")
+	c.send(t, "두다 x")
+	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "equip 없는물건")
 	c.readUntil(t, "그런 물건이 없어요.")
 	c.send(t, "들다 x")

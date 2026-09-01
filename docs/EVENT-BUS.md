@@ -40,11 +40,11 @@ the world.
 | `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
 | `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
 | `Look` | `ConnID`, `Target?` | net | Empty target: emit `Room` card (NPCs, scenery names, ground). Set: examine NPC/object, emit Description `Text`; object `after_examine` emits a second sys `Text` once (`Flags["examined:<id>"]`) |
-| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First matching `talk.when` whose sheet flag is >0, else first/second (D-046). First talk sets `Sheet.Flags["{id}_talked"]` even if a when-line was used |
+| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First matching `talk.when` whose sheet flag is >0, else first/second (D-046). First talk sets `Sheet.Flags["{id}_talked"]` even if a when-line was used. `cafe-hand` with EmberPrereq sets `ember=1`; 청람 risk (EmberPrereq + `dawn_scent` + `smuggle_success_count>=1`) overrides the line and sets `ember` (D-049) |
 | `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
 | `Practice` | `ConnID`, `SkillID` | net | GAMEPLAY roll; loop writes new ranks/stats; emit Text |
 | `Get` | `ConnID`, `ItemID` | net | Move one ground stack into bag if weight allows |
-| `Drop` | `ConnID`, `ItemID` | net | Move one bag stack to ground |
+| `Drop` | `ConnID`, `ItemID` | net | Move one bag stack to ground. Leaflet drop in packing-shed or café-baekya with EmberPrereq sets `ember=1` after the normal drop (D-049) |
 | `Equip` | `ConnID`, `ItemID` | net | Bag → slot if `slot` is wearable |
 | `Unequip` | `ConnID`, `Slot` | net | Slot → bag |
 | `Sheet` | `ConnID` | net | Emit skills/title/stats/inv/purse text |
@@ -52,7 +52,7 @@ the world.
 | `Craft` | `ConnID`, `Query` | net | Consume a YAML recipe; write bag + craft rank |
 | `Sell` / `Buy` | `ConnID`, `Query`, `Qty` | net | Trade at the room's `market` slug; write nyang + stock |
 | `Quote` | `ConnID` | net | Emit current stall prices |
-| `Hide` | `ConnID`, `Query?` | net | At `checkpoint` with contraband: stealth-flavored conceal. Success sets `dawn_scent` / `smuggle_pass`; fail confiscates one unit or fines 냥 (D-048) |
+| `Hide` | `ConnID`, `Query?` | net | At `checkpoint` with contraband: stealth-flavored conceal. Success sets `dawn_scent` / `smuggle_pass`; fail confiscates one unit or fines 냥 (D-048). Successful leaflet hide with EmberPrereq also sets `ember=1` (D-049) |
 | `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Persist sheet; delete roster; emit `Sys` to remaining **in that room** |
 
 Auth create/login is **not** a loop command. Hashing and store I/O run in

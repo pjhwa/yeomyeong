@@ -405,7 +405,7 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Get{ConnID: s.id, ItemID: rest}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
-	case low == "drop" || verb == "놓다":
+	case low == "drop" || verb == "놓다" || verb == "두다":
 		if rest == "" {
 			return s.writeLine(text.T(text.Default, text.CmdUnknown))
 		}

@@ -388,9 +388,13 @@ func (l *Loop) hide(c Hide) {
 		p.Flags[yworld.SmuggleSuccessCountFlag]++
 		p.Flags[yworld.DawnScentFlag] = 1
 		p.Flags[yworld.SmugglePassFlag] = 1
+		ember := itemID == leafletID && maybeGrantEmber(&p)
 		l.world.roster[c.ConnID] = p
 		name := l.itemName(itemID)
 		l.sysf(p.ConnID, text.HideOK, name, text.EulReul(name))
+		if ember {
+			l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: emberHideAmbient})
+		}
 		l.applyGain(&p, "stealth", true)
 		l.world.roster[c.ConnID] = p
 		return

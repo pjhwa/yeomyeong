@@ -692,3 +692,36 @@ Format:
   adds a smuggle play recipe. `숨다` remains stealth practice; hide
   verbs are separate commands.
 
+
+## D-049 — Act I ember first beat (three paths)
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: After P0 (`first_market_sale`) and P1 (`dawn_scent`), a
+  returning player needs a combat-free 15–25 min beat that raises dawn
+  society trust `ember` 0→1 and softly re-opens café/well. PLAN Act I
+  wants three paths (말 / 기술 / 위험). Wolhyang YAML and 백야 identity
+  stay closed until I-10.
+- Decision: Sheet flag `ember` is set **once**. Prerequisite
+  `EmberPrereq`: `examined:gangpo-pack` AND (`first_market_sale` OR
+  `dawn_scent`). Any one path grants:
+  1. **Talk** — T0 NPC `cafe-hand` at `dalbitgol:cafe-baekya` (점원 /
+     손님). When prereqs: one acknowledgment that someone is listening
+     about the missing peddler; engine sets `ember=1`. No choice UI.
+  2. **Skill** — `놓다` / `두다` leaflet in `dalbitgol:packing-shed` or
+     `dalbitgol:cafe-baekya` after a normal drop: one ambient line,
+     `ember=1`. Leaflet may stay on the ground.
+  3. **Risk** — Talking to 청람 when prereqs + `dawn_scent` +
+     `smuggle_success_count>=1` emits the risk line (engine override
+     before `talk.when`) and sets `ember=1`. Else a successful leaflet
+     `숨기다` at a checkpoint with prereqs (hide itself sets
+     `dawn_scent`) also sets `ember=1`.
+  After `ember`: 청람 `talk.when` (first) and 장터/다방 room `when`
+  plus café saucer / packing-shed cart `when` point at 우물길 / 다방
+  문. No Wolhyang NPC, no Baekya identity, no LLM, no new zone, no
+  reputation UI, no shops.
+- Consequences: CONTENT-SCHEMA notes engine-granted `ember`.
+  COMMISSIONER §9.4 is the three-path recipe. FS-006 and FS-016
+  reinforced; FS-005 stays planted. `talk.when` remains single-flag
+  first-match (D-046); compound risk is engine-only.

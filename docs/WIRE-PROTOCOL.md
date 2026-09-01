@@ -174,7 +174,7 @@ After the prompt:
 | `두드리다` `이야기하다` `캐다` … | `Practice` / gather — YAML `verbs` (D-040, D-045) |
 | `inv` / `가방` / `소지` | `Sheet` (inventory section) |
 | `get <item>` / `집다 <item>` | `Get` |
-| `drop <item>` / `놓다 <item>` | `Drop` |
+| `drop <item>` / `놓다 <item>` / `두다 <item>` | `Drop` |
 | `equip <item>` / `들다 <item>` | `Equip` |
 | `unequip <slot>` / `벗다 <slot>` | `Unequip` |
 | `hide` / `숨기다` / `감추다` [`item`] | `Hide` (checkpoint + contraband, D-048) |

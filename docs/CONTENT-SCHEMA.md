@@ -139,7 +139,7 @@ T0 YAML dialogue. Not LLM. `대화 청람` / `talk 청람` / `말걸다`.
 | `aliases` | yes | at least one. `대화` / `보다` targets |
 | `look` | yes | `보다 <alias>` blurb |
 | `talk.first` / `talk.second` | yes | Korean. Second line is for a player who already talked |
-| `talk.when` | no | List of `{flag, ko}` (`en` optional). On `대화`, the **first** entry whose `flag` is present and >0 on the player sheet wins over first/second (D-046). Empty/missing `flag` = load error. Flag is an opaque sheet key; not checked at load. first/second stay required. |
+| `talk.when` | no | List of `{flag, ko}` (`en` optional). On `대화`, the **first** entry whose `flag` is present and >0 on the player sheet wins over first/second (D-046). Empty/missing `flag` = load error. Flag is an opaque sheet key; not checked at load. first/second stay required. Engine may override 청람's line when granting `ember` (D-049 risk path: `dawn_scent` + `smuggle_success_count>=1` + EmberPrereq). |
 | `foreshadow` | no | existing `FS-NNN` ids |
 
 Unknown NPC: `여기는 그 사람이 없어요.`
@@ -251,6 +251,8 @@ Player verbs are the skill's YAML `verbs` (`캐다`, `줍다`). Empty node → w
 At least two markets so the same good can quote differently. Selling raises stock (price eases); buying lowers it. Tick walks stock one step toward `target`.
 
 Rooms with flag `checkpoint` may take a toll when a player walks in carrying **4+** units of market goods (D-044). At a checkpoint, `숨기다`/`감추다` can conceal `contraband` items (D-048); success sets `dawn_scent` and one `smuggle_pass` that skips the next toll.
+
+Act I sheet flag `ember` (D-049) is **engine-granted**, once, when `EmberPrereq` holds (`examined:gangpo-pack` AND (`first_market_sale` OR `dawn_scent`)): talk to `cafe-hand`; drop `leaflet` in `dalbitgol:packing-shed` or `dalbitgol:cafe-baekya`; 청람 risk talk; or successful leaflet hide. YAML `when` entries on `ember` are the soft-hook (우물길 / 다방 문), not the grant.
 
 ## Graph rules
 

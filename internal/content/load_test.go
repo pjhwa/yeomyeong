@@ -277,11 +277,18 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	}
 	if n, ok := w.NPCs.Find("청람"); !ok {
 		t.Fatal("cheongram npc missing")
-	} else if len(n.TalkWhen) < 3 || n.TalkWhen[0].Flag != "dawn_scent" || n.TalkWhen[1].Flag != "first_market_sale" || n.TalkWhen[2].Flag != "examined:gangpo-pack" {
+	} else if len(n.TalkWhen) < 4 || n.TalkWhen[0].Flag != "ember" || n.TalkWhen[1].Flag != "dawn_scent" || n.TalkWhen[2].Flag != "first_market_sale" || n.TalkWhen[3].Flag != "examined:gangpo-pack" {
 		t.Fatalf("cheongram talk.when: %+v", n.TalkWhen)
 	}
 	if n, ok := w.NPCs.FindInRoom("dalbitgol:packing-shed", "오씨"); !ok || n.ID != "clerk-oh" {
 		t.Fatalf("clerk-oh: %+v %v", n, ok)
+	}
+	hand, ok := w.NPCs.FindInRoom("dalbitgol:cafe-baekya", "점원")
+	if !ok || hand.ID != "cafe-hand" {
+		t.Fatalf("cafe-hand: %+v %v", hand, ok)
+	}
+	if len(hand.TalkWhen) < 3 || hand.TalkWhen[0].Flag != "ember" || hand.TalkWhen[1].Flag != "dawn_scent" || hand.TalkWhen[2].Flag != "first_market_sale" {
+		t.Fatalf("cafe-hand talk.when: %+v", hand.TalkWhen)
 	}
 	if _, ok := w.Objects.FindInRoom("dalbitgol:market", "신문"); !ok {
 		t.Fatal("market newspaper object missing")
@@ -309,6 +316,28 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	}
 	if len(chit.DescWhen) == 0 || chit.DescWhen[0].Flag != "first_market_sale" || !strings.Contains(chit.DescWhen[0].Line.KO, "만석상회") {
 		t.Fatalf("cargo-chit when: %+v", chit.DescWhen)
+	}
+	cart, ok := w.Objects.FindInRoom("dalbitgol:packing-shed", "빈 수레")
+	if !ok || cart.ID != "empty-cart" {
+		t.Fatalf("empty-cart: %+v %v", cart, ok)
+	}
+	if len(cart.DescWhen) == 0 || cart.DescWhen[0].Flag != "ember" {
+		t.Fatalf("empty-cart when: %+v", cart.DescWhen)
+	}
+	saucer, ok := w.Objects.FindInRoom("dalbitgol:cafe-baekya", "잔받침")
+	if !ok || saucer.ID != "clean-saucer" {
+		t.Fatalf("clean-saucer: %+v %v", saucer, ok)
+	}
+	if len(saucer.DescWhen) == 0 || saucer.DescWhen[0].Flag != "ember" {
+		t.Fatalf("clean-saucer when: %+v", saucer.DescWhen)
+	}
+	cafe, ok := w.Rooms.Room("dalbitgol:cafe-baekya")
+	if !ok || len(cafe.DescWhen) == 0 || cafe.DescWhen[0].Flag != "ember" {
+		t.Fatalf("cafe-baekya when: %+v %v", cafe, ok)
+	}
+	market, ok := w.Rooms.Room("dalbitgol:market")
+	if !ok || len(market.DescWhen) == 0 || market.DescWhen[0].Flag != "ember" {
+		t.Fatalf("market ember when first: %+v %v", market.DescWhen, ok)
 	}
 }
 

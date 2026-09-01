@@ -173,11 +173,19 @@ func TestTalkFlagPersistsOnLeave(t *testing.T) {
 
 func startDalbitgol(t *testing.T) (*Loop, <-chan Event) {
 	t.Helper()
+	return startDalbitgolWith(t, nil)
+}
+
+func startDalbitgolWith(t *testing.T, rng func() float64) (*Loop, <-chan Event) {
+	t.Helper()
 	w, err := content.LoadWorld(filepath.Join("..", "..", "content"), yworld.SpawnID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	l := NewWithWorld(discardLog(), w.Rooms, w.Items, w.Ground, nil).WithNPCs(w.NPCs).WithObjects(w.Objects)
+	if rng != nil {
+		l = l.WithRand(rng)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {

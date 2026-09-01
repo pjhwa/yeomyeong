@@ -54,6 +54,10 @@ func (l *Loop) dropItem(c DropItem) {
 	l.world.ground[p.RoomID] = yworld.AddStack(l.world.ground[p.RoomID], itemID, 1)
 	name := l.itemName(itemID)
 	l.sysf(p.ConnID, text.DropOK, name, text.EulReul(name))
+	if itemID == leafletID && emberDropRoom(p.RoomID) && maybeGrantEmber(&p) {
+		l.world.roster[c.ConnID] = p
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: emberDropAmbient})
+	}
 }
 
 func (l *Loop) equip(c Equip) {

@@ -7,6 +7,18 @@ import (
 	yworld "github.com/pjhwa/yeomyeong/internal/world"
 )
 
+const (
+	cafeHandID             = "cafe-hand"
+	cheongramID            = "cheongram"
+	leafletID              = "leaflet"
+	cafeBaekyaRoom         = "dalbitgol:cafe-baekya"
+	packingShedRoom        = "dalbitgol:packing-shed"
+	cheongramEmberRiskLine = "이제 그쪽에서 자네를 부른다네. 우물길이나 다방 문을 한 번 더 보게. 말은 아끼게."
+	cafeHandEmberAck       = "카운터 뒤에서 누가 사라진 보부상 이야기를 하고 있어요. 점원이 잔을 닦다 말고 고개를 끄덕여요."
+	emberDropAmbient       = "전단을 내려놓자 누가 작은 소리로 말해요. 우물길이나 다방 문을 한 번 더 보라는 투예요."
+	emberHideAmbient       = "검문 너머로 누가 우물길 쪽을 턱짓해요. 다방 문도 한 번 더 보라는 투예요."
+)
+
 func (l *Loop) talk(c Talk) {
 	p, ok := l.world.roster[c.ConnID]
 	if !ok {
@@ -26,12 +38,64 @@ func (l *Loop) talk(c Talk) {
 		p.Flags = map[string]int{}
 	}
 	key := yworld.TalkFlag(npc.ID)
-	body := pickTalk(npc, p.Flags)
+	body := l.talkBody(npc, &p)
 	if p.Flags[key] == 0 {
 		p.Flags[key] = 1
-		l.world.roster[c.ConnID] = p
 	}
+	l.world.roster[c.ConnID] = p
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: body})
+}
+
+func (l *Loop) talkBody(npc yworld.NPC, p *Player) string {
+	if npc.ID == cheongramID && p.Flags[yworld.EmberFlag] == 0 &&
+		yworld.EmberPrereq(p.Flags) &&
+		p.Flags[yworld.DawnScentFlag] > 0 &&
+		p.Flags[yworld.SmuggleSuccessCountFlag] >= 1 {
+		p.Flags[yworld.EmberFlag] = 1
+		return cheongramEmberRiskLine
+	}
+	if npc.ID == cafeHandID && p.Flags[yworld.EmberFlag] == 0 && !yworld.EmberPrereq(p.Flags) {
+		return ungatedTalk(npc, p.Flags)
+	}
+	body := pickTalk(npc, p.Flags)
+	if npc.ID == cafeHandID && maybeGrantEmber(p) {
+		if isUngatedTalk(npc, body) {
+			return cafeHandEmberAck
+		}
+	}
+	return body
+}
+
+func ungatedTalk(npc yworld.NPC, flags map[string]int) string {
+	if flags[yworld.TalkFlag(npc.ID)] > 0 {
+		if second := strings.TrimSpace(npc.TalkSecond.Text(text.Default)); second != "" {
+			return second
+		}
+	}
+	return strings.TrimSpace(npc.TalkFirst.Text(text.Default))
+}
+
+func isUngatedTalk(npc yworld.NPC, body string) bool {
+	return body == strings.TrimSpace(npc.TalkFirst.Text(text.Default)) ||
+		body == strings.TrimSpace(npc.TalkSecond.Text(text.Default))
+}
+
+func maybeGrantEmber(p *Player) bool {
+	if p == nil {
+		return false
+	}
+	if p.Flags == nil {
+		p.Flags = map[string]int{}
+	}
+	if p.Flags[yworld.EmberFlag] > 0 || !yworld.EmberPrereq(p.Flags) {
+		return false
+	}
+	p.Flags[yworld.EmberFlag] = 1
+	return true
+}
+
+func emberDropRoom(room string) bool {
+	return room == packingShedRoom || room == cafeBaekyaRoom
 }
 
 // pickTalk returns the first talk.when line whose flag is >0, else first/second (D-046).

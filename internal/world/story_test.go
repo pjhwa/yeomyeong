@@ -2,6 +2,30 @@ package world
 
 import "testing"
 
+func TestEmberPrereq(t *testing.T) {
+	if EmberFlag != "ember" {
+		t.Fatalf("ember=%s", EmberFlag)
+	}
+	if EmberPrereq(nil) || EmberPrereq(map[string]int{}) {
+		t.Fatal("empty flags")
+	}
+	if EmberPrereq(map[string]int{ExaminedFlag("gangpo-pack"): 1}) {
+		t.Fatal("pack alone")
+	}
+	if EmberPrereq(map[string]int{FirstMarketSaleFlag: 1}) {
+		t.Fatal("sale alone")
+	}
+	if EmberPrereq(map[string]int{DawnScentFlag: 1, SmuggleSuccessCountFlag: 1}) {
+		t.Fatal("scent alone")
+	}
+	if !EmberPrereq(map[string]int{ExaminedFlag("gangpo-pack"): 1, FirstMarketSaleFlag: 1}) {
+		t.Fatal("pack+sale")
+	}
+	if !EmberPrereq(map[string]int{ExaminedFlag("gangpo-pack"): 1, DawnScentFlag: 1}) {
+		t.Fatal("pack+scent")
+	}
+}
+
 func TestTalkFlagAndMatch(t *testing.T) {
 	if TalkFlag("cheongram") != "cheongram_talked" {
 		t.Fatalf("flag=%s", TalkFlag("cheongram"))

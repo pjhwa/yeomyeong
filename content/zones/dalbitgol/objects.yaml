@@ -79,6 +79,40 @@
     ko: 가마니 끈이 팽팽히 튕기며 짧게 스냅 소리를 내고, 겨가 소매에 앉는다.
   foreshadow: [FS-016]
 
+- id: empty-cart
+  room: dalbitgol:packing-shed
+  name:
+    ko: 빈 수레
+  aliases: [빈수레, 수레, 빈 수레, 수레바닥]
+  description:
+    ko: >
+      수레 바닥이 비어 있고, 나무 바퀴가 살짝 기울어 있다. 겨 냄새가 바닥
+      틈에서 올라오고, 빈 끈이 손가락에 차갑다. 옆 가마니는 묶인 채 그대로다.
+  when:
+    - flag: ember
+      ko: >
+        빈 수레 바닥에 손가락 자국이 한 줄 남아 있다. 겨 냄새 사이로 잉크
+        냄새가 스치고, 자국은 우물길과 다방 문 쪽을 가리키는 투다. 바퀴는
+        아직 따뜻하다.
+  foreshadow: [FS-016]
+
+- id: clean-saucer
+  room: dalbitgol:cafe-baekya
+  name:
+    ko: 잔받침
+  aliases: [잔받침, 받침, 빈잔받침]
+  description:
+    ko: >
+      창가 잔받침은 차 얼룩이 하나도 없고, 동전만 매일 같은 자리에 식어
+      있다. 만지면 사기가 차갑고, 볶은 보리차 냄새만 남는다. 옆 잔은 비어
+      쟁반에 가볍게 부딪힌다.
+  when:
+    - flag: ember
+      ko: >
+        얼룩 없는 잔받침 옆에 동전이 그대로다. 문 쪽으로 눈길이 가고,
+        우물길 쪽 흙냄새가 문틈으로 한 번 들어온다. 잔받침은 여전히 차갑다.
+  foreshadow: [FS-006]
+
 - id: face-down-plate
   room: dalbitgol:school
   name:

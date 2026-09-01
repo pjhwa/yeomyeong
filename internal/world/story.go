@@ -23,6 +23,20 @@ const SmugglePassFlag = "smuggle_pass"
 // LeafletDawnBonusFlag is set after the one-time leaflet sell bump from dawn_scent.
 const LeafletDawnBonusFlag = "leaflet_dawn_bonus"
 
+// EmberFlag is dawn-society trust 0→1 after the Act I first beat (D-049).
+const EmberFlag = "ember"
+
+// EmberPrereq is pack examine AND (first market sale OR dawn scent).
+func EmberPrereq(flags map[string]int) bool {
+	if flags == nil {
+		return false
+	}
+	if flags[ExaminedFlag("gangpo-pack")] <= 0 {
+		return false
+	}
+	return flags[FirstMarketSaleFlag] > 0 || flags[DawnScentFlag] > 0
+}
+
 // TalkFlag is the per-player sheet flag set after the first talk with npcID.
 func TalkFlag(npcID string) string {
 	if npcID == "" {
