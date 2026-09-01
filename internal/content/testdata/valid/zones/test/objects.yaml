@@ -1,0 +1,9 @@
+- id: test-paper
+  room: test:yard
+  name: 한벽일보
+  aliases: [한벽일보, 신문, 게시판]
+  description: >
+    한벽일보 한 줄에 같은 활자가 두 번 찍혀 어긋나 있다. 잉크가 손가락에 묻고,
+    활자 냄새가 난다.
+  after_examine: 다락 사다리가 한 번 삐걱인다.
+  foreshadow: [FS-014]

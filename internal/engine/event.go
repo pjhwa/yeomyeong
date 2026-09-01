@@ -35,6 +35,8 @@ type Room struct {
 	Description string
 	Exits       map[string]string // dir → destination display name
 	Who         []string          // other usernames in the room
+	NPCs        []string          // scripted NPC display names in the room
+	Objects     []string          // scenery examine display names in the room
 	Ground      []string          // catalog display names, one entry per unit
 }
 

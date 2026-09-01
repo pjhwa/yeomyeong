@@ -11,7 +11,7 @@ Related: [EVENT-BUS.md](EVENT-BUS.md).
 | Transport | Address env | Default | Framing |
 |---|---|---|---|
 | Telnet (compat) | `YEOMYEONG_TELNET_ADDR` | `:4001` | CRLF, LF, or CR. On accept the server sends `IAC WILL ECHO` and `IAC WILL SGA` (client local echo off). Inbound IAC is still dropped. Password lines are not echoed. |
-| WebSocket (primary) | `YEOMYEONG_WS_ADDR` | `:8080` | JSON text frames on `GET /ws` |
+| WebSocket (primary) | `YEOMYEONG_WS_ADDR` | `:8080` | JSON text frames on `GET /ws`. Same HTTP server serves a single-page terminal at `GET /` (first-10-minutes hook; not M6) |
 
 Both transports enqueue the **same** command types on the game loop.
 There is no second path that mutates the roster.
@@ -36,7 +36,8 @@ All client frames:
 | `auth.create` | `{ "username", "password" }` | New account, then enter world |
 | `auth.login` | `{ "username", "password" }` | Existing account, then enter world |
 | `cmd.say` | `{ "text" }` | After `auth.ok` |
-| `cmd.look` | `{}` | After `auth.ok` |
+| `cmd.look` | `{ "target"? }` | After `auth.ok`. Empty payload is a full room look; `target` examines an NPC or scenery object |
+| `cmd.talk` | `{ "npc" }` | After `auth.ok`. Scripted NPC talk (`대화 청람`) |
 | `cmd.move` | `{ "dir" }` | After `auth.ok`. `dir` is `north`/`south`/`east`/`west`/`up`/`down` |
 | `cmd.practice` | `{ "skill" }` | After `auth.ok`. `skill` is a SKILL-TABLE id or Korean name |
 | `cmd.skills` | `{}` | After `auth.ok` — sheet (title, ranks, stats) |
@@ -67,7 +68,7 @@ Password: 8–72 bytes. Empty `text` on `cmd.say` is rejected.
 | `auth.ok` | `{ "username", "session" }` | Entered the world. `session` is an opaque token (M0: unused for reconnect). |
 | `auth.err` | `{ "code", "message" }` | Create/login failed. Still at the auth gate. |
 | `text` | `{ "channel", "from", "text" }` | Player-visible line (`channel` is `say`, `sys`, or `room`) |
-| `room` | `{ "id", "name", "description", "exits", "who" }` | Full room card after enter, look, or a successful move |
+| `room` | `{ "id", "name", "description", "exits", "who", "npcs"?, "objects"?, "ground"? }` | Full room card after enter, look, or a successful move. `npcs` is scripted NPC display names; `objects` is scenery examine names (`살펴볼 것:`) |
 | `sys` | `{ "code", "message" }` | Protocol/rate-limit/parse error |
 
 `room.exits` is a map of dir → destination **display name** (not id), so the
@@ -84,6 +85,13 @@ Telnet renders a `room` event as:
 ```
 
 (omit the `여기` line when empty; omit `출구` when there are none.)
+
+When the room has scripted NPCs or scenery examine targets, Telnet adds:
+
+```
+사람: 청람 선생
+살펴볼 것: 보부상 봇짐
+```
 
 When the room has ground items, Telnet adds:
 
@@ -153,7 +161,8 @@ After the prompt:
 | input | command |
 |---|---|
 | `say <text>` / `말 <text>` | `Say` |
-| `look` / `보다` / `살펴` / `l` | `Look` |
+| `look` / `보다` / `살펴` / `l` | `Look` (optional rest = examine target) |
+| `talk <npc>` / `대화 <npc>` / `말걸다 <npc>` | `Talk` |
 | `n` `s` `e` `w` `u` `d` | `Move` |
 | `북` `남` `동` `서` `위` `아래` | `Move` |
 | `north` `south` `east` `west` `up` `down` | `Move` |

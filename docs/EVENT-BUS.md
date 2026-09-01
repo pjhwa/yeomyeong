@@ -13,7 +13,7 @@ The game-loop goroutine is the **only** goroutine that:
 - inserts / removes players on the in-memory roster
 - reads the roster to decide who receives a `say`
 - writes `Player.RoomID` (position)
-- writes skill ranks, stats, bag, equipment, room ground piles, nyang
+- writes skill ranks, stats, bag, equipment, room ground piles, nyang, player flags
 - writes market stock and gather-node remaining
 - changes any future world field (heat, …)
 
@@ -39,7 +39,8 @@ the world.
 |---|---|---|---|
 | `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
 | `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
-| `Look` | `ConnID` | net | Emit `Room` card to that conn (include title + ground items) |
+| `Look` | `ConnID`, `Target?` | net | Empty target: emit `Room` card (NPCs, scenery names, ground). Set: examine NPC/object, emit Description `Text`; object `after_examine` emits a second sys `Text` once (`Flags["examined:<id>"]`) |
+| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First talk sets `Sheet.Flags["{id}_talked"]`; later talks use the memory line |
 | `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
 | `Practice` | `ConnID`, `SkillID` | net | GAMEPLAY roll; loop writes new ranks/stats; emit Text |
 | `Get` | `ConnID`, `ItemID` | net | Move one ground stack into bag if weight allows |
@@ -64,7 +65,7 @@ Unknown `ConnID` on `Say` / `LeaveWorld`: no-op (already gone).
 | Name | Fields | Delivery |
 |---|---|---|
 | `Text` | `ConnID` (target), `Channel` (`say`\|`sys`\|`room`), `From`, `Body` | That connection's outbound buffer |
-| `Room` | `ConnID`, `ID`, `Name`, `Description`, `Exits` (dir→display name), `Who` | That connection; adapters format per WIRE-PROTOCOL |
+| `Room` | `ConnID`, `ID`, `Name`, `Description`, `Exits` (dir→display name), `Who`, `NPCs`, `Objects`, `Ground` | That connection; adapters format per WIRE-PROTOCOL |
 | `Drop` | `ConnID` | Adapter closes the socket after flush |
 
 The loop never writes to a socket. It only appends to an outbound queue

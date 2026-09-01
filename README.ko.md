@@ -21,8 +21,8 @@ Go로 구축. [DikuMUD](https://dikumud.com) (1990)에서 영감을 받았고, �
 
 ---
 
-> **⚠️ 상태: M2 숙련 재검수 중 (D-040).** 경제와 1부 서사는 아직 설계 목표다.
-> 현재 범위는 [로드맵](#로드맵)을 본다.
+> **⚠️ 상태: M2 플레이 가능 — 첫 10분 훅이 들어가 있다.** 경제(M3)와 1부 서사(M4)는
+> 아직 설계 목표다. 현재 범위는 [로드맵](#로드맵)을 본다.
 
 <!-- TODO(M1): replace with asciinema demo GIF — 30s: market → haggle → checkpoint → deliver -->
 <div align="center">
@@ -69,16 +69,25 @@ Go로 구축. [DikuMUD](https://dikumud.com) (1990)에서 영감을 받았고, �
 ```bash
 git clone https://github.com/pjhwa/yeomyeong.git
 cd yeomyeong
-docker compose up
+go run ./cmd/server          # DATABASE_URL 비움 = 메모리 저장
+# 또는: docker compose up --build
 ```
 
-그다음 둘 중 하나:
+그다음:
 
 ```bash
+open http://localhost:8080   # 브라우저 터미널
 nc localhost 4001            # 한글 입력 (권장)
 telnet localhost 4001        # 고전 — macOS telnet 은 한글 IME 가 깨짐
-open http://localhost:8080   # 웹 클라이언트
 ```
+
+Postgres는 선택이다. `docker compose up` 은 로컬 Postgres도 띄우지만, 데모는
+`DATABASE_URL` 을 비워 메모리 저장을 쓴다.
+
+**첫 10분 (전투 없음):** 달빛골 마을문에서 북쪽으로 장터까지 걷고 (`n` 몇 번,
+그다음 `e`), `보다 신문`. 남쪽으로 서당까지 가서 `대화 청람` 을 두 번 —
+선생이 자네를 기억한다. 캡처는
+[`docs/assets/first-10-minutes.txt`](docs/assets/first-10-minutes.txt).
 
 ## 아키텍처
 

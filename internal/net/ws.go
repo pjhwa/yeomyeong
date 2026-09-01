@@ -9,6 +9,8 @@ import (
 	"log/slog"
 	stdnet "net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -41,6 +43,7 @@ const (
 	typeCmdSell     = "cmd.sell"
 	typeCmdBuy      = "cmd.buy"
 	typeCmdQuote    = "cmd.quote"
+	typeCmdTalk     = "cmd.talk"
 	typeCmdQuit     = "cmd.quit"
 	typeAuthOK      = "auth.ok"
 	typeAuthErr     = "auth.err"
@@ -64,7 +67,7 @@ var (
 	errWSQuit        = errors.New("quit")
 )
 
-// Allow any Origin in M0: there is no browser client yet (CLIENT / M6).
+// Browser origin is allowed: GET / serves the first-10-minutes terminal (not M6).
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
@@ -73,10 +76,11 @@ var wsUpgrader = websocket.Upgrader{
 
 // WS is the WebSocket HTTP listener. It never mutates the roster.
 type WS struct {
-	Addr  string
-	Loop  *engine.Loop
-	Store persist.AccountStore
-	Log   *slog.Logger
+	Addr    string
+	Loop    *engine.Loop
+	Store   persist.AccountStore
+	Log     *slog.Logger
+	WebRoot string // directory of index.html; empty disables GET /
 
 	ln    stdnet.Listener
 	ready chan struct{}
@@ -88,11 +92,12 @@ func NewWS(addr string, loop *engine.Loop, store persist.AccountStore, log *slog
 		log = slog.Default()
 	}
 	return &WS{
-		Addr:  addr,
-		Loop:  loop,
-		Store: store,
-		Log:   log,
-		ready: make(chan struct{}),
+		Addr:    addr,
+		Loop:    loop,
+		Store:   store,
+		Log:     log,
+		WebRoot: findWebRoot(),
+		ready:   make(chan struct{}),
 	}
 }
 
@@ -123,6 +128,9 @@ func (w *WS) Serve(ctx context.Context) error {
 		defer wg.Done()
 		w.handle(ctx, rw, r)
 	})
+	if root := strings.TrimSpace(w.WebRoot); root != "" {
+		mux.Handle("/", http.FileServer(http.Dir(root)))
+	}
 
 	httpSrv := &http.Server{
 		Handler:           mux,
@@ -255,7 +263,7 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 	switch f.Type {
 	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdLook, typeCmdMove, typeCmdQuit,
 		typeCmdPractice, typeCmdSkills, typeCmdInv, typeCmdGet, typeCmdDrop, typeCmdEquip, typeCmdUnequip,
-		typeCmdGather, typeCmdCraft, typeCmdSell, typeCmdBuy, typeCmdQuote:
+		typeCmdGather, typeCmdCraft, typeCmdSell, typeCmdBuy, typeCmdQuote, typeCmdTalk:
 		if !s.lim.allow(time.Now()) {
 			return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 		}
@@ -295,6 +303,8 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.doTrade(f, false)
 	case typeCmdQuote:
 		return s.doQuote(f)
+	case typeCmdTalk:
+		return s.doTalk(f)
 	case typeCmdQuit:
 		return s.doQuit()
 	default:
@@ -388,7 +398,29 @@ func (s *wsSession) doLook(f inFrame) error {
 	if !s.authed {
 		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
 	}
-	if !s.loop.Submit(engine.Look{ConnID: s.id}) {
+	var p struct {
+		Target string `json:"target"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(engine.Look{ConnID: s.id, Target: strings.TrimSpace(p.Target)}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doTalk(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		NPC string `json:"npc"`
+	}
+	if err := decodePayload(f.Payload, &p); err != nil || strings.TrimSpace(p.NPC) == "" {
+		return s.writeSys(f.ID, codeBadFrame, codeBadFrame)
+	}
+	if !s.loop.Submit(engine.Talk{ConnID: s.id, NPC: strings.TrimSpace(p.NPC)}) {
 		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 	}
 	return nil
@@ -609,12 +641,22 @@ func (s *wsSession) writeEvent(ev engine.Event) error {
 		if ground == nil {
 			ground = []string{}
 		}
+		npcs := e.NPCs
+		if npcs == nil {
+			npcs = []string{}
+		}
+		objects := e.Objects
+		if objects == nil {
+			objects = []string{}
+		}
 		return s.writeJSON(typeRoom, "", map[string]any{
 			"id":          e.ID,
 			"name":        e.Name,
 			"description": e.Description,
 			"exits":       exits,
 			"who":         who,
+			"npcs":        npcs,
+			"objects":     objects,
 			"ground":      ground,
 		})
 	case engine.Drop:
@@ -677,5 +719,27 @@ func mapAuthErr(err error) (code, message string) {
 		return persist.ErrBadPassword.Error(), persist.ErrBadPassword.Error()
 	default:
 		return codeInternal, codeInternal
+	}
+}
+
+func findWebRoot() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	dir, err := filepath.Abs(wd)
+	if err != nil {
+		return ""
+	}
+	for {
+		cand := filepath.Join(dir, "web")
+		if st, err := os.Stat(filepath.Join(cand, "index.html")); err == nil && !st.IsDir() {
+			return cand
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
 	}
 }

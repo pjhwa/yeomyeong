@@ -53,6 +53,8 @@ type Loop struct {
 	// catalog/items/skills are immutable after construction. nil means none loaded.
 	catalog *yworld.Catalog
 	items   *yworld.Items
+	npcs    *yworld.NPCs
+	objects *yworld.Objects
 	skills  *skill.Catalog
 	craft   *craft.Catalog
 	markets *economy.Book
@@ -96,6 +98,18 @@ func NewWithWorld(log *slog.Logger, cat *yworld.Catalog, items *yworld.Items, gr
 // WithSkills attaches the practice catalog. Call before Run.
 func (l *Loop) WithSkills(cat *skill.Catalog) *Loop {
 	l.skills = cat
+	return l
+}
+
+// WithNPCs attaches scripted characters. Call before Run.
+func (l *Loop) WithNPCs(n *yworld.NPCs) *Loop {
+	l.npcs = n
+	return l
+}
+
+// WithObjects attaches scenery examine targets. Call before Run.
+func (l *Loop) WithObjects(o *yworld.Objects) *Loop {
+	l.objects = o
 	return l
 }
 
@@ -262,6 +276,8 @@ func (l *Loop) handle(cmd Command) {
 		l.say(c)
 	case Look:
 		l.look(c)
+	case Talk:
+		l.talk(c)
 	case Move:
 		l.move(c)
 	case LeaveWorld:
@@ -331,6 +347,7 @@ func (l *Loop) enter(c EnterWorld) {
 		Bag:       sh.Bag,
 		Equip:     sh.Equip,
 		Nyang:     sh.Nyang,
+		Flags:     sh.Flags,
 	}
 	l.world.roster[c.ConnID] = p
 	// Room card first so adapters that return on seated (awaitSeated +
@@ -357,6 +374,10 @@ func (l *Loop) say(c Say) {
 func (l *Loop) look(c Look) {
 	p, ok := l.world.roster[c.ConnID]
 	if !ok {
+		return
+	}
+	if q := strings.TrimSpace(c.Target); q != "" {
+		l.examine(p, q)
 		return
 	}
 	l.emit(l.roomCard(p))
@@ -412,11 +433,13 @@ func (l *Loop) sysInRoom(roomID, body string) {
 func (l *Loop) roomCard(viewer Player) Room {
 	who := l.whoElse(viewer)
 	card := Room{
-		ConnID: viewer.ConnID,
-		ID:     viewer.RoomID,
-		Exits:  map[string]string{},
-		Who:    who,
-		Ground: l.groundNames(viewer.RoomID),
+		ConnID:  viewer.ConnID,
+		ID:      viewer.RoomID,
+		Exits:   map[string]string{},
+		Who:     who,
+		NPCs:    l.npcNames(viewer.RoomID),
+		Objects: l.objectNames(viewer.RoomID),
+		Ground:  l.groundNames(viewer.RoomID),
 	}
 	if l.catalog == nil {
 		return card
@@ -435,6 +458,36 @@ func (l *Loop) roomCard(viewer Player) Room {
 		card.Exits[dir] = name
 	}
 	return card
+}
+
+func (l *Loop) npcNames(roomID string) []string {
+	names := make([]string, 0)
+	if l.npcs == nil {
+		return names
+	}
+	for _, n := range l.npcs.InRoom(roomID) {
+		name := strings.TrimSpace(n.Name.Text(text.Default))
+		if name == "" {
+			name = n.ID
+		}
+		names = append(names, name)
+	}
+	return names
+}
+
+func (l *Loop) objectNames(roomID string) []string {
+	names := make([]string, 0)
+	if l.objects == nil {
+		return names
+	}
+	for _, o := range l.objects.InRoom(roomID) {
+		name := strings.TrimSpace(o.Name.Text(text.Default))
+		if name == "" {
+			name = o.ID
+		}
+		names = append(names, name)
+	}
+	return names
 }
 
 func (l *Loop) whoElse(viewer Player) []string {

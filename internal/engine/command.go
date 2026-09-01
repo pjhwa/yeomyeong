@@ -31,8 +31,16 @@ type Say struct {
 }
 
 // Look asks the loop for the caller's current room card.
+// Target, when set, examines an NPC or scenery object instead of the room.
 type Look struct {
 	ConnID ConnID
+	Target string
+}
+
+// Talk is a scripted NPC conversation (T0 YAML, not LLM).
+type Talk struct {
+	ConnID ConnID
+	NPC    string
 }
 
 // Move asks the loop to walk Dir (north/south/east/west/up/down).
@@ -116,6 +124,7 @@ type Quote struct {
 func (EnterWorld) command() {}
 func (Say) command()        {}
 func (Look) command()       {}
+func (Talk) command()       {}
 func (Move) command()       {}
 func (LeaveWorld) command() {}
 func (Get) command()        {}

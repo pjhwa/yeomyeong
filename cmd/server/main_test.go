@@ -79,7 +79,7 @@ func TestLoadWorldZonesNotDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	if _, _, _, err := loadWorld(log, dir); err == nil {
+	if _, err := loadWorld(log, dir); err == nil {
 		t.Fatal("want error when zones is a file")
 	}
 }
