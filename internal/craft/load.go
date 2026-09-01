@@ -11,35 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type loc struct {
-	KO string
-	EN string
-}
-
-func (l *loc) UnmarshalYAML(n *yaml.Node) error {
-	switch n.Kind {
-	case yaml.ScalarNode:
-		var s string
-		if err := n.Decode(&s); err != nil {
-			return err
-		}
-		l.KO = strings.TrimSpace(s)
-		return nil
-	case yaml.MappingNode:
-		var raw struct {
-			KO string `yaml:"ko"`
-			EN string `yaml:"en"`
-		}
-		if err := n.Decode(&raw); err != nil {
-			return err
-		}
-		l.KO, l.EN = strings.TrimSpace(raw.KO), strings.TrimSpace(raw.EN)
-		return nil
-	default:
-		return fmt.Errorf("localized string must be a Korean scalar or {ko, en}")
-	}
-}
-
 type yamlNode struct {
 	Room       string `yaml:"room"`
 	Skill      string `yaml:"skill"`

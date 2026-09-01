@@ -73,8 +73,11 @@ func TestLoadAndStock(t *testing.T) {
 	if st.Remaining("test:start", "herb") != 2 {
 		t.Fatal("boot stock")
 	}
-	if !st.Take("test:start", "herb") || !st.Take("test:start", "herb") {
-		t.Fatal("take")
+	if !st.Take("test:start", "herb") {
+		t.Fatal("take 1")
+	}
+	if !st.Take("test:start", "herb") {
+		t.Fatal("take 2")
 	}
 	if st.Take("test:start", "herb") {
 		t.Fatal("empty")
