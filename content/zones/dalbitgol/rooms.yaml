@@ -339,14 +339,18 @@
     en: "Warehouse Lane"
   description:
     ko: >
-      골목 담에 만석상회 광목 덮개가 늘어져 있다. 밀랍 도장이 한쪽 모서리에
-      찍혀 있고, 만지면 밀랍이 손톱에 남는다. 겨 냄새와 쌀가루에 숨이
-      짧아진다.
+      골목 흙에 수레 자국이 두 줄로 파여 정거장 쪽으로 이어진다. 담에
+      만석상회 광목 덮개가 늘어져 있고, 밀랍 도장이 한쪽 모서리에 찍혀
+      만지면 손톱에 남는다. 겨 냄새와 쌀가루에 숨이 짧아진다. 자국 안
+      짚이 진흙에 엉겨 발끝에 끈적하다.
   exits:
     west: dalbitgol:east-street
     east: dalbitgol:warehouse
     south: dalbitgol:packing-shed
   flags: [town]
+  ambient:
+    - ko: "골목 끝에서 빈 수레가 자갈을 한 번 굴리고 멈춘다."
+  foreshadow: [FS-016]
 
 - id: dalbitgol:warehouse
   name:
@@ -525,14 +529,16 @@
     en: "Station Yard"
   description:
     ko: >
-      화물마당 나무상자에 한벽행이라고 먹으로 찍힌 글자가 희미하다. 석탄가루가
-      구두코를 덮고, 만지면 번들거린다. 줄이 화물 덮개를 당기는 소리가 짧게
-      난다.
+      화물마당 나무상자에 한벽행이라고 먹으로 찍힌 글자가 희미하다. 상자 밑
+      짚이 진흙에 엉겨 있고, 석탄가루가 구두코를 덮어 만지면 번들거린다. 줄이
+      화물 덮개를 당기는 소리가 짧게 난다.
   exits:
     west: dalbitgol:packing-shed
     south: dalbitgol:station
     north: dalbitgol:warehouse
   flags: [town]
+  ambient:
+    - ko: "빈 수레가 화물 덮개 옆에서 축을 한 번 굴린다."
 
 - id: dalbitgol:packing-shed
   name:
@@ -541,8 +547,8 @@
   description:
     ko: >
       포장간 수레 바닥이 한 층 떠 있다. 만석상회 도장이 찍힌 가마니가 그
-      위를 덮고, 겨 냄새가 눈을 찌른다. 새끼줄이 팽팽해질 때마다 나무 바퀴가
-      삐걱인다.
+      위를 덮고, 빈 끈에 꼬리표가 축 늘어져 있다. 겨 냄새가 눈을 찌르고,
+      새끼줄이 팽팽해질 때마다 나무 바퀴가 삐걱인다.
   exits:
     west: dalbitgol:inn-yard
     east: dalbitgol:station-yard
@@ -550,6 +556,7 @@
     north: dalbitgol:warehouse-lane
   flags: [town, indoor]
   market: dalbitgol
+  foreshadow: [FS-016]
 
 - id: dalbitgol:school-lane
   name:

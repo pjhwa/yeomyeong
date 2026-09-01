@@ -6,3 +6,8 @@
   talk:
     first: 처음 보는 얼굴이군.
     second: 또 왔군, 자네.
+    when:
+      - flag: examined:test-paper
+        ko: 신문을 봤군, 자네.
+      - flag: other-flag
+        ko: 다른 단서를 봤군.

@@ -40,7 +40,7 @@ the world.
 | `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
 | `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
 | `Look` | `ConnID`, `Target?` | net | Empty target: emit `Room` card (NPCs, scenery names, ground). Set: examine NPC/object, emit Description `Text`; object `after_examine` emits a second sys `Text` once (`Flags["examined:<id>"]`) |
-| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First talk sets `Sheet.Flags["{id}_talked"]`; later talks use the memory line |
+| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First matching `talk.when` whose sheet flag is >0, else first/second (D-046). First talk sets `Sheet.Flags["{id}_talked"]` even if a when-line was used |
 | `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
 | `Practice` | `ConnID`, `SkillID` | net | GAMEPLAY roll; loop writes new ranks/stats; emit Text |
 | `Get` | `ConnID`, `ItemID` | net | Move one ground stack into bag if weight allows |

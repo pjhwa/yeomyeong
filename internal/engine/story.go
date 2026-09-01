@@ -26,16 +26,29 @@ func (l *Loop) talk(c Talk) {
 		p.Flags = map[string]int{}
 	}
 	key := yworld.TalkFlag(npc.ID)
-	body := strings.TrimSpace(npc.TalkFirst.Text(text.Default))
-	if p.Flags[key] > 0 {
-		if second := strings.TrimSpace(npc.TalkSecond.Text(text.Default)); second != "" {
-			body = second
-		}
-	} else {
+	body := pickTalk(npc, p.Flags)
+	if p.Flags[key] == 0 {
 		p.Flags[key] = 1
 		l.world.roster[c.ConnID] = p
 	}
 	l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: body})
+}
+
+// pickTalk returns the first talk.when line whose flag is >0, else first/second (D-046).
+func pickTalk(npc yworld.NPC, flags map[string]int) string {
+	for _, w := range npc.TalkWhen {
+		if flags[w.Flag] > 0 {
+			if body := strings.TrimSpace(w.Line.Text(text.Default)); body != "" {
+				return body
+			}
+		}
+	}
+	if flags[yworld.TalkFlag(npc.ID)] > 0 {
+		if second := strings.TrimSpace(npc.TalkSecond.Text(text.Default)); second != "" {
+			return second
+		}
+	}
+	return strings.TrimSpace(npc.TalkFirst.Text(text.Default))
 }
 
 func (l *Loop) examine(p Player, q string) {

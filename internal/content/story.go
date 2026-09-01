@@ -30,8 +30,15 @@ type yamlNPC struct {
 }
 
 type yamlTalk struct {
-	First  loc `yaml:"first"`
-	Second loc `yaml:"second"`
+	First  loc            `yaml:"first"`
+	Second loc            `yaml:"second"`
+	When   []yamlTalkWhen `yaml:"when"`
+}
+
+type yamlTalkWhen struct {
+	Flag string `yaml:"flag"`
+	KO   string `yaml:"ko"`
+	EN   string `yaml:"en"`
 }
 
 func loadObjects(root string, rooms map[string]world.Room) ([]world.Object, error) {
@@ -146,6 +153,10 @@ func toNPC(yn yamlNPC, zone string, rooms map[string]world.Room) (world.NPC, err
 	if yn.Talk.First.KO == "" || yn.Talk.Second.KO == "" {
 		return world.NPC{}, fmt.Errorf("npc %q: talk.first.ko and talk.second.ko are required", yn.ID)
 	}
+	when, err := toTalkWhen(yn.ID, yn.Talk.When)
+	if err != nil {
+		return world.NPC{}, err
+	}
 	aliases, err := cleanAliases(yn.Aliases)
 	if err != nil {
 		return world.NPC{}, fmt.Errorf("npc %q: %w", yn.ID, err)
@@ -161,8 +172,31 @@ func toNPC(yn yamlNPC, zone string, rooms map[string]world.Room) (world.NPC, err
 		Look:       world.Localized{KO: yn.Look.KO, EN: yn.Look.EN},
 		TalkFirst:  world.Localized{KO: yn.Talk.First.KO, EN: yn.Talk.First.EN},
 		TalkSecond: world.Localized{KO: yn.Talk.Second.KO, EN: yn.Talk.Second.EN},
+		TalkWhen:   when,
 		Foreshadow: append([]string(nil), yn.Foreshadow...),
 	}, nil
+}
+
+func toTalkWhen(npcID string, raw []yamlTalkWhen) ([]world.TalkWhen, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	out := make([]world.TalkWhen, 0, len(raw))
+	for i, w := range raw {
+		flag := strings.TrimSpace(w.Flag)
+		if flag == "" {
+			return nil, fmt.Errorf("npc %q: talk.when[%d]: empty flag", npcID, i)
+		}
+		ko := strings.TrimSpace(w.KO)
+		if ko == "" {
+			return nil, fmt.Errorf("npc %q: talk.when[%d]: ko is required", npcID, i)
+		}
+		out = append(out, world.TalkWhen{
+			Flag: flag,
+			Line: world.Localized{KO: ko, EN: strings.TrimSpace(w.EN)},
+		})
+	}
+	return out, nil
 }
 
 func cleanAliases(in []string) ([]string, error) {

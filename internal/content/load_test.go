@@ -272,8 +272,13 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	if _, ok := w.Rooms.Room("solgol:market"); !ok {
 		t.Fatal("solgol:market missing")
 	}
-	if _, ok := w.NPCs.Find("청람"); !ok {
+	if n, ok := w.NPCs.Find("청람"); !ok {
 		t.Fatal("cheongram npc missing")
+	} else if len(n.TalkWhen) == 0 || n.TalkWhen[0].Flag != "examined:gangpo-pack" {
+		t.Fatalf("cheongram talk.when: %+v", n.TalkWhen)
+	}
+	if n, ok := w.NPCs.FindInRoom("dalbitgol:packing-shed", "오씨"); !ok || n.ID != "clerk-oh" {
+		t.Fatalf("clerk-oh: %+v %v", n, ok)
 	}
 	if _, ok := w.Objects.FindInRoom("dalbitgol:market", "신문"); !ok {
 		t.Fatal("market newspaper object missing")
@@ -284,6 +289,14 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	}
 	if !strings.Contains(pack.Description.KO, "한벽일보") || strings.TrimSpace(pack.AfterExamine.KO) == "" {
 		t.Fatalf("warehouse pack clue: %+v", pack)
+	}
+	ruts, ok := w.Objects.FindInRoom("dalbitgol:warehouse-lane", "자국")
+	if !ok || ruts.ID != "cart-ruts" || !strings.Contains(ruts.Description.KO, "화물마당") {
+		t.Fatalf("cart-ruts: %+v %v", ruts, ok)
+	}
+	chit, ok := w.Objects.FindInRoom("dalbitgol:packing-shed", "꼬리표")
+	if !ok || chit.ID != "cargo-chit" || !strings.Contains(chit.Description.KO, "만석상회") {
+		t.Fatalf("cargo-chit: %+v %v", chit, ok)
 	}
 }
 
@@ -311,6 +324,12 @@ func TestLoadStoryYAML(t *testing.T) {
 	if !ok || n.ID != "tutor" || !strings.Contains(n.TalkFirst.KO, "처음") {
 		t.Fatalf("tutor: %+v %v", n, ok)
 	}
+	if len(n.TalkWhen) != 2 || n.TalkWhen[0].Flag != "examined:test-paper" || !strings.Contains(n.TalkWhen[0].Line.KO, "신문을 봤군") {
+		t.Fatalf("tutor when: %+v", n.TalkWhen)
+	}
+	if n.TalkWhen[1].Flag != "other-flag" {
+		t.Fatalf("tutor when[1]: %+v", n.TalkWhen)
+	}
 	if w.Objects.Len() != 1 {
 		t.Fatalf("objects=%d", w.Objects.Len())
 	}
@@ -333,6 +352,21 @@ func TestLoadStoryErrors(t *testing.T) {
 	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n")
 	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "talk.second") {
 		t.Fatalf("missing second talk: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n    second: 또.\n    when:\n      - flag: \"\"\n        ko: 단서.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "empty flag") {
+		t.Fatalf("empty when.flag: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n    second: 또.\n    when:\n      - ko: 단서.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "empty flag") {
+		t.Fatalf("missing when.flag: %v", err)
+	}
+	root = writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", "- id: ghost\n  room: test:start\n  name: 사람\n  aliases: [사람]\n  look: 코트.\n  talk:\n    first: 안녕.\n    second: 또.\n    when:\n      - flag: examined:ghost\n        ko: \"\"\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "ko is required") {
+		t.Fatalf("empty when.ko: %v", err)
 	}
 	root = writeZone(t, minRoom(""))
 	writeStoryFile(t, root, "objects.yaml", "- id: bad-fs\n  room: test:start\n  name: 신문\n  aliases: [신문]\n  description: 설명이다.\n  foreshadow: [FS-999]\n")

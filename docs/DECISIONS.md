@@ -627,3 +627,25 @@ Format:
   assert the new sentences. `엿장수 가위질`, `고시문`, `교정쇄`,
   `분견대`, `언변` as a typed verb, and remaining 문어체 in live YAML
   or Go player strings are defects.
+
+## D-046 — Optional `talk.when` flag gates
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: After the warehouse pack examine (`examined:gangpo-pack`,
+  FS-016), Act I needs T0 dialogue that notices the pack without a
+  second NPC verb or a quest VM. Engine talk only had `first` /
+  `second`.
+- Decision: NPC YAML may list optional `talk.when` entries. Each
+  entry is `{flag, ko}` (`en` optional). On `대화`, pick the **first**
+  `when` entry whose `flag` is present and **>0** on the player sheet;
+  otherwise keep today's first/second. Still set `{id}_talked` on the
+  first talk, even if a when-line was used. `talk.first` and
+  `talk.second` stay required. Empty or missing `when.flag` is a load
+  error. The flag string is an opaque sheet key; do not require it to
+  exist at load time.
+- Consequences: CONTENT-SCHEMA documents the field. Loader and the
+  single-writer loop implement it. Do not grow `when` into a predicate
+  language in this slice. Unknown flag names are allowed (they simply
+  never match until something writes that sheet key).

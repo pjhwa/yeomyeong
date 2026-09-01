@@ -171,7 +171,8 @@ func TestTalkFlagPersistsOnLeave(t *testing.T) {
 	}
 }
 
-func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
+func startDalbitgol(t *testing.T) (*Loop, <-chan Event) {
+	t.Helper()
 	w, err := content.LoadWorld(filepath.Join("..", "..", "content"), yworld.SpawnID)
 	if err != nil {
 		t.Fatal(err)
@@ -192,6 +193,11 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 		}
 	})
 	out := mustAttach(t, l, "a")
+	return l, out
+}
+
+func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
+	l, out := startDalbitgol(t)
 	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
 	_ = mustSnapshot(t, l)
 	drain(out)
@@ -229,9 +235,7 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 	if !hasTextContains(first, "처음 보는 얼굴이군") || !hasTextContains(first, "자네") {
 		t.Fatalf("cheongram first: %#v", first)
 	}
-	if hasTextContains(first, "월송") || hasTextContains(first, "쇠말뚝") || hasTextContains(first, "새벽회") {
-		t.Fatalf("leaked secret: %#v", first)
-	}
+	assertNoSecrets(t, first)
 	l.Submit(Talk{ConnID: "a", NPC: "청람"})
 	_ = mustSnapshot(t, l)
 	mem := drain(out)
@@ -278,9 +282,7 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 	if !hasTextContains(pack, "수레 축") {
 		t.Fatalf("pack reaction: %#v", pack)
 	}
-	if hasTextContains(pack, "월송") || hasTextContains(pack, "쇠말뚝") || hasTextContains(pack, "새벽회") {
-		t.Fatalf("leaked secret: %#v", pack)
-	}
+	assertNoSecrets(t, pack)
 	if mustSnapshot(t, l).Players[0].Flags[yworld.ExaminedFlag("gangpo-pack")] != 1 {
 		t.Fatal("examined:gangpo-pack flag")
 	}
@@ -293,6 +295,219 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 	if hasTextContains(again, "수레 축") {
 		t.Fatalf("second examine repeated reaction: %#v", again)
 	}
+
+	l.Submit(Move{ConnID: "a", Dir: "west"})
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:warehouse-lane" {
+		t.Fatalf("want warehouse-lane, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Look{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	lane := findRoom(drain(out))
+	if lane == nil || !hasString(lane.Objects, "수레 자국") {
+		t.Fatalf("lane objects: %+v", lane)
+	}
+	l.Submit(Look{ConnID: "a", Target: "자국"})
+	_ = mustSnapshot(t, l)
+	ruts := drain(out)
+	if !hasTextContains(ruts, "짚") || !hasTextContains(ruts, "기름") || !hasTextContains(ruts, "화물마당") {
+		t.Fatalf("cart-ruts: %#v", ruts)
+	}
+	if !hasTextContains(ruts, "덧문") {
+		t.Fatalf("cart-ruts reaction: %#v", ruts)
+	}
+	assertNoSecrets(t, ruts)
+	if mustSnapshot(t, l).Players[0].Flags[yworld.ExaminedFlag("cart-ruts")] != 1 {
+		t.Fatal("examined:cart-ruts flag")
+	}
+
+	l.Submit(Move{ConnID: "a", Dir: "south"})
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:packing-shed" {
+		t.Fatalf("want packing-shed, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Look{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	shed := findRoom(drain(out))
+	if shed == nil || !hasString(shed.Objects, "화물 꼬리표") || !hasString(shed.NPCs, "오씨 점원") {
+		t.Fatalf("shed card: %+v", shed)
+	}
+	l.Submit(Look{ConnID: "a", Target: "꼬리표"})
+	_ = mustSnapshot(t, l)
+	chit := drain(out)
+	if !hasTextContains(chit, "만석상회") || !hasTextContains(chit, "꼬리표") || !hasTextContains(chit, "정거장") {
+		t.Fatalf("cargo-chit: %#v", chit)
+	}
+	assertNoSecrets(t, chit)
+
+	l.Submit(Talk{ConnID: "a", NPC: "오씨"})
+	_ = mustSnapshot(t, l)
+	clerk := drain(out)
+	if !hasTextContains(clerk, "강포") || !hasTextContains(clerk, "새벽이 오기 전") || !hasTextContains(clerk, "화물마당") {
+		t.Fatalf("clerk when: %#v", clerk)
+	}
+	if !hasTextContains(clerk, "다방 백야") {
+		t.Fatalf("clerk café nudge: %#v", clerk)
+	}
+	assertNoSecrets(t, clerk)
+	if mustSnapshot(t, l).Players[0].Flags[yworld.TalkFlag("clerk-oh")] != 1 {
+		t.Fatal("clerk-oh_talked flag")
+	}
+
+	for _, dir := range []string{"south", "south", "west"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:school" {
+		t.Fatalf("want school for gated 청람, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Talk{ConnID: "a", NPC: "청람"})
+	_ = mustSnapshot(t, l)
+	gated := drain(out)
+	if !hasTextContains(gated, "수레 자국") || !hasTextContains(gated, "다방에도 물어보게") || !hasTextContains(gated, "화물마당") {
+		t.Fatalf("cheongram when: %#v", gated)
+	}
+	if hasTextContains(gated, "또 왔군") {
+		t.Fatalf("cheongram when reused second: %#v", gated)
+	}
+	assertNoSecrets(t, gated)
+}
+
+func TestTalkWhenFromTestdata(t *testing.T) {
+	l := startStory(t)
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+
+	l.Submit(Talk{ConnID: "a", NPC: "훈장"})
+	_ = mustSnapshot(t, l)
+	if !hasTextContains(drain(out), "처음 보는 얼굴이군.") {
+		t.Fatal("ungated first")
+	}
+
+	l.Submit(Move{ConnID: "a", Dir: "north"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	l.Submit(Look{ConnID: "a", Target: "신문"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	l.Submit(Move{ConnID: "a", Dir: "south"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	l.Submit(Talk{ConnID: "a", NPC: "훈장"})
+	_ = mustSnapshot(t, l)
+	got := drain(out)
+	if !hasTextContains(got, "신문을 봤군, 자네.") {
+		t.Fatalf("when after examine: %#v", got)
+	}
+	if hasTextContains(got, "또 왔군") {
+		t.Fatalf("when reused second: %#v", got)
+	}
+}
+
+func TestTalkWhenFirstMatchAndSetsTalked(t *testing.T) {
+	l := startStory(t)
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{
+		ConnID: "a", AccountID: "1", Username: "갑", Session: "s",
+		Sheet: yworld.Sheet{Flags: map[string]int{"other-flag": 1, "examined:test-paper": 1}},
+	})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	l.Submit(Talk{ConnID: "a", NPC: "훈장"})
+	_ = mustSnapshot(t, l)
+	got := drain(out)
+	if !hasTextContains(got, "신문을 봤군, 자네.") {
+		t.Fatalf("first when should win: %#v", got)
+	}
+	if hasTextContains(got, "다른 단서를 봤군") {
+		t.Fatalf("later when fired: %#v", got)
+	}
+	if mustSnapshot(t, l).Players[0].Flags[yworld.TalkFlag("tutor")] != 1 {
+		t.Fatal("when-line must still set talked")
+	}
+
+	outB := mustAttach(t, l, "b")
+	l.Submit(EnterWorld{
+		ConnID: "b", AccountID: "2", Username: "을", Session: "s2",
+		Sheet: yworld.Sheet{Flags: map[string]int{"other-flag": 1}},
+	})
+	_ = mustSnapshot(t, l)
+	drain(outB)
+	l.Submit(Talk{ConnID: "b", NPC: "훈장"})
+	_ = mustSnapshot(t, l)
+	secondWhen := drain(outB)
+	if !hasTextContains(secondWhen, "다른 단서를 봤군") {
+		t.Fatalf("second when: %#v", secondWhen)
+	}
+	if hasTextContains(secondWhen, "신문을 봤군") {
+		t.Fatalf("first when without its flag: %#v", secondWhen)
+	}
+}
+
+func TestCourierTrailGatedTalkNeedsPack(t *testing.T) {
+	l, out := startDalbitgol(t)
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	for _, dir := range []string{"north", "north", "north", "north", "north", "east", "east", "east", "east", "south"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap := mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:packing-shed" {
+		t.Fatalf("want packing-shed, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Talk{ConnID: "a", NPC: "오씨"})
+	_ = mustSnapshot(t, l)
+	first := drain(out)
+	if !hasTextContains(first, "포장간") {
+		t.Fatalf("clerk first: %#v", first)
+	}
+	if hasTextContains(first, "강포") || hasTextContains(first, "새벽이 오기 전") || hasTextContains(first, "다방 백야 쪽에서도") {
+		t.Fatalf("clerk when without pack: %#v", first)
+	}
+	l.Submit(Talk{ConnID: "a", NPC: "오씨"})
+	_ = mustSnapshot(t, l)
+	second := drain(out)
+	if !hasTextContains(second, "또 오셨어요") {
+		t.Fatalf("clerk second: %#v", second)
+	}
+	if hasTextContains(second, "강포") || hasTextContains(second, "다방 백야 쪽에서도") {
+		t.Fatalf("clerk second leaked when: %#v", second)
+	}
+
+	for _, dir := range []string{"south", "south", "west"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:school" {
+		t.Fatalf("want school, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Talk{ConnID: "a", NPC: "청람"})
+	_ = mustSnapshot(t, l)
+	cfirst := drain(out)
+	if !hasTextContains(cfirst, "처음 보는 얼굴이군") {
+		t.Fatalf("cheongram first: %#v", cfirst)
+	}
+	if hasTextContains(cfirst, "다방에도 물어보게") || hasTextContains(cfirst, "창고 짐을 봤군") {
+		t.Fatalf("cheongram when without pack: %#v", cfirst)
+	}
+	l.Submit(Talk{ConnID: "a", NPC: "청람"})
+	_ = mustSnapshot(t, l)
+	csecond := drain(out)
+	if !hasTextContains(csecond, "또 왔군") {
+		t.Fatalf("cheongram second: %#v", csecond)
+	}
+	if hasTextContains(csecond, "다방에도 물어보게") || hasTextContains(csecond, "수레 자국") {
+		t.Fatalf("cheongram second leaked when: %#v", csecond)
+	}
+	assertNoSecrets(t, first, second, cfirst, csecond)
 }
 
 func TestExamineReactionOnce(t *testing.T) {
@@ -353,4 +568,17 @@ func hasString(list []string, want string) bool {
 		}
 	}
 	return false
+}
+
+var storySecrets = []string{"월송", "쇠말뚝", "새벽회", "한도규", "서월향", "무쇠 심장", "분맥"}
+
+func assertNoSecrets(t *testing.T, batches ...[]Event) {
+	t.Helper()
+	for _, evs := range batches {
+		for _, secret := range storySecrets {
+			if hasTextContains(evs, secret) {
+				t.Fatalf("leaked secret %q: %#v", secret, evs)
+			}
+		}
+	}
 }

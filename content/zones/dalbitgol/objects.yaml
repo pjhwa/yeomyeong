@@ -26,8 +26,37 @@
       강포가 사흘째 안 보인다는 줄이 있고, 같은 활자가 두 번 찍혀 비뚤어져
       있다. 잉크가 손가락에 묻고, 끈은 끊어진 채다.
   after_examine:
-    ko: 바깥에서 수레 축이 짧게 신음하고, 서까래 먼지가 목덜미에 내려앉는다.
+    ko: 바깥 골목에서 수레 축이 짧게 신음하고, 서까래 먼지가 목덜미에 내려앉는다.
   foreshadow: [FS-001, FS-014, FS-016]
+
+- id: cart-ruts
+  room: dalbitgol:warehouse-lane
+  name:
+    ko: 수레 자국
+  aliases: [수레, 자국, 수레자국, 바퀴, 수레 자국]
+  description:
+    ko: >
+      흙에 파인 바퀴 자국 안에 짚과 진흙이 엉겨 있고, 발끝으로 건드리면
+      축 기름이 미끄럽다. 기름 냄새가 코를 찌르고, 자국은 정거장 화물마당
+      쪽으로 이어진다. 바퀴가 긁고 간 돌은 아직 따뜻하다.
+  after_examine:
+    ko: 골목 너머에서 빈 수레가 한 번 지나가고, 먼 덧문이 닫힌다.
+  foreshadow: [FS-016]
+
+- id: cargo-chit
+  room: dalbitgol:packing-shed
+  name:
+    ko: 화물 꼬리표
+  aliases: [꼬리표, 화물, 가마니, 표]
+  description:
+    ko: >
+      빈 가마니 끈에 만석상회 도장이 찍힌 꼬리표가 한 장 매달려 있고,
+      모서리가 젖어 손가락에 차갑다. 연필로 정거장에서 확인하라고 갈겨 쓴
+      줄이 번져 있고, 겨 냄새가 끈에 배어 있다. 옆 수레 바닥은 비어
+      정거장 쪽으로 바퀴 자국만 남았다.
+  after_examine:
+    ko: 포장간 밖에서 빈 수레가 자갈을 한 번 굴리고 멈춘다.
+  foreshadow: [FS-016]
 
 - id: face-down-plate
   room: dalbitgol:school

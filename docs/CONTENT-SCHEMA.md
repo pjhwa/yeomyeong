@@ -124,6 +124,9 @@ T0 YAML dialogue. Not LLM. `대화 청람` / `talk 청람` / `말걸다`.
   talk:
     first: { ko: "처음 보는 얼굴이군, 자네." }
     second: { ko: "또 왔군, 자네." }
+    when:
+      - flag: examined:gangpo-pack
+        ko: "창고 짐을 봤군, 자네."
   foreshadow: [FS-016]
 ```
 
@@ -135,6 +138,7 @@ T0 YAML dialogue. Not LLM. `대화 청람` / `talk 청람` / `말걸다`.
 | `aliases` | yes | at least one. `대화` / `보다` targets |
 | `look` | yes | `보다 <alias>` blurb |
 | `talk.first` / `talk.second` | yes | Korean. Second line is for a player who already talked |
+| `talk.when` | no | List of `{flag, ko}` (`en` optional). On `대화`, the **first** entry whose `flag` is present and >0 on the player sheet wins over first/second (D-046). Empty/missing `flag` = load error. Flag is an opaque sheet key; not checked at load. first/second stay required. |
 | `foreshadow` | no | existing `FS-NNN` ids |
 
 Unknown NPC: `여기는 그 사람이 없어요.`

@@ -23,6 +23,13 @@ func ExaminedFlag(objectID string) string {
 	return "examined:" + objectID
 }
 
+// TalkWhen is one optional flag-gated talk line (D-046). Flag is an opaque
+// sheet key; the loop picks the first entry whose Flags[Flag] > 0.
+type TalkWhen struct {
+	Flag string
+	Line Localized
+}
+
 // NPC is a scripted character from content/zones/<zone>/npcs.yaml.
 type NPC struct {
 	ID         string
@@ -32,6 +39,7 @@ type NPC struct {
 	Look       Localized
 	TalkFirst  Localized
 	TalkSecond Localized
+	TalkWhen   []TalkWhen
 	Foreshadow []string
 }
 
@@ -237,6 +245,9 @@ func cloneNPC(n NPC) NPC {
 	out := n
 	if n.Aliases != nil {
 		out.Aliases = append([]string(nil), n.Aliases...)
+	}
+	if n.TalkWhen != nil {
+		out.TalkWhen = append([]TalkWhen(nil), n.TalkWhen...)
 	}
 	if n.Foreshadow != nil {
 		out.Foreshadow = append([]string(nil), n.Foreshadow...)
