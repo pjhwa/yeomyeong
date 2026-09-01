@@ -6,6 +6,9 @@ func TestTalkFlagAndMatch(t *testing.T) {
 	if TalkFlag("cheongram") != "cheongram_talked" {
 		t.Fatalf("flag=%s", TalkFlag("cheongram"))
 	}
+	if ExaminedFlag("gangpo-pack") != "examined:gangpo-pack" {
+		t.Fatalf("examined=%s", ExaminedFlag("gangpo-pack"))
+	}
 	npcs, err := NewNPCs([]NPC{{
 		ID: "tutor", Room: "test:start", Name: Localized{KO: "훈장"},
 		Aliases: []string{"훈장", "선생"}, TalkFirst: Localized{KO: "안녕"},

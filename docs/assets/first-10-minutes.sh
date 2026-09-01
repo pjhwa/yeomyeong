@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Reproducible first-10-minutes hook: spawn → market newspaper → school 청람 twice.
+# Reproducible first-10-minutes hook: spawn → market newspaper → school 청람 twice
+# → warehouse pack examine.
 # Assumes the server is listening, or starts `go run ./cmd/server`.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -102,6 +103,16 @@ c.send("대화 청람")
 c.wait("처음 보는 얼굴이군")
 c.send("대화 청람")
 c.wait("또 왔군")
+c.wait("만석상회 창고에 짐이 남아")
+# Rolling 1s rate limit is 20 cmds; pause so the warehouse walk is not dropped.
+time.sleep(1.2)
+for step in ["w", "n", "n", "n", "e", "e", "e"]:
+    c.send(step)
+    time.sleep(0.05)
+c.wait("살펴볼 것: 보부상 봇짐")
+c.send("보다 짐")
+c.wait("거짓 바닥")
+c.wait("수레 축")
 print(c.text.replace("\r\n", "\n").replace("\r", "\n"))
 c.send("quit")
 time.sleep(0.2)

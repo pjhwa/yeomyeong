@@ -238,14 +238,117 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 	if !hasTextContains(mem, "또 왔군") {
 		t.Fatalf("cheongram second: %#v", mem)
 	}
+	if !hasTextContains(mem, "만석상회 창고") || !hasTextContains(mem, "짐이 남아") {
+		t.Fatalf("warehouse nudge: %#v", mem)
+	}
 	if mustSnapshot(t, l).Players[0].Flags[yworld.TalkFlag("cheongram")] != 1 {
 		t.Fatal("cheongram_talked flag")
+	}
+
+	for _, dir := range []string{"west", "north", "north", "north"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:market" {
+		t.Fatalf("back to market, at %s", snap.Players[0].RoomID)
+	}
+	for _, dir := range []string{"east", "east", "east"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:warehouse" {
+		t.Fatalf("want warehouse, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Look{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	wh := findRoom(drain(out))
+	if wh == nil || !hasString(wh.Objects, "보부상 봇짐") {
+		t.Fatalf("warehouse objects: %+v", wh)
+	}
+	l.Submit(Look{ConnID: "a", Target: "짐"})
+	_ = mustSnapshot(t, l)
+	pack := drain(out)
+	if !hasTextContains(pack, "거짓 바닥") || !hasTextContains(pack, "찻잔") || !hasTextContains(pack, "강포") {
+		t.Fatalf("pack clue: %#v", pack)
+	}
+	if !hasTextContains(pack, "한벽일보") || !hasTextContains(pack, "활자") || !hasTextContains(pack, "무허가") {
+		t.Fatalf("pack newspaper echo: %#v", pack)
+	}
+	if !hasTextContains(pack, "수레 축") {
+		t.Fatalf("pack reaction: %#v", pack)
+	}
+	if hasTextContains(pack, "월송") || hasTextContains(pack, "쇠말뚝") || hasTextContains(pack, "새벽회") {
+		t.Fatalf("leaked secret: %#v", pack)
+	}
+	if mustSnapshot(t, l).Players[0].Flags[yworld.ExaminedFlag("gangpo-pack")] != 1 {
+		t.Fatal("examined:gangpo-pack flag")
+	}
+	l.Submit(Look{ConnID: "a", Target: "보부상"})
+	_ = mustSnapshot(t, l)
+	again := drain(out)
+	if !hasTextContains(again, "거짓 바닥") {
+		t.Fatalf("second examine missing description: %#v", again)
+	}
+	if hasTextContains(again, "수레 축") {
+		t.Fatalf("second examine repeated reaction: %#v", again)
+	}
+}
+
+func TestExamineReactionOnce(t *testing.T) {
+	l := startStory(t)
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	l.Submit(Move{ConnID: "a", Dir: "north"})
+	_ = mustSnapshot(t, l)
+	card := findRoom(drain(out))
+	if card == nil || !hasString(card.Objects, "한벽일보") {
+		t.Fatalf("yard objects: %+v", card)
+	}
+
+	l.Submit(Look{ConnID: "a", Target: "신문"})
+	_ = mustSnapshot(t, l)
+	first := drain(out)
+	if !hasTextContains(first, "한벽일보") || !hasTextContains(first, "사다리") {
+		t.Fatalf("first examine: %#v", first)
+	}
+	if countTextContains(first, "사다리") != 1 {
+		t.Fatalf("reaction count: %#v", first)
+	}
+	if mustSnapshot(t, l).Players[0].Flags[yworld.ExaminedFlag("test-paper")] != 1 {
+		t.Fatal("examined:test-paper flag")
+	}
+
+	l.Submit(Look{ConnID: "a", Target: "게시판"})
+	_ = mustSnapshot(t, l)
+	second := drain(out)
+	if !hasTextContains(second, "한벽일보") {
+		t.Fatalf("second examine missing description: %#v", second)
+	}
+	if hasTextContains(second, "사다리") {
+		t.Fatalf("second examine repeated reaction: %#v", second)
 	}
 }
 
 func hasTextContains(evs []Event, sub string) bool {
+	return countTextContains(evs, sub) > 0
+}
+
+func countTextContains(evs []Event, sub string) int {
+	n := 0
 	for _, ev := range evs {
 		if tx, ok := ev.(Text); ok && strings.Contains(tx.Body, sub) {
+			n++
+		}
+	}
+	return n
+}
+
+func hasString(list []string, want string) bool {
+	for _, s := range list {
+		if s == want {
 			return true
 		}
 	}

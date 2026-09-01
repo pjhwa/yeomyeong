@@ -278,6 +278,13 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	if _, ok := w.Objects.FindInRoom("dalbitgol:market", "신문"); !ok {
 		t.Fatal("market newspaper object missing")
 	}
+	pack, ok := w.Objects.FindInRoom("dalbitgol:warehouse", "짐")
+	if !ok || pack.ID != "gangpo-pack" {
+		t.Fatalf("warehouse pack: %+v %v", pack, ok)
+	}
+	if !strings.Contains(pack.Description.KO, "한벽일보") || strings.TrimSpace(pack.AfterExamine.KO) == "" {
+		t.Fatalf("warehouse pack clue: %+v", pack)
+	}
 }
 
 func TestNoHardcodedRooms(t *testing.T) {
@@ -310,6 +317,9 @@ func TestLoadStoryYAML(t *testing.T) {
 	o, ok := w.Objects.FindInRoom("test:yard", "신문")
 	if !ok || !strings.Contains(o.Description.KO, "활자") || !strings.Contains(o.Description.KO, "한벽일보") {
 		t.Fatalf("paper: %+v %v", o, ok)
+	}
+	if !strings.Contains(o.AfterExamine.KO, "사다리") {
+		t.Fatalf("after_examine: %+v", o)
 	}
 }
 

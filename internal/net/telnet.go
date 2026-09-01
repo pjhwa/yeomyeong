@@ -560,6 +560,9 @@ func formatRoom(e engine.Room) []string {
 	if len(e.NPCs) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomNPCs, strings.Join(e.NPCs, ", ")))
 	}
+	if len(e.Objects) > 0 {
+		lines = append(lines, text.T(text.Default, text.RoomObjects, strings.Join(e.Objects, ", ")))
+	}
 	if len(e.Ground) > 0 {
 		lines = append(lines, text.T(text.Default, text.RoomGround, strings.Join(e.Ground, ", ")))
 	}

@@ -398,6 +398,12 @@ func TestSplitCmdAndFormat(t *testing.T) {
 	if len(withNPC) != 3 || withNPC[2] != "사람: 청람 선생" {
 		t.Fatalf("npc line: %#v", withNPC)
 	}
+	withObj := formatRoom(engine.Room{
+		Name: "창고", Description: "짚단.", Objects: []string{"보부상 봇짐"},
+	})
+	if len(withObj) != 3 || withObj[2] != "살펴볼 것: 보부상 봇짐" {
+		t.Fatalf("object line: %#v", withObj)
+	}
 	if !isTalk("talk", "talk") || !isTalk("대화", "대화") || !isTalk("말걸다", "말걸다") {
 		t.Fatal("talk verbs")
 	}

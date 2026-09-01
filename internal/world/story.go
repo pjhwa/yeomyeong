@@ -14,6 +14,15 @@ func TalkFlag(npcID string) string {
 	return npcID + "_talked"
 }
 
+// ExaminedFlag is the per-player sheet flag set after the first after_examine
+// reaction for objectID. Description still prints on later looks.
+func ExaminedFlag(objectID string) string {
+	if objectID == "" {
+		return ""
+	}
+	return "examined:" + objectID
+}
+
 // NPC is a scripted character from content/zones/<zone>/npcs.yaml.
 type NPC struct {
 	ID         string
@@ -28,12 +37,13 @@ type NPC struct {
 
 // Object is a scenery examine target from content/zones/<zone>/objects.yaml.
 type Object struct {
-	ID          string
-	Room        string
-	Name        Localized
-	Aliases     []string
-	Description Localized
-	Foreshadow  []string
+	ID           string
+	Room         string
+	Name         Localized
+	Aliases      []string
+	Description  Localized
+	AfterExamine Localized
+	Foreshadow   []string
 }
 
 // NPCs is an immutable NPC catalog. Safe for concurrent reads after NewNPCs.

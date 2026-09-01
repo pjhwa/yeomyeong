@@ -47,6 +47,20 @@ func (l *Loop) examine(p Player, q string) {
 	if obj, ok := l.findObjectHere(p.RoomID, q); ok {
 		body := strings.TrimSpace(obj.Description.Text(text.Default))
 		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: body})
+		reaction := strings.TrimSpace(obj.AfterExamine.Text(text.Default))
+		if reaction == "" {
+			return
+		}
+		if p.Flags == nil {
+			p.Flags = map[string]int{}
+		}
+		key := yworld.ExaminedFlag(obj.ID)
+		if p.Flags[key] > 0 {
+			return
+		}
+		p.Flags[key] = 1
+		l.world.roster[p.ConnID] = p
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: reaction})
 		return
 	}
 	if l.npcs != nil {

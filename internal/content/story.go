@@ -10,12 +10,13 @@ import (
 )
 
 type yamlObject struct {
-	ID          string   `yaml:"id"`
-	Room        string   `yaml:"room"`
-	Name        loc      `yaml:"name"`
-	Aliases     []string `yaml:"aliases"`
-	Description loc      `yaml:"description"`
-	Foreshadow  []string `yaml:"foreshadow"`
+	ID           string   `yaml:"id"`
+	Room         string   `yaml:"room"`
+	Name         loc      `yaml:"name"`
+	Aliases      []string `yaml:"aliases"`
+	Description  loc      `yaml:"description"`
+	AfterExamine loc      `yaml:"after_examine"`
+	Foreshadow   []string `yaml:"foreshadow"`
 }
 
 type yamlNPC struct {
@@ -113,12 +114,13 @@ func toObject(yo yamlObject, zone string, rooms map[string]world.Room) (world.Ob
 		return world.Object{}, fmt.Errorf("object %q: %w", yo.ID, err)
 	}
 	return world.Object{
-		ID:          yo.ID,
-		Room:        yo.Room,
-		Name:        world.Localized{KO: yo.Name.KO, EN: yo.Name.EN},
-		Aliases:     aliases,
-		Description: world.Localized{KO: yo.Description.KO, EN: yo.Description.EN},
-		Foreshadow:  append([]string(nil), yo.Foreshadow...),
+		ID:           yo.ID,
+		Room:         yo.Room,
+		Name:         world.Localized{KO: yo.Name.KO, EN: yo.Name.EN},
+		Aliases:      aliases,
+		Description:  world.Localized{KO: yo.Description.KO, EN: yo.Description.EN},
+		AfterExamine: world.Localized{KO: yo.AfterExamine.KO, EN: yo.AfterExamine.EN},
+		Foreshadow:   append([]string(nil), yo.Foreshadow...),
 	}, nil
 }
 

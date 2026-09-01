@@ -433,12 +433,13 @@ func (l *Loop) sysInRoom(roomID, body string) {
 func (l *Loop) roomCard(viewer Player) Room {
 	who := l.whoElse(viewer)
 	card := Room{
-		ConnID: viewer.ConnID,
-		ID:     viewer.RoomID,
-		Exits:  map[string]string{},
-		Who:    who,
-		NPCs:   l.npcNames(viewer.RoomID),
-		Ground: l.groundNames(viewer.RoomID),
+		ConnID:  viewer.ConnID,
+		ID:      viewer.RoomID,
+		Exits:   map[string]string{},
+		Who:     who,
+		NPCs:    l.npcNames(viewer.RoomID),
+		Objects: l.objectNames(viewer.RoomID),
+		Ground:  l.groundNames(viewer.RoomID),
 	}
 	if l.catalog == nil {
 		return card
@@ -468,6 +469,21 @@ func (l *Loop) npcNames(roomID string) []string {
 		name := strings.TrimSpace(n.Name.Text(text.Default))
 		if name == "" {
 			name = n.ID
+		}
+		names = append(names, name)
+	}
+	return names
+}
+
+func (l *Loop) objectNames(roomID string) []string {
+	names := make([]string, 0)
+	if l.objects == nil {
+		return names
+	}
+	for _, o := range l.objects.InRoom(roomID) {
+		name := strings.TrimSpace(o.Name.Text(text.Default))
+		if name == "" {
+			name = o.ID
 		}
 		names = append(names, name)
 	}

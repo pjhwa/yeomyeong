@@ -333,7 +333,10 @@ func TestWSTalkAndLookTarget(t *testing.T) {
 	b.waitText(t, engine.ChannelSys, "", "처음 보는 얼굴이군.")
 
 	a.send(t, typeCmdMove, "m1", map[string]string{"dir": "north"})
-	_ = a.readType(t, typeRoom)
+	yard := decodeRoom(t, a.readType(t, typeRoom))
+	if len(yard.Objects) != 1 || yard.Objects[0] != "한벽일보" {
+		t.Fatalf("objects: %+v", yard)
+	}
 	a.send(t, typeCmdLook, "ln", map[string]string{"target": "신문"})
 	a.waitText(t, engine.ChannelSys, "", "한벽일보", "활자", "두 번")
 
@@ -538,6 +541,7 @@ type roomPayload struct {
 	Exits       map[string]string `json:"exits"`
 	Who         []string          `json:"who"`
 	NPCs        []string          `json:"npcs"`
+	Objects     []string          `json:"objects"`
 }
 
 func decodeRoom(t *testing.T, f inFrame) roomPayload {

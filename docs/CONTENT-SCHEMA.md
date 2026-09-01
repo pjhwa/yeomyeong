@@ -93,16 +93,22 @@ Scenery, not inventory. `보다 신문` matches an alias in the current room.
   description:
     ko: >
       한벽일보 한 줄에 같은 활자가 두 번 찍혀 있다.
+  after_examine:
+    ko: "바깥에서 덧문이 한 번 닫힌다."
   foreshadow: [FS-001, FS-014]
 ```
+
+Room cards list each scenery `name.ko` as `살펴볼 것:` (text key `room.objects`),
+parallel to `사람:` / `바닥:`.
 
 | Field | Required | Rules |
 |---|---|---|
 | `id` | yes | `[a-z][a-z0-9-]*`, unique across the load |
 | `room` | yes | existing room id; zone must match the directory |
-| `name` | yes | Localized. Non-empty `ko` |
+| `name` | yes | Localized. Non-empty `ko`. Shown on the room card (`살펴볼 것:`) |
 | `aliases` | no | `보다` / `look` targets. Also matches `id` and `name` |
 | `description` | yes | Localized. 2–4 sentences, ≥2 senses (style) |
+| `after_examine` | no | Localized ambient line after a successful `보다`. Korean-only OK. Empty = none. The loop prints `description` every time; this line fires once per player (`Flags["examined:<id>"]`). Not an NPC. |
 | `foreshadow` | no | existing `FS-NNN` ids |
 
 ## Scripted NPC (`content/zones/<zone>/npcs.yaml`)

@@ -83,6 +83,7 @@ const (
 	TalkMissing     = "talk.missing"
 	ExamineMissing  = "examine.missing"
 	RoomNPCs        = "room.npcs"
+	RoomObjects     = "room.objects"
 )
 
 // Sys codes for inventory (additive; WIRE-PROTOCOL M1 codes unchanged).
@@ -172,6 +173,7 @@ var catalog = map[string]entry{
 	TalkMissing:     {ko: "여기는 그 사람이 없어요."},
 	ExamineMissing:  {ko: "여기엔 그런 게 없어요."},
 	RoomNPCs:        {ko: "사람: %s"},
+	RoomObjects:     {ko: "살펴볼 것: %s"},
 }
 
 var dirKey = map[string]string{

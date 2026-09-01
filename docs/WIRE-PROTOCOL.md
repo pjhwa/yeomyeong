@@ -68,7 +68,7 @@ Password: 8–72 bytes. Empty `text` on `cmd.say` is rejected.
 | `auth.ok` | `{ "username", "session" }` | Entered the world. `session` is an opaque token (M0: unused for reconnect). |
 | `auth.err` | `{ "code", "message" }` | Create/login failed. Still at the auth gate. |
 | `text` | `{ "channel", "from", "text" }` | Player-visible line (`channel` is `say`, `sys`, or `room`) |
-| `room` | `{ "id", "name", "description", "exits", "who", "npcs"? }` | Full room card after enter, look, or a successful move. `npcs` is scripted NPC display names |
+| `room` | `{ "id", "name", "description", "exits", "who", "npcs"?, "objects"?, "ground"? }` | Full room card after enter, look, or a successful move. `npcs` is scripted NPC display names; `objects` is scenery examine names (`살펴볼 것:`) |
 | `sys` | `{ "code", "message" }` | Protocol/rate-limit/parse error |
 
 `room.exits` is a map of dir → destination **display name** (not id), so the
@@ -85,6 +85,13 @@ Telnet renders a `room` event as:
 ```
 
 (omit the `여기` line when empty; omit `출구` when there are none.)
+
+When the room has scripted NPCs or scenery examine targets, Telnet adds:
+
+```
+사람: 청람 선생
+살펴볼 것: 보부상 봇짐
+```
 
 When the room has ground items, Telnet adds:
 

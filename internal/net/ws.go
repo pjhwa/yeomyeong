@@ -645,6 +645,10 @@ func (s *wsSession) writeEvent(ev engine.Event) error {
 		if npcs == nil {
 			npcs = []string{}
 		}
+		objects := e.Objects
+		if objects == nil {
+			objects = []string{}
+		}
 		return s.writeJSON(typeRoom, "", map[string]any{
 			"id":          e.ID,
 			"name":        e.Name,
@@ -652,6 +656,7 @@ func (s *wsSession) writeEvent(ev engine.Event) error {
 			"exits":       exits,
 			"who":         who,
 			"npcs":        npcs,
+			"objects":     objects,
 			"ground":      ground,
 		})
 	case engine.Drop:

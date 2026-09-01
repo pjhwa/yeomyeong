@@ -43,6 +43,7 @@
     if (parts.length) lines.push("출구: " + parts.join(", "));
     if (p.who && p.who.length) lines.push("여기: " + p.who.join(", "));
     if (p.npcs && p.npcs.length) lines.push("사람: " + p.npcs.join(", "));
+    if (p.objects && p.objects.length) lines.push("살펴볼 것: " + p.objects.join(", "));
     if (p.ground && p.ground.length) lines.push("바닥: " + p.ground.join(", "));
     return lines.filter(Boolean).join("\n");
   }
