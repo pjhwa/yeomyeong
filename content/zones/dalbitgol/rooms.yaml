@@ -349,7 +349,7 @@
     south: dalbitgol:packing-shed
   flags: [town]
   ambient:
-    - ko: "골목 끝에서 빈 수레가 자갈을 한 번 굴리고 멈춘다."
+    - ko: "담 너머에서 광목 덮개가 바람에 한 번 펄럭인다."
   foreshadow: [FS-016]
 
 - id: dalbitgol:warehouse
@@ -538,7 +538,7 @@
     north: dalbitgol:warehouse
   flags: [town]
   ambient:
-    - ko: "빈 수레가 화물 덮개 옆에서 축을 한 번 굴린다."
+    - ko: "석탄가루가 덮개 틈에서 한 줌 떨어져 구두코에 앉는다."
 
 - id: dalbitgol:packing-shed
   name:
