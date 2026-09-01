@@ -51,6 +51,30 @@ func pickTalk(npc yworld.NPC, flags map[string]int) string {
 	return strings.TrimSpace(npc.TalkFirst.Text(text.Default))
 }
 
+// pickObjectDesc returns the first object.when line whose flag is >0, else description.
+func pickObjectDesc(obj yworld.Object, flags map[string]int) string {
+	for _, w := range obj.DescWhen {
+		if flags[w.Flag] > 0 {
+			if body := strings.TrimSpace(w.Line.Text(text.Default)); body != "" {
+				return body
+			}
+		}
+	}
+	return strings.TrimSpace(obj.Description.Text(text.Default))
+}
+
+// pickRoomDesc returns the first room.when line whose flag is >0, else description.
+func pickRoomDesc(r yworld.Room, flags map[string]int) string {
+	for _, w := range r.DescWhen {
+		if flags[w.Flag] > 0 {
+			if body := strings.TrimSpace(w.Line.Text(text.Default)); body != "" {
+				return body
+			}
+		}
+	}
+	return strings.TrimSpace(r.Description.Text(text.Default))
+}
+
 func (l *Loop) examine(p Player, q string) {
 	if npc, ok := l.findNPCHere(p.RoomID, q); ok {
 		body := strings.TrimSpace(npc.Look.Text(text.Default))
@@ -58,7 +82,7 @@ func (l *Loop) examine(p Player, q string) {
 		return
 	}
 	if obj, ok := l.findObjectHere(p.RoomID, q); ok {
-		body := strings.TrimSpace(obj.Description.Text(text.Default))
+		body := pickObjectDesc(obj, p.Flags)
 		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: body})
 		reaction := strings.TrimSpace(obj.AfterExamine.Text(text.Default))
 		if reaction == "" {

@@ -57,8 +57,15 @@ func TestGatherCraftSellPriceAndToll(t *testing.T) {
 	if qtyOf(snap.Players[0].Bag, "herb") != 1 || snap.Players[0].Nyang != yardHerb*2 {
 		t.Fatalf("sell yard nyang=%d bag=%v want %d", snap.Players[0].Nyang, snap.Players[0].Bag, yardHerb*2)
 	}
-	if !hasBody(drain(out), text.T(text.Default, text.SellOK, "쑥", "을", yardHerb*2)) {
+	sellEvs := drain(out)
+	if !hasBody(sellEvs, text.T(text.Default, text.SellOK, "쑥", "을", yardHerb*2)) {
 		t.Fatal("sell line")
+	}
+	if !hasBodyContains(sellEvs, "게시판 앞에서") || !hasBodyContains(sellEvs, "화물마당") {
+		t.Fatalf("first sale ambient: %#v", sellEvs)
+	}
+	if snap.Players[0].Flags[yworld.FirstMarketSaleFlag] != 1 {
+		t.Fatal("first_market_sale flag after sell")
 	}
 	l.Submit(Quote{ConnID: "a"})
 	_ = mustSnapshot(t, l)
@@ -80,6 +87,10 @@ func TestGatherCraftSellPriceAndToll(t *testing.T) {
 	snap = mustSnapshot(t, l)
 	if qtyOf(snap.Players[0].Bag, "herb") != 0 || snap.Players[0].Nyang != yardHerb*2+shopHerb {
 		t.Fatalf("shop sell %+v", snap.Players[0])
+	}
+	secondSell := drain(out)
+	if hasBodyContains(secondSell, "게시판 앞에서") {
+		t.Fatalf("second sell re-emitted ambient: %#v", secondSell)
 	}
 
 	// Craft nails at the forge shop.

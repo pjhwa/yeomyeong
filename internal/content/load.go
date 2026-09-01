@@ -74,6 +74,7 @@ type yamlRoom struct {
 	ID           string            `yaml:"id"`
 	Name         loc               `yaml:"name"`
 	Description  loc               `yaml:"description"`
+	When         []yamlTalkWhen    `yaml:"when"`
 	Exits        map[string]string `yaml:"exits"`
 	Flags        []string          `yaml:"flags"`
 	Market       string            `yaml:"market"`
@@ -179,10 +180,15 @@ func toRoom(yr yamlRoom, zone string) (world.Room, error) {
 	if yr.HeatModifier != nil {
 		heat = *yr.HeatModifier
 	}
+	when, err := toTalkWhen(yr.ID, yr.When)
+	if err != nil {
+		return world.Room{}, fmt.Errorf("room %q: %w", yr.ID, err)
+	}
 	return world.Room{
 		ID:           yr.ID,
 		Name:         world.Localized{KO: yr.Name.KO, EN: yr.Name.EN},
 		Description:  world.Localized{KO: yr.Description.KO, EN: yr.Description.EN},
+		DescWhen:     when,
 		Exits:        yr.Exits,
 		Flags:        yr.Flags,
 		Market:       strings.TrimSpace(yr.Market),

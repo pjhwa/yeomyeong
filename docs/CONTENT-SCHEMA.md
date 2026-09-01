@@ -109,6 +109,7 @@ parallel to `사람:` / `바닥:`.
 | `aliases` | no | `보다` / `look` targets. Also matches `id` and `name` |
 | `description` | yes | Localized. 2–4 sentences, ≥2 senses (style) |
 | `after_examine` | no | Localized ambient line after a successful `보다`. Korean-only OK. Empty = none. The loop prints `description` every time; this line fires once per player (`Flags["examined:<id>"]`). Not an NPC. |
+| `when` | no | List of `{flag, ko}` (`en` optional). On `보다`, the **first** entry whose `flag` is >0 on the sheet replaces `description` (same pick rule as `talk.when` / D-046). Empty/missing `flag` = load error. Used to keep trail examines bland until `first_market_sale`. |
 | `foreshadow` | no | existing `FS-NNN` ids |
 
 ## Scripted NPC (`content/zones/<zone>/npcs.yaml`)

@@ -274,7 +274,7 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	}
 	if n, ok := w.NPCs.Find("청람"); !ok {
 		t.Fatal("cheongram npc missing")
-	} else if len(n.TalkWhen) == 0 || n.TalkWhen[0].Flag != "examined:gangpo-pack" {
+	} else if len(n.TalkWhen) < 2 || n.TalkWhen[0].Flag != "first_market_sale" || n.TalkWhen[1].Flag != "examined:gangpo-pack" {
 		t.Fatalf("cheongram talk.when: %+v", n.TalkWhen)
 	}
 	if n, ok := w.NPCs.FindInRoom("dalbitgol:packing-shed", "오씨"); !ok || n.ID != "clerk-oh" {
@@ -290,13 +290,22 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	if !strings.Contains(pack.Description.KO, "한벽일보") || strings.TrimSpace(pack.AfterExamine.KO) == "" {
 		t.Fatalf("warehouse pack clue: %+v", pack)
 	}
+	if !strings.Contains(pack.AfterExamine.KO, "시세") || !strings.Contains(pack.AfterExamine.KO, "쑥") {
+		t.Fatalf("warehouse pack livelihood bridge: %+v", pack.AfterExamine)
+	}
 	ruts, ok := w.Objects.FindInRoom("dalbitgol:warehouse-lane", "자국")
-	if !ok || ruts.ID != "cart-ruts" || !strings.Contains(ruts.Description.KO, "화물마당") {
-		t.Fatalf("cart-ruts: %+v %v", ruts, ok)
+	if !ok || ruts.ID != "cart-ruts" || !strings.Contains(ruts.Description.KO, "흐릿") {
+		t.Fatalf("cart-ruts bland: %+v %v", ruts, ok)
+	}
+	if len(ruts.DescWhen) == 0 || ruts.DescWhen[0].Flag != "first_market_sale" || !strings.Contains(ruts.DescWhen[0].Line.KO, "화물마당") {
+		t.Fatalf("cart-ruts when: %+v", ruts.DescWhen)
 	}
 	chit, ok := w.Objects.FindInRoom("dalbitgol:packing-shed", "꼬리표")
-	if !ok || chit.ID != "cargo-chit" || !strings.Contains(chit.Description.KO, "만석상회") {
-		t.Fatalf("cargo-chit: %+v %v", chit, ok)
+	if !ok || chit.ID != "cargo-chit" || !strings.Contains(chit.Description.KO, "잘 읽히지") {
+		t.Fatalf("cargo-chit bland: %+v %v", chit, ok)
+	}
+	if len(chit.DescWhen) == 0 || chit.DescWhen[0].Flag != "first_market_sale" || !strings.Contains(chit.DescWhen[0].Line.KO, "만석상회") {
+		t.Fatalf("cargo-chit when: %+v", chit.DescWhen)
 	}
 }
 

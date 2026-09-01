@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+// FirstMarketSaleFlag is set once after a successful market sell that pays
+// nyang (D-047). Gates the Act I courier-trail soft-hook.
+const FirstMarketSaleFlag = "first_market_sale"
+
 // TalkFlag is the per-player sheet flag set after the first talk with npcID.
 func TalkFlag(npcID string) string {
 	if npcID == "" {
@@ -50,6 +54,7 @@ type Object struct {
 	Name         Localized
 	Aliases      []string
 	Description  Localized
+	DescWhen     []TalkWhen // optional flag-gated description (object.when)
 	AfterExamine Localized
 	Foreshadow   []string
 }
@@ -259,6 +264,9 @@ func cloneObject(o Object) Object {
 	out := o
 	if o.Aliases != nil {
 		out.Aliases = append([]string(nil), o.Aliases...)
+	}
+	if o.DescWhen != nil {
+		out.DescWhen = append([]TalkWhen(nil), o.DescWhen...)
 	}
 	if o.Foreshadow != nil {
 		out.Foreshadow = append([]string(nil), o.Foreshadow...)

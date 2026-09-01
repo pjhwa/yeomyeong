@@ -251,9 +251,19 @@ func (l *Loop) sell(c Sell) {
 	}
 	p.Bag = bag
 	p.Nyang += paid
+	if p.Flags == nil {
+		p.Flags = map[string]int{}
+	}
+	firstSale := p.Flags[yworld.FirstMarketSaleFlag] == 0 && (paid > 0 || p.Nyang >= 2)
+	if firstSale {
+		p.Flags[yworld.FirstMarketSaleFlag] = 1
+	}
 	l.world.roster[c.ConnID] = p
 	name := l.itemName(itemID)
 	l.sysf(p.ConnID, text.SellOK, name, text.EulReul(name), paid)
+	if firstSale {
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: "게시판 앞에서 누가 낮게 말한다. 강포 수레는 정거장 화물마당 쪽으로 갔다고, 안내문 찢긴 데를 손가락으로 짚으며."})
+	}
 	l.applyGain(&p, "haggle", true)
 	l.world.roster[c.ConnID] = p
 }

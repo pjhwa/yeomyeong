@@ -649,3 +649,23 @@ Format:
   single-writer loop implement it. Do not grow `when` into a predicate
   language in this slice. Unknown flag names are allowed (they simply
   never match until something writes that sheet key).
+
+## D-047 — First market sale gates Act I courier soft-hook
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: P0 first-session loop needs livelihood between warehouse pack
+  examine and concrete courier-trail clues. Pack examine alone opened the
+  detective path too early.
+- Decision: After a successful market `팔다` that pays nyang, set sheet flag
+  `first_market_sale` once (also acceptable if `nyang >= 2` after that sell).
+  Concrete trail object `when` lines, 청람/오씨 concrete `talk.when`, and
+  장터 board/room `when` descriptions gate on this flag. Pack examine only
+  bridges to 시세/캐다/만들다. Soft-hook durable surfaces are 청람 talk
+  third and 장터 안내문/묘사 — no 월향 NPC/YAML in this slice. Object and
+  room YAML may list optional `when` entries with the same pick rule as
+  `talk.when` (D-046).
+- Consequences: CONTENT-SCHEMA documents object/room `when`. Smoke and
+  story tests assert bland-before / concrete-after sale.
+

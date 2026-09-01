@@ -449,7 +449,7 @@ func (l *Loop) roomCard(viewer Player) Room {
 		return card
 	}
 	card.Name = strings.TrimSpace(r.Name.Text(text.Default))
-	card.Description = strings.TrimSpace(r.Description.Text(text.Default))
+	card.Description = pickRoomDesc(r, viewer.Flags)
 	for dir, destID := range r.Exits {
 		name := destID
 		if dest, ok := l.catalog.Room(destID); ok {

@@ -10,13 +10,14 @@ import (
 )
 
 type yamlObject struct {
-	ID           string   `yaml:"id"`
-	Room         string   `yaml:"room"`
-	Name         loc      `yaml:"name"`
-	Aliases      []string `yaml:"aliases"`
-	Description  loc      `yaml:"description"`
-	AfterExamine loc      `yaml:"after_examine"`
-	Foreshadow   []string `yaml:"foreshadow"`
+	ID           string         `yaml:"id"`
+	Room         string         `yaml:"room"`
+	Name         loc            `yaml:"name"`
+	Aliases      []string       `yaml:"aliases"`
+	Description  loc            `yaml:"description"`
+	When         []yamlTalkWhen `yaml:"when"`
+	AfterExamine loc            `yaml:"after_examine"`
+	Foreshadow   []string       `yaml:"foreshadow"`
 }
 
 type yamlNPC struct {
@@ -120,12 +121,17 @@ func toObject(yo yamlObject, zone string, rooms map[string]world.Room) (world.Ob
 	if err != nil {
 		return world.Object{}, fmt.Errorf("object %q: %w", yo.ID, err)
 	}
+	when, err := toTalkWhen(yo.ID, yo.When)
+	if err != nil {
+		return world.Object{}, fmt.Errorf("object %q: %w", yo.ID, err)
+	}
 	return world.Object{
 		ID:           yo.ID,
 		Room:         yo.Room,
 		Name:         world.Localized{KO: yo.Name.KO, EN: yo.Name.EN},
 		Aliases:      aliases,
 		Description:  world.Localized{KO: yo.Description.KO, EN: yo.Description.EN},
+		DescWhen:     when,
 		AfterExamine: world.Localized{KO: yo.AfterExamine.KO, EN: yo.AfterExamine.EN},
 		Foreshadow:   append([]string(nil), yo.Foreshadow...),
 	}, nil
@@ -177,7 +183,7 @@ func toNPC(yn yamlNPC, zone string, rooms map[string]world.Room) (world.NPC, err
 	}, nil
 }
 
-func toTalkWhen(npcID string, raw []yamlTalkWhen) ([]world.TalkWhen, error) {
+func toTalkWhen(id string, raw []yamlTalkWhen) ([]world.TalkWhen, error) {
 	if len(raw) == 0 {
 		return nil, nil
 	}
@@ -185,11 +191,11 @@ func toTalkWhen(npcID string, raw []yamlTalkWhen) ([]world.TalkWhen, error) {
 	for i, w := range raw {
 		flag := strings.TrimSpace(w.Flag)
 		if flag == "" {
-			return nil, fmt.Errorf("npc %q: talk.when[%d]: empty flag", npcID, i)
+			return nil, fmt.Errorf("%q: when[%d]: empty flag", id, i)
 		}
 		ko := strings.TrimSpace(w.KO)
 		if ko == "" {
-			return nil, fmt.Errorf("npc %q: talk.when[%d]: ko is required", npcID, i)
+			return nil, fmt.Errorf("%q: when[%d]: ko is required", id, i)
 		}
 		out = append(out, world.TalkWhen{
 			Flag: flag,
