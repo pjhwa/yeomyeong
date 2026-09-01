@@ -309,3 +309,45 @@ type errNotIntT struct{}
 func (errNotIntT) Error() string { return "not int" }
 
 var errNotInt errNotIntT
+
+
+func TestFirstMarketSaleFlagOnce(t *testing.T) {
+	l := startLivelihood(t, skill.Always)
+	out := mustAttach(t, l, "a")
+	l.Submit(EnterWorld{ConnID: "a", AccountID: "1", Username: "갑", Session: "s"})
+	l.Submit(Gather{ConnID: "a", Skill: "캐다"})
+	l.Submit(Gather{ConnID: "a", Query: "쑥"})
+	l.Submit(Gather{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+
+	// Fixture: market is on the yard north of spawn (see TestGatherCraftSellPriceAndToll).
+	l.Submit(Move{ConnID: "a", Dir: "north"})
+	_ = mustSnapshot(t, l)
+	drain(out)
+
+	l.Submit(Sell{ConnID: "a", Query: "쑥", Qty: 1})
+	snap := mustSnapshot(t, l)
+	evs := drain(out)
+	if snap.Players[0].Nyang < 1 {
+		t.Fatalf("sell failed bag=%v nyang=%d evs=%#v", snap.Players[0].Bag, snap.Players[0].Nyang, evs)
+	}
+	if snap.Players[0].Flags[yworld.FirstMarketSaleFlag] != 1 {
+		t.Fatalf("first_market_sale not set flags=%v", snap.Players[0].Flags)
+	}
+	if !hasBodyContains(evs, "강포") || !hasBodyContains(evs, "게시판") {
+		t.Fatalf("first sale rumor: %#v", evs)
+	}
+
+	l.Submit(Sell{ConnID: "a", Query: "쑥", Qty: 1})
+	_ = mustSnapshot(t, l)
+	second := drain(out)
+	for _, ev := range second {
+		if tx, ok := ev.(Text); ok && strings.Contains(tx.Body, "마지막으로 게시판") {
+			t.Fatalf("second sell re-emitted rumor: %#v", second)
+		}
+	}
+	if mustSnapshot(t, l).Players[0].Flags[yworld.FirstMarketSaleFlag] != 1 {
+		t.Fatal("flag cleared")
+	}
+}

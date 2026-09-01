@@ -35,3 +35,9 @@ func TestTalkFlagAndMatch(t *testing.T) {
 		t.Fatal("dup object")
 	}
 }
+
+func TestFirstMarketSaleFlag(t *testing.T) {
+	if FirstMarketSaleFlag != "first_market_sale" {
+		t.Fatalf("%q", FirstMarketSaleFlag)
+	}
+}

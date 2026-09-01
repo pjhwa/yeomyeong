@@ -251,9 +251,19 @@ func (l *Loop) sell(c Sell) {
 	}
 	p.Bag = bag
 	p.Nyang += paid
+	if p.Flags == nil {
+		p.Flags = map[string]int{}
+	}
+	firstSale := p.Flags[yworld.FirstMarketSaleFlag] == 0
+	if firstSale {
+		p.Flags[yworld.FirstMarketSaleFlag] = 1
+	}
 	l.world.roster[c.ConnID] = p
 	name := l.itemName(itemID)
 	l.sysf(p.ConnID, text.SellOK, name, text.EulReul(name), paid)
+	if firstSale {
+		l.sysf(p.ConnID, text.FirstSaleRumor)
+	}
 	l.applyGain(&p, "haggle", true)
 	l.world.roster[c.ConnID] = p
 }

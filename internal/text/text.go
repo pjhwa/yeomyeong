@@ -73,6 +73,7 @@ const (
 	SellMissing     = "sell.missing"
 	SellShort       = "sell.short"
 	SellOK          = "sell.ok"
+	FirstSaleRumor  = "sell.first_rumor"
 	BuyNone         = "buy.none"
 	BuyEmpty        = "buy.empty"
 	BuyPoor         = "buy.poor"
@@ -163,6 +164,7 @@ var catalog = map[string]entry{
 	SellMissing:     {ko: "그런 물건이 없어요."},
 	SellShort:       {ko: "그만큼은 없어요."},
 	SellOK:          {ko: "%s%s %d냥 받고 넘겼어요."},
+	FirstSaleRumor:  {ko: "좌판 쪽에서 낮은 말로, 보부상 강포가 마지막으로 게시판 앞을 서성였다더라는 이야기가 스친다."},
 	BuyNone:         {ko: "그런 물건은 안 팔아요."},
 	BuyEmpty:        {ko: "지금은 바닥이에요."},
 	BuyPoor:         {ko: "주머니가 모자라요."},

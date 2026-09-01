@@ -627,3 +627,45 @@ Format:
   assert the new sentences. `엿장수 가위질`, `고시문`, `교정쇄`,
   `분견대`, `언변` as a typed verb, and remaining 문어체 in live YAML
   or Go player strings are defects.
+
+
+## D-046 — Optional `talk.when` flag gates
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: First-session soft hooks need T0 dialogue that notices sheet
+  flags (e.g. `first_market_sale`) without a quest VM. Engine talk only
+  had `first` / `second`.
+- Decision: NPC YAML may list optional `talk.when` entries. Each entry
+  is `{flag, ko}` (`en` optional). On `대화`, pick the **first** `when`
+  entry whose `flag` is present and **>0** on the player sheet;
+  otherwise keep today's first/second. Still set `{id}_talked` on the
+  first talk, even if a when-line was used. `talk.first` and
+  `talk.second` stay required. Empty or missing `when.flag` is a load
+  error. The flag string is an opaque sheet key; do not require it to
+  exist at load time.
+- Consequences: CONTENT-SCHEMA documents the field. Loader and the
+  single-writer loop implement it. Do not grow `when` into a predicate
+  language in this slice.
+
+
+## D-047 — First-session livelihood bridge + `description_when`
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: P0 first-session loop needs (1) a livelihood nudge right after
+  the warehouse pack examine and (2) a clue that survives logout after the
+  first market sale, without quest UI. Courier-trail breadcrumbs (PR #76)
+  stay orthogonal.
+- Decision: After pack examine, `after_examine` may point at 밭 `캐다` /
+  장터 `시세`/`팔다` in everyday Korean. On the first successful market
+  `팔다` that pays nyang, the loop sets sheet flag `first_market_sale`
+  once and emits a soft rumor line. Object YAML may list optional
+  `description_when` entries `{flag, ko}` (same pick rule as `talk.when`)
+  so `보다 신문` can show an altered board after that flag. 청람 may use
+  `talk.when` on the same flag. Prefer 청람 / 장터 안내문 over 월향.
+- Consequences: Reinforces FS-001 / FS-014 / FS-016. COMMISSIONER gets
+  「§첫 세션 15분」. Do not mark M3/M4 complete. Do not require the
+  courier trail for P0 acceptance.

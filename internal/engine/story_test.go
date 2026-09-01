@@ -275,8 +275,8 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 	if !hasTextContains(pack, "한벽일보") || !hasTextContains(pack, "활자") || !hasTextContains(pack, "무허가") {
 		t.Fatalf("pack newspaper echo: %#v", pack)
 	}
-	if !hasTextContains(pack, "수레 축") {
-		t.Fatalf("pack reaction: %#v", pack)
+	if !hasTextContains(pack, "쑥") || !hasTextContains(pack, "시세") {
+		t.Fatalf("pack livelihood nudge: %#v", pack)
 	}
 	if hasTextContains(pack, "월송") || hasTextContains(pack, "쇠말뚝") || hasTextContains(pack, "새벽회") {
 		t.Fatalf("leaked secret: %#v", pack)
@@ -290,7 +290,7 @@ func TestDalbitgolNewspaperAndCheongram(t *testing.T) {
 	if !hasTextContains(again, "거짓 바닥") {
 		t.Fatalf("second examine missing description: %#v", again)
 	}
-	if hasTextContains(again, "수레 축") {
+	if hasTextContains(again, "시세") {
 		t.Fatalf("second examine repeated reaction: %#v", again)
 	}
 }
@@ -353,4 +353,40 @@ func hasString(list []string, want string) bool {
 		}
 	}
 	return false
+}
+
+
+
+func TestPickTalkAndDescriptionWhen(t *testing.T) {
+	npc := yworld.NPC{
+		ID:         "cheongram",
+		TalkFirst:  yworld.Localized{KO: "처음"},
+		TalkSecond: yworld.Localized{KO: "또"},
+		TalkWhen: []yworld.TalkWhen{{
+			Flag: yworld.FirstMarketSaleFlag,
+			Line: yworld.Localized{KO: "장터에서 물건을 넘겼다고 들었네"},
+		}},
+	}
+	if got := pickTalk(npc, nil); got != "처음" {
+		t.Fatalf("first=%q", got)
+	}
+	if got := pickTalk(npc, map[string]int{yworld.TalkFlag("cheongram"): 1}); got != "또" {
+		t.Fatalf("second=%q", got)
+	}
+	if got := pickTalk(npc, map[string]int{yworld.FirstMarketSaleFlag: 1}); !strings.Contains(got, "장터에서") {
+		t.Fatalf("when=%q", got)
+	}
+	obj := yworld.Object{
+		Description: yworld.Localized{KO: "기본 게시판"},
+		DescriptionWhen: []yworld.DescWhen{{
+			Flag: yworld.FirstMarketSaleFlag,
+			Line: yworld.Localized{KO: "연필로 덧글"},
+		}},
+	}
+	if got := pickObjectDescription(obj, nil); got != "기본 게시판" {
+		t.Fatalf("base=%q", got)
+	}
+	if got := pickObjectDescription(obj, map[string]int{yworld.FirstMarketSaleFlag: 1}); !strings.Contains(got, "연필") {
+		t.Fatalf("when=%q", got)
+	}
 }

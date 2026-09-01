@@ -39,8 +39,8 @@ the world.
 |---|---|---|---|
 | `EnterWorld` | `ConnID`, `AccountID`, `Username`, `Session` | net, **after** persist auth succeeds | Insert roster entry in spawn `dalbitgol:gate` (D-028); emit seated `Sys`; emit `Room` card to the newcomer |
 | `Say` | `ConnID`, `Text` | net, only if that conn is in the roster | Emit `Text{channel:say}` to every roster conn **in the same room** (M1: say is no longer global) |
-| `Look` | `ConnID`, `Target?` | net | Empty target: emit `Room` card (NPCs, scenery names, ground). Set: examine NPC/object, emit Description `Text`; object `after_examine` emits a second sys `Text` once (`Flags["examined:<id>"]`) |
-| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First talk sets `Sheet.Flags["{id}_talked"]`; later talks use the memory line |
+| `Look` | `ConnID`, `Target?` | net | Empty target: emit `Room` card (NPCs, scenery names, ground). Set: examine NPC/object, emit Description `Text` (or first matching `description_when`); object `after_examine` emits a second sys `Text` once (`Flags["examined:<id>"]`) |
+| `Talk` | `ConnID`, `NPC` | net | Scripted YAML talk. First matching `talk.when` (flag >0) wins; else first/second. First talk sets `Sheet.Flags["{id}_talked"]` even if a when-line was used (D-046) |
 | `Move` | `ConnID`, `Dir` | net | If exit exists, set `RoomID`, emit `Room` to mover. Else emit `Sys` `no_exit` |
 | `Practice` | `ConnID`, `SkillID` | net | GAMEPLAY roll; loop writes new ranks/stats; emit Text |
 | `Get` | `ConnID`, `ItemID` | net | Move one ground stack into bag if weight allows |
@@ -50,7 +50,7 @@ the world.
 | `Sheet` | `ConnID` | net | Emit skills/title/stats/inv/purse text |
 | `Gather` | `ConnID`, `Query`, `Skill` | net | Harvest a YAML node; write bag + forage rank |
 | `Craft` | `ConnID`, `Query` | net | Consume a YAML recipe; write bag + craft rank |
-| `Sell` / `Buy` | `ConnID`, `Query`, `Qty` | net | Trade at the room's `market` slug; write nyang + stock |
+| `Sell` / `Buy` | `ConnID`, `Query`, `Qty` | net | Trade at the room's `market` slug; write nyang + stock. First successful `Sell` sets `Flags["first_market_sale"]` once and emits a soft rumor `Text` (D-047) |
 | `Quote` | `ConnID` | net | Emit current stall prices |
 | `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Persist sheet; delete roster; emit `Sys` to remaining **in that room** |
 

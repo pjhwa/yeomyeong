@@ -108,7 +108,8 @@ parallel to `사람:` / `바닥:`.
 | `name` | yes | Localized. Non-empty `ko`. Shown on the room card (`살펴볼 것:`) |
 | `aliases` | no | `보다` / `look` targets. Also matches `id` and `name` |
 | `description` | yes | Localized. 2–4 sentences, ≥2 senses (style) |
-| `after_examine` | no | Localized ambient line after a successful `보다`. Korean-only OK. Empty = none. The loop prints `description` every time; this line fires once per player (`Flags["examined:<id>"]`). Not an NPC. |
+| `after_examine` | no | Localized ambient line after a successful `보다`. Korean-only OK. Empty = none. The loop prints `description` (or a matching `description_when`) every time; this line fires once per player (`Flags["examined:<id>"]`). Not an NPC. |
+| `description_when` | no | List of `{flag, ko}` (`en` optional). On `보다`, the **first** entry whose `flag` is >0 on the player sheet replaces `description` (D-047). Empty/missing `flag` = load error. |
 | `foreshadow` | no | existing `FS-NNN` ids |
 
 ## Scripted NPC (`content/zones/<zone>/npcs.yaml`)
@@ -124,6 +125,9 @@ T0 YAML dialogue. Not LLM. `대화 청람` / `talk 청람` / `말걸다`.
   talk:
     first: { ko: "처음 보는 얼굴이군, 자네." }
     second: { ko: "또 왔군, 자네." }
+    when:
+      - flag: first_market_sale
+        ko: "장터에서 물건을 넘겼다고 들었네, 자네."
   foreshadow: [FS-016]
 ```
 
@@ -135,6 +139,7 @@ T0 YAML dialogue. Not LLM. `대화 청람` / `talk 청람` / `말걸다`.
 | `aliases` | yes | at least one. `대화` / `보다` targets |
 | `look` | yes | `보다 <alias>` blurb |
 | `talk.first` / `talk.second` | yes | Korean. Second line is for a player who already talked |
+| `talk.when` | no | List of `{flag, ko}` (`en` optional). On `대화`, the **first** entry whose `flag` is >0 on the player sheet wins over first/second (D-046). Empty/missing `flag` = load error. Flag is an opaque sheet key. first/second stay required. |
 | `foreshadow` | no | existing `FS-NNN` ids |
 
 Unknown NPC: `여기는 그 사람이 없어요.`

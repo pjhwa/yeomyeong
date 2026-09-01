@@ -10,13 +10,14 @@ import (
 )
 
 type yamlObject struct {
-	ID           string   `yaml:"id"`
-	Room         string   `yaml:"room"`
-	Name         loc      `yaml:"name"`
-	Aliases      []string `yaml:"aliases"`
-	Description  loc      `yaml:"description"`
-	AfterExamine loc      `yaml:"after_examine"`
-	Foreshadow   []string `yaml:"foreshadow"`
+	ID              string        `yaml:"id"`
+	Room            string        `yaml:"room"`
+	Name            loc           `yaml:"name"`
+	Aliases         []string      `yaml:"aliases"`
+	Description     loc           `yaml:"description"`
+	DescriptionWhen []yamlDescWhen `yaml:"description_when"`
+	AfterExamine    loc           `yaml:"after_examine"`
+	Foreshadow      []string      `yaml:"foreshadow"`
 }
 
 type yamlNPC struct {
@@ -30,8 +31,21 @@ type yamlNPC struct {
 }
 
 type yamlTalk struct {
-	First  loc `yaml:"first"`
-	Second loc `yaml:"second"`
+	First  loc            `yaml:"first"`
+	Second loc            `yaml:"second"`
+	When   []yamlTalkWhen `yaml:"when"`
+}
+
+type yamlTalkWhen struct {
+	Flag string `yaml:"flag"`
+	KO   string `yaml:"ko"`
+	EN   string `yaml:"en"`
+}
+
+type yamlDescWhen struct {
+	Flag string `yaml:"flag"`
+	KO   string `yaml:"ko"`
+	EN   string `yaml:"en"`
 }
 
 func loadObjects(root string, rooms map[string]world.Room) ([]world.Object, error) {
@@ -113,14 +127,19 @@ func toObject(yo yamlObject, zone string, rooms map[string]world.Room) (world.Ob
 	if err != nil {
 		return world.Object{}, fmt.Errorf("object %q: %w", yo.ID, err)
 	}
+	when, err := toDescWhen(yo.ID, yo.DescriptionWhen)
+	if err != nil {
+		return world.Object{}, err
+	}
 	return world.Object{
-		ID:           yo.ID,
-		Room:         yo.Room,
-		Name:         world.Localized{KO: yo.Name.KO, EN: yo.Name.EN},
-		Aliases:      aliases,
-		Description:  world.Localized{KO: yo.Description.KO, EN: yo.Description.EN},
-		AfterExamine: world.Localized{KO: yo.AfterExamine.KO, EN: yo.AfterExamine.EN},
-		Foreshadow:   append([]string(nil), yo.Foreshadow...),
+		ID:              yo.ID,
+		Room:            yo.Room,
+		Name:            world.Localized{KO: yo.Name.KO, EN: yo.Name.EN},
+		Aliases:         aliases,
+		Description:     world.Localized{KO: yo.Description.KO, EN: yo.Description.EN},
+		DescriptionWhen: when,
+		AfterExamine:    world.Localized{KO: yo.AfterExamine.KO, EN: yo.AfterExamine.EN},
+		Foreshadow:      append([]string(nil), yo.Foreshadow...),
 	}, nil
 }
 
@@ -153,6 +172,10 @@ func toNPC(yn yamlNPC, zone string, rooms map[string]world.Room) (world.NPC, err
 	if len(aliases) == 0 {
 		return world.NPC{}, fmt.Errorf("npc %q: aliases required", yn.ID)
 	}
+	when, err := toTalkWhen(yn.ID, yn.Talk.When)
+	if err != nil {
+		return world.NPC{}, err
+	}
 	return world.NPC{
 		ID:         yn.ID,
 		Room:       yn.Room,
@@ -161,6 +184,7 @@ func toNPC(yn yamlNPC, zone string, rooms map[string]world.Room) (world.NPC, err
 		Look:       world.Localized{KO: yn.Look.KO, EN: yn.Look.EN},
 		TalkFirst:  world.Localized{KO: yn.Talk.First.KO, EN: yn.Talk.First.EN},
 		TalkSecond: world.Localized{KO: yn.Talk.Second.KO, EN: yn.Talk.Second.EN},
+		TalkWhen:   when,
 		Foreshadow: append([]string(nil), yn.Foreshadow...),
 	}, nil
 }
@@ -178,6 +202,51 @@ func cleanAliases(in []string) ([]string, error) {
 		}
 		seen[a] = struct{}{}
 		out = append(out, a)
+	}
+	return out, nil
+}
+
+
+func toTalkWhen(npcID string, raw []yamlTalkWhen) ([]world.TalkWhen, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	out := make([]world.TalkWhen, 0, len(raw))
+	for i, w := range raw {
+		flag := strings.TrimSpace(w.Flag)
+		if flag == "" {
+			return nil, fmt.Errorf("npc %q: talk.when[%d]: empty flag", npcID, i)
+		}
+		ko := strings.TrimSpace(w.KO)
+		if ko == "" {
+			return nil, fmt.Errorf("npc %q: talk.when[%d]: ko is required", npcID, i)
+		}
+		out = append(out, world.TalkWhen{
+			Flag: flag,
+			Line: world.Localized{KO: ko, EN: strings.TrimSpace(w.EN)},
+		})
+	}
+	return out, nil
+}
+
+func toDescWhen(objectID string, raw []yamlDescWhen) ([]world.DescWhen, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+	out := make([]world.DescWhen, 0, len(raw))
+	for i, w := range raw {
+		flag := strings.TrimSpace(w.Flag)
+		if flag == "" {
+			return nil, fmt.Errorf("object %q: description_when[%d]: empty flag", objectID, i)
+		}
+		ko := strings.TrimSpace(w.KO)
+		if ko == "" {
+			return nil, fmt.Errorf("object %q: description_when[%d]: ko is required", objectID, i)
+		}
+		out = append(out, world.DescWhen{
+			Flag: flag,
+			Line: world.Localized{KO: ko, EN: strings.TrimSpace(w.EN)},
+		})
 	}
 	return out, nil
 }

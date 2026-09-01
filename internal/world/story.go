@@ -23,6 +23,23 @@ func ExaminedFlag(objectID string) string {
 	return "examined:" + objectID
 }
 
+// FirstMarketSaleFlag is set once after the player's first successful market sell.
+const FirstMarketSaleFlag = "first_market_sale"
+
+// TalkWhen is one optional flag-gated talk line (D-046). Flag is an opaque
+// sheet key; the loop picks the first entry whose Flags[Flag] > 0.
+type TalkWhen struct {
+	Flag string
+	Line Localized
+}
+
+// DescWhen is one optional flag-gated object description (D-047). Same pick
+// rule as TalkWhen: first matching flag >0 wins over the base Description.
+type DescWhen struct {
+	Flag string
+	Line Localized
+}
+
 // NPC is a scripted character from content/zones/<zone>/npcs.yaml.
 type NPC struct {
 	ID         string
@@ -32,18 +49,20 @@ type NPC struct {
 	Look       Localized
 	TalkFirst  Localized
 	TalkSecond Localized
+	TalkWhen   []TalkWhen
 	Foreshadow []string
 }
 
 // Object is a scenery examine target from content/zones/<zone>/objects.yaml.
 type Object struct {
-	ID           string
-	Room         string
-	Name         Localized
-	Aliases      []string
-	Description  Localized
-	AfterExamine Localized
-	Foreshadow   []string
+	ID             string
+	Room           string
+	Name           Localized
+	Aliases        []string
+	Description    Localized
+	DescriptionWhen []DescWhen
+	AfterExamine   Localized
+	Foreshadow     []string
 }
 
 // NPCs is an immutable NPC catalog. Safe for concurrent reads after NewNPCs.
@@ -238,6 +257,9 @@ func cloneNPC(n NPC) NPC {
 	if n.Aliases != nil {
 		out.Aliases = append([]string(nil), n.Aliases...)
 	}
+	if n.TalkWhen != nil {
+		out.TalkWhen = append([]TalkWhen(nil), n.TalkWhen...)
+	}
 	if n.Foreshadow != nil {
 		out.Foreshadow = append([]string(nil), n.Foreshadow...)
 	}
@@ -248,6 +270,9 @@ func cloneObject(o Object) Object {
 	out := o
 	if o.Aliases != nil {
 		out.Aliases = append([]string(nil), o.Aliases...)
+	}
+	if o.DescriptionWhen != nil {
+		out.DescriptionWhen = append([]DescWhen(nil), o.DescriptionWhen...)
 	}
 	if o.Foreshadow != nil {
 		out.Foreshadow = append([]string(nil), o.Foreshadow...)

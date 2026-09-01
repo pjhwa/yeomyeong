@@ -399,3 +399,60 @@ func stacksOf(piles []world.Stack, id string) int {
 	}
 	return 0
 }
+
+
+func TestLoadTalkWhenAndDescriptionWhen(t *testing.T) {
+	root := writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", ""+
+		"- id: tutor\n"+
+		"  room: test:start\n"+
+		"  name: 훈장\n"+
+		"  aliases: [훈장]\n"+
+		"  look: 코트.\n"+
+		"  talk:\n"+
+		"    first: 처음.\n"+
+		"    second: 또.\n"+
+		"    when:\n"+
+		"      - flag: first_market_sale\n"+
+		"        ko: 장터에서 넘겼군.\n")
+	writeStoryFile(t, root, "objects.yaml", ""+
+		"- id: test-paper\n"+
+		"  room: test:start\n"+
+		"  name: 신문\n"+
+		"  aliases: [신문]\n"+
+		"  description: 기본.\n"+
+		"  description_when:\n"+
+		"    - flag: first_market_sale\n"+
+		"      ko: 덧글이 있다.\n")
+	w, err := LoadWorld(root, "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	n, ok := w.NPCs.Find("훈장")
+	if !ok || len(n.TalkWhen) != 1 || n.TalkWhen[0].Flag != "first_market_sale" {
+		t.Fatalf("talk.when: %+v", n)
+	}
+	o, ok := w.Objects.FindInRoom("test:start", "신문")
+	if !ok || len(o.DescriptionWhen) != 1 || !strings.Contains(o.DescriptionWhen[0].Line.KO, "덧글") {
+		t.Fatalf("description_when: %+v", o)
+	}
+}
+
+func TestLoadTalkWhenEmptyFlag(t *testing.T) {
+	root := writeZone(t, minRoom(""))
+	writeStoryFile(t, root, "npcs.yaml", ""+
+		"- id: ghost\n"+
+		"  room: test:start\n"+
+		"  name: 사람\n"+
+		"  aliases: [사람]\n"+
+		"  look: 코트.\n"+
+		"  talk:\n"+
+		"    first: 안녕.\n"+
+		"    second: 또.\n"+
+		"    when:\n"+
+		"      - flag: \"\"\n"+
+		"        ko: 빈 깃발.\n")
+	if _, err := LoadWorld(root, "test:start"); err == nil || !strings.Contains(err.Error(), "empty flag") {
+		t.Fatalf("want empty flag error: %v", err)
+	}
+}
