@@ -153,6 +153,11 @@ Unknown NPC: `여기는 그 사람이 없어요.`
   slot: main_hand          # none | main_hand | body
   skills: [smith]          # practice bonus tags
   weight: 2
+- id: leaflet
+  name: { ko: "전단" }
+  description: { ko: "활자가 조금 기운 전단이다." }
+  weight: 1
+  contraband: true         # checkpoint hide target (D-048)
 ```
 
 | Field | Required | Rules |
@@ -162,6 +167,7 @@ Unknown NPC: `여기는 그 사람이 없어요.`
 | `slot` | no | default `none` (not wearable) |
 | `skills` | no | skill ids from SKILL-TABLE |
 | `weight` | no | integer ≥ 0, default 1. Bag cap is **20** weight |
+| `contraband` | no | bool, default false. Checkpoint `숨기다`/`감추다` target (D-048) |
 
 ## Zone spawns (`content/zones/<zone>/spawns.yaml`)
 
@@ -244,7 +250,7 @@ Player verbs are the skill's YAML `verbs` (`캐다`, `줍다`). Empty node → w
 
 At least two markets so the same good can quote differently. Selling raises stock (price eases); buying lowers it. Tick walks stock one step toward `target`.
 
-Rooms with flag `checkpoint` may take a toll when a player walks in carrying **4+** units of market goods (D-044).
+Rooms with flag `checkpoint` may take a toll when a player walks in carrying **4+** units of market goods (D-044). At a checkpoint, `숨기다`/`감추다` can conceal `contraband` items (D-048); success sets `dawn_scent` and one `smuggle_pass` that skips the next toll.
 
 ## Graph rules
 

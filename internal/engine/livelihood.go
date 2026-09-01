@@ -254,6 +254,11 @@ func (l *Loop) sell(c Sell) {
 	if p.Flags == nil {
 		p.Flags = map[string]int{}
 	}
+	if itemID == "leaflet" && p.Flags[yworld.DawnScentFlag] > 0 && p.Flags[yworld.LeafletDawnBonusFlag] == 0 {
+		p.Nyang += LeafletDawnBonus
+		paid += LeafletDawnBonus
+		p.Flags[yworld.LeafletDawnBonusFlag] = 1
+	}
 	firstSale := p.Flags[yworld.FirstMarketSaleFlag] == 0 && (paid > 0 || p.Nyang >= 2)
 	if firstSale {
 		p.Flags[yworld.FirstMarketSaleFlag] = 1
@@ -326,6 +331,10 @@ func (l *Loop) maybeToll(p *Player, dest string) string {
 	if !ok || !hasFlag(r.Flags, "checkpoint") {
 		return ""
 	}
+	if p.Flags != nil && p.Flags[yworld.SmugglePassFlag] > 0 {
+		p.Flags[yworld.SmugglePassFlag] = 0
+		return ""
+	}
 	if l.tradeQty(*p) < TradeBulk {
 		return ""
 	}
@@ -351,6 +360,120 @@ func (l *Loop) maybeToll(p *Player, dest string) string {
 	p.Bag = bag
 	name := l.itemName(id)
 	return text.T(text.Default, text.TollTake, name, text.EulReul(name))
+}
+
+func (l *Loop) hide(c Hide) {
+	p, ok := l.world.roster[c.ConnID]
+	if !ok {
+		return
+	}
+	if !hasFlag(l.roomFlags(p.RoomID), "checkpoint") {
+		l.sys(p.ConnID, text.HideNone, text.CodeNoHide)
+		return
+	}
+	itemID := l.resolveContraband(c.Query, p.Bag)
+	if itemID == "" {
+		l.sys(p.ConnID, text.HideNeed, text.CodeNeedMat)
+		return
+	}
+	rng := l.rng
+	if rng == nil {
+		rng = skill.DefaultRand
+	}
+	chance := l.smuggleChance(p)
+	if rng() < chance {
+		if p.Flags == nil {
+			p.Flags = map[string]int{}
+		}
+		p.Flags[yworld.SmuggleSuccessCountFlag]++
+		p.Flags[yworld.DawnScentFlag] = 1
+		p.Flags[yworld.SmugglePassFlag] = 1
+		l.world.roster[c.ConnID] = p
+		name := l.itemName(itemID)
+		l.sysf(p.ConnID, text.HideOK, name, text.EulReul(name))
+		l.applyGain(&p, "stealth", true)
+		l.world.roster[c.ConnID] = p
+		return
+	}
+	// Fail: confiscate one contraband, else nyang fine.
+	if bag, ok := yworld.TakeStack(p.Bag, itemID, 1); ok {
+		p.Bag = bag
+		l.world.roster[c.ConnID] = p
+		name := l.itemName(itemID)
+		l.sysf(p.ConnID, text.HideFailTake, name, text.EulReul(name))
+		l.applyGain(&p, "stealth", false)
+		l.world.roster[c.ConnID] = p
+		return
+	}
+	fine := SmuggleFineNyang
+	if p.Nyang > 0 && p.Nyang < fine {
+		fine = p.Nyang
+	}
+	if fine > 0 && p.Nyang >= fine {
+		p.Nyang -= fine
+		l.world.roster[c.ConnID] = p
+		l.sysf(p.ConnID, text.HideFailFine, fine)
+	} else {
+		l.world.roster[c.ConnID] = p
+		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: "검문이 눈치를 채더니 가방을 한참 뒤졌어요. 다행히 집을 빼앗기진 않았어요."})
+	}
+	l.applyGain(&p, "stealth", false)
+	l.world.roster[c.ConnID] = p
+}
+
+func (l *Loop) smuggleChance(p Player) float64 {
+	chance := 0.50
+	if l.skills != nil {
+		sheet := l.skills.Bind(p.Skills, p.Stats)
+		chance += 0.04 * float64(sheet.Rank("stealth"))
+	}
+	n := 0
+	for _, s := range p.Bag {
+		n += s.Qty
+	}
+	if n > 12 {
+		n = 12
+	}
+	chance -= 0.02 * float64(n)
+	if chance < 0.20 {
+		return 0.20
+	}
+	if chance > 0.90 {
+		return 0.90
+	}
+	return chance
+}
+
+func (l *Loop) resolveContraband(query string, bag []yworld.Stack) string {
+	q := strings.TrimSpace(query)
+	if q != "" {
+		id := l.resolveItemID(q, bag)
+		if id == "" {
+			return ""
+		}
+		if !l.itemContraband(id) || qtyOfBag(bag, id) < 1 {
+			return ""
+		}
+		return id
+	}
+	return l.firstContraband(bag)
+}
+
+func (l *Loop) firstContraband(bag []yworld.Stack) string {
+	for _, s := range bag {
+		if s.Qty > 0 && l.itemContraband(s.ID) {
+			return s.ID
+		}
+	}
+	return ""
+}
+
+func (l *Loop) itemContraband(id string) bool {
+	if l.items == nil || id == "" {
+		return false
+	}
+	it, ok := l.items.Get(id)
+	return ok && it.Contraband
 }
 
 func (l *Loop) tradeQty(p Player) int {

@@ -4,9 +4,11 @@
     - {id: herb, base: 10, stock: 10, target: 10, demand: 1.0}
     - {id: nail, base: 10, stock: 6, target: 8, demand: 1.2}
     - {id: ore, base: 4, stock: 8, target: 8, demand: 1.0}
+    - {id: leaflet, base: 5, stock: 4, target: 6, demand: 1.4}
 - id: test-east
   name: 가게 장터
   goods:
     - {id: herb, base: 10, stock: 3, target: 6, demand: 1.6}
     - {id: nail, base: 10, stock: 2, target: 5, demand: 1.7}
     - {id: ore, base: 4, stock: 12, target: 10, demand: 0.6}
+    - {id: leaflet, base: 5, stock: 8, target: 8, demand: 0.7}

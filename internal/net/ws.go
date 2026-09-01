@@ -43,6 +43,7 @@ const (
 	typeCmdSell     = "cmd.sell"
 	typeCmdBuy      = "cmd.buy"
 	typeCmdQuote    = "cmd.quote"
+	typeCmdHide     = "cmd.hide"
 	typeCmdTalk     = "cmd.talk"
 	typeCmdQuit     = "cmd.quit"
 	typeAuthOK      = "auth.ok"
@@ -263,7 +264,7 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 	switch f.Type {
 	case typeAuthCreate, typeAuthLogin, typeCmdSay, typeCmdLook, typeCmdMove, typeCmdQuit,
 		typeCmdPractice, typeCmdSkills, typeCmdInv, typeCmdGet, typeCmdDrop, typeCmdEquip, typeCmdUnequip,
-		typeCmdGather, typeCmdCraft, typeCmdSell, typeCmdBuy, typeCmdQuote, typeCmdTalk:
+		typeCmdGather, typeCmdCraft, typeCmdSell, typeCmdBuy, typeCmdQuote, typeCmdHide, typeCmdTalk:
 		if !s.lim.allow(time.Now()) {
 			return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 		}
@@ -303,6 +304,8 @@ func (s *wsSession) handleFrame(ctx context.Context, data []byte) error {
 		return s.doTrade(f, false)
 	case typeCmdQuote:
 		return s.doQuote(f)
+	case typeCmdHide:
+		return s.doHide(f)
 	case typeCmdTalk:
 		return s.doTalk(f)
 	case typeCmdQuit:
@@ -568,6 +571,25 @@ func (s *wsSession) doQuote(f inFrame) error {
 		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
 	}
 	if !s.loop.Submit(engine.Quote{ConnID: s.id}) {
+		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
+	}
+	return nil
+}
+
+func (s *wsSession) doHide(f inFrame) error {
+	if !s.authed {
+		return s.writeSys(f.ID, codeNotAuth, codeNotAuth)
+	}
+	var p struct {
+		Query string `json:"query"`
+		Item  string `json:"item"`
+	}
+	_ = decodePayload(f.Payload, &p)
+	q := strings.TrimSpace(p.Query)
+	if q == "" {
+		q = strings.TrimSpace(p.Item)
+	}
+	if !s.loop.Submit(engine.Hide{ConnID: s.id, Query: q}) {
 		return s.writeSys(f.ID, codeRateLimited, codeRateLimited)
 	}
 	return nil

@@ -80,6 +80,11 @@ const (
 	BuyHeavy        = "buy.heavy"
 	TollPay         = "toll.pay"
 	TollTake        = "toll.take"
+	HideNone        = "hide.none"
+	HideNeed        = "hide.need"
+	HideOK          = "hide.ok"
+	HideFailTake    = "hide.fail_take"
+	HideFailFine    = "hide.fail_fine"
 	TalkMissing     = "talk.missing"
 	ExamineMissing  = "examine.missing"
 	RoomNPCs        = "room.npcs"
@@ -99,6 +104,7 @@ const (
 	CodeNoNode      = "no_node"
 	CodeNoRecipe    = "no_recipe"
 	CodeNeedMat     = "need_mat"
+	CodeNoHide      = "no_hide"
 )
 
 type entry struct {
@@ -170,6 +176,11 @@ var catalog = map[string]entry{
 	BuyHeavy:        {ko: "너무 무거워서 살 수 없어요."},
 	TollPay:         {ko: "검문에서 짐을 보더니 통행세 %d냥을 받아 갔어요."},
 	TollTake:        {ko: "검문에서 짐을 보더니 %s%s 놓고 가라고 했어요."},
+	HideNone:        {ko: "여기는 숨을 곳이 없어요."},
+	HideNeed:        {ko: "가방에 감출 민감한 짐이 없어요."},
+	HideOK:          {ko: "%s%s 자루 밑에 넣었어요. 검문이 그냥 보내 줬어요."},
+	HideFailTake:    {ko: "검문이 가방을 뒤지더니 %s%s 빼앗아 갔어요."},
+	HideFailFine:    {ko: "검문이 눈치를 채더니 벌금 %d냥을 받아 갔어요."},
 	TalkMissing:     {ko: "여기는 그 사람이 없어요."},
 	ExamineMissing:  {ko: "여기엔 그런 게 없어요."},
 	RoomNPCs:        {ko: "사람: %s"},

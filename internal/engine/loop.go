@@ -34,6 +34,10 @@ const (
 	TollNyang = 2
 	// TollChance is P(stop) when carrying bulk into a checkpoint room.
 	TollChance = 0.35
+	// SmuggleFineNyang is the checkpoint fine when hide fails and nothing to confiscate.
+	SmuggleFineNyang = 3
+	// LeafletDawnBonus is the one-time extra nyang when selling leaflet after dawn_scent.
+	LeafletDawnBonus = 2
 	// MarketTickEvery is game ticks between NPC stock drift (10 × 100ms).
 	MarketTickEvery = 10
 )
@@ -304,6 +308,8 @@ func (l *Loop) handle(cmd Command) {
 		l.buy(c)
 	case Quote:
 		l.quote(c)
+	case Hide:
+		l.hide(c)
 	case attachReq:
 		c.resp <- l.ensureOut(c.id)
 	case detachReq:

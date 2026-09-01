@@ -52,6 +52,7 @@ the world.
 | `Craft` | `ConnID`, `Query` | net | Consume a YAML recipe; write bag + craft rank |
 | `Sell` / `Buy` | `ConnID`, `Query`, `Qty` | net | Trade at the room's `market` slug; write nyang + stock |
 | `Quote` | `ConnID` | net | Emit current stall prices |
+| `Hide` | `ConnID`, `Query?` | net | At `checkpoint` with contraband: stealth-flavored conceal. Success sets `dawn_scent` / `smuggle_pass`; fail confiscates one unit or fines 냥 (D-048) |
 | `LeaveWorld` | `ConnID` | net, on `quit` or disconnect | Persist sheet; delete roster; emit `Sys` to remaining **in that room** |
 
 Auth create/login is **not** a loop command. Hashing and store I/O run in

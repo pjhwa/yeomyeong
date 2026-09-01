@@ -36,3 +36,10 @@
   slot: main_hand
   skills: [smith]
   weight: 1
+
+- id: leaflet
+  name: { ko: "전단" }
+  description: { ko: "테스트용 전단이다." }
+  slot: none
+  weight: 1
+  contraband: true
