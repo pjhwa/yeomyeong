@@ -28,6 +28,7 @@ type yamlItem struct {
 	Slot        string   `yaml:"slot"`
 	Skills      []string `yaml:"skills"`
 	Weight      *int     `yaml:"weight"`
+	Contraband  bool     `yaml:"contraband"`
 }
 
 type yamlSpawn struct {
@@ -207,6 +208,7 @@ func toItem(yi yamlItem) (world.Item, error) {
 		ID: yi.ID, Name: world.Localized{KO: yi.Name.KO, EN: yi.Name.EN},
 		Description: world.Localized{KO: yi.Description.KO, EN: yi.Description.EN},
 		Slot:        slot, Skills: append([]string(nil), yi.Skills...), Weight: weight,
+		Contraband:  yi.Contraband,
 	}, nil
 }
 

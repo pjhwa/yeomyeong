@@ -121,6 +121,12 @@ type Quote struct {
 	ConnID ConnID
 }
 
+// Hide conceals contraband at a checkpoint (숨기다 / 감추다). Query is optional item id/name.
+type Hide struct {
+	ConnID ConnID
+	Query  string
+}
+
 func (EnterWorld) command() {}
 func (Say) command()        {}
 func (Look) command()       {}
@@ -138,6 +144,7 @@ func (Craft) command()      {}
 func (Sell) command()       {}
 func (Buy) command()        {}
 func (Quote) command()      {}
+func (Hide) command()       {}
 
 // Control requests served by the same queue so they observe FIFO order
 // relative to world-mutating commands. Not part of the public bus.

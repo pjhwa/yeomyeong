@@ -51,6 +51,7 @@ All client frames:
 | `cmd.sell` | `{ "item", "n"? }` | After `auth.ok`. Telnet: `팔다 쑥` / `팔다 쑥 2` |
 | `cmd.buy` | `{ "item", "n"? }` | After `auth.ok`. Telnet: `사다 쑥` |
 | `cmd.quote` | `{}` | After `auth.ok`. Telnet: `시세` |
+| `cmd.hide` | `{ "item"? }` | After `auth.ok`. Telnet: `숨기다` / `감추다` / `숨기다 전단` (D-048) |
 | `cmd.quit` | `{}` | Any time after connect |
 
 Username rules (server-enforced): 2–16 runes; Hangul syllables (`가`–`힣`),
@@ -119,6 +120,7 @@ When the room has ground items, Telnet adds:
 | `no_node` | `캐다` in a room with no gather node |
 | `no_recipe` | unknown `만들다` target, or wrong station |
 | `need_mat` | missing recipe inputs, or sell qty short |
+| `no_hide` | `숨기다` outside a checkpoint |
 
 ## Telnet — line protocol
 
@@ -175,6 +177,7 @@ After the prompt:
 | `drop <item>` / `놓다 <item>` | `Drop` |
 | `equip <item>` / `들다 <item>` | `Equip` |
 | `unequip <slot>` / `벗다 <slot>` | `Unequip` |
+| `hide` / `숨기다` / `감추다` [`item`] | `Hide` (checkpoint + contraband, D-048) |
 | `quit` / `종료` | `Quit` (close after a farewell line) |
 | empty line | ignore |
 | anything else | `sys` equivalent: keyed `cmd.unknown` (`무슨 말인지 모르겠어요. 보다, 종료`) |

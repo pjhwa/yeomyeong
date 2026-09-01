@@ -10,6 +10,19 @@ import (
 // nyang (D-047). Gates the Act I courier-trail soft-hook.
 const FirstMarketSaleFlag = "first_market_sale"
 
+// DawnScentFlag is set after a successful checkpoint smuggle (D-048).
+// Narrative soft-hook only — no reputation UI.
+const DawnScentFlag = "dawn_scent"
+
+// SmuggleSuccessCountFlag counts successful hides at checkpoints (D-048).
+const SmuggleSuccessCountFlag = "smuggle_success_count"
+
+// SmugglePassFlag grants one tax-free checkpoint entry after a successful hide.
+const SmugglePassFlag = "smuggle_pass"
+
+// LeafletDawnBonusFlag is set after the one-time leaflet sell bump from dawn_scent.
+const LeafletDawnBonusFlag = "leaflet_dawn_bonus"
+
 // TalkFlag is the per-player sheet flag set after the first talk with npcID.
 func TalkFlag(npcID string) string {
 	if npcID == "" {

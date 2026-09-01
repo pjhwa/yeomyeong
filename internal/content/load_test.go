@@ -272,9 +272,12 @@ func TestLoadRealTreeIfPresent(t *testing.T) {
 	if _, ok := w.Rooms.Room("solgol:market"); !ok {
 		t.Fatal("solgol:market missing")
 	}
+	if it, ok := w.Items.Get("leaflet"); !ok || !it.Contraband {
+		t.Fatalf("leaflet contraband: %+v %v", it, ok)
+	}
 	if n, ok := w.NPCs.Find("청람"); !ok {
 		t.Fatal("cheongram npc missing")
-	} else if len(n.TalkWhen) < 2 || n.TalkWhen[0].Flag != "first_market_sale" || n.TalkWhen[1].Flag != "examined:gangpo-pack" {
+	} else if len(n.TalkWhen) < 3 || n.TalkWhen[0].Flag != "dawn_scent" || n.TalkWhen[1].Flag != "first_market_sale" || n.TalkWhen[2].Flag != "examined:gangpo-pack" {
 		t.Fatalf("cheongram talk.when: %+v", n.TalkWhen)
 	}
 	if n, ok := w.NPCs.FindInRoom("dalbitgol:packing-shed", "오씨"); !ok || n.ID != "clerk-oh" {

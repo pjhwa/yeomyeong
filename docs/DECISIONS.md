@@ -669,3 +669,26 @@ Format:
 - Consequences: CONTENT-SCHEMA documents object/room `when`. Smoke and
   story tests assert bland-before / concrete-after sale.
 
+## D-048 — Thin smuggling slice at checkpoints
+
+- Date: 2026-09-01
+- Status: accepted
+- Decider: LEAD
+- Context: M3-SLICE-NOTES lists smuggling as the second trade loop after
+  gather-craft-market. Full heat, false-bottom carts, escorts, and
+  three-axis reputation are out of scope. P0 already opens the next
+  sentence from a market sale; P1 opens one from a successful hide.
+- Decision: Items may set `contraband: true` (전단/`leaflet`). At a
+  `checkpoint` room the player may `숨기다` / `감추다` (optional item
+  query). Success chance uses stealth rank and bag size (no combat).
+  Success: keep goods, `smuggle_success_count++`, `dawn_scent=1`,
+  `smuggle_pass=1` (one tax-free checkpoint entry; D-044 toll otherwise
+  unchanged). Fail: confiscate one contraband unit, or a small 냥 fine
+  if confiscation cannot apply. Soft reward only: 청람 `talk.when` and
+  달빛골 장터 room `when` on `dawn_scent`, plus a one-time +2냥 when
+  selling leaflet. No reputation UI, shops, heat, or new zones. Do not
+  mark the README M3 checkbox done.
+- Consequences: CONTENT-SCHEMA documents `contraband`. COMMISSIONER
+  adds a smuggle play recipe. `숨다` remains stealth practice; hide
+  verbs are separate commands.
+

@@ -35,6 +35,7 @@
   description: { ko: "활자가 조금 기운 전단이다. 잉크가 손가락에 묻을 만큼 덜 말랐다." }
   slot: none
   weight: 1
+  contraband: true
 
 - id: poultice
   name: { ko: "약첩" }

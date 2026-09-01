@@ -20,6 +20,7 @@ type Item struct {
 	Slot        string
 	Skills      []string
 	Weight      int
+	Contraband  bool
 }
 
 // Items is an immutable item catalog. Safe for concurrent reads after NewItems.

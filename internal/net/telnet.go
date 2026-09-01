@@ -454,6 +454,10 @@ func (s *session) dispatch(line string) error {
 		if !s.loop.Submit(engine.Quote{ConnID: s.id}) {
 			return s.writeLine(text.T(text.Default, text.SysRateLimit))
 		}
+	case low == "hide" || verb == "숨기다" || verb == "감추다":
+		if !s.loop.Submit(engine.Hide{ConnID: s.id, Query: rest}) {
+			return s.writeLine(text.T(text.Default, text.SysRateLimit))
+		}
 	case low == "quit" || verb == "종료":
 		if s.user != "" {
 			_ = s.writeLine(text.T(text.Default, text.SysLeave, s.user))

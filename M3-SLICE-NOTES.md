@@ -1,14 +1,15 @@
 # M3 slice notes — 여명 / YEOMYEONG
 
 This is a **vertical slice**, not PLAN.md §3.4 complete. The README M3
-checkbox stays open. Binding rulings: D-042, D-043, D-044.
+checkbox stays open. Binding rulings: D-042, D-043, D-044, D-048.
 
 ## What shipped
 
 Gather a YAML node → consume a YAML recipe → sell at a stall whose
 price moves with stock. Two markets so the same good is cheap in one
 place and dear in the other. Walking bulk through a checkpoint may
-skim a toll. No combat.
+skim a toll. A thin smuggle path (`숨기다` / `감추다` on contraband
+at checkpoints) can skip one toll and set `dawn_scent`. No combat.
 
 ## Files
 
@@ -19,8 +20,8 @@ skim a toll. No combat.
 
 **Engine / persist / net**
 
-- `internal/engine/livelihood.go` — gather, craft, quote, sell, buy, toll
-- `internal/engine/command.go` — `Gather` `Craft` `Sell` `Buy` `Quote`
+- `internal/engine/livelihood.go` — gather, craft, quote, sell, buy, toll, hide
+- `internal/engine/command.go` — `Gather` `Craft` `Sell` `Buy` `Quote` `Hide`
 - `internal/engine/loop.go` — tick regen + market drift; `WithCraft` / `WithMarkets`
 - `internal/world/sheet.go` — `Nyang`
 - `internal/persist/sheet.go`, `migrations/003_nyang.sql`
@@ -39,7 +40,7 @@ skim a toll. No combat.
 
 **Docs**
 
-- `docs/DECISIONS.md` D-042–D-044
+- `docs/DECISIONS.md` D-042–D-044, D-048
 - `docs/CONTENT-SCHEMA.md`, `docs/SKILL-TABLE.md`, `docs/EVENT-BUS.md`, `docs/WIRE-PROTOCOL.md`
 - `docs/COMMISSIONER.md` §9 play recipe (slice, not a gate close)
 
@@ -69,6 +70,7 @@ Short loop:
 | `만들다 전단` | 인쇄소 + 활자 막대 + 한지 | 전단 |
 | `만들다 약첩` | 사당(clinic) + 쑥×2 | 약첩 |
 | `시세` `팔다` `사다` | 달빛골 장터, 솔골 장터 | 냥 |
+| `숨기다` / `감추다` | 정거장·솔골 고갯길 (checkpoint) + 전단 | dawn_scent, 통행세 1회 면제 |
 
 `두드리다` is still practice only. It does not eat 쇠조각.
 
@@ -78,8 +80,8 @@ of 2냥 toll, or one unit left behind if the purse is empty.
 ## Remaining M3 gaps (not this slice)
 
 - Player shops / housing / offline stalls
-- Smuggling, double-bottom carts, Dawn Circle trust from contraband
-- Three-axis reputation (새벽회 / 제국 수배 / 상계)
+- Full smuggling (heat, double-bottom carts, escorts) — thin hide slice is in (D-048)
+- Three-axis reputation UI (새벽회 / 제국 수배 / 상계); `dawn_scent` is a flag only
 - Seasonal/weather/event shocks to prices
 - Player-to-player trade
 - Split gather skills (채광·나무 베기·약초·낚시·사냥)
@@ -88,4 +90,5 @@ of 2냥 toll, or one unit left behind if the purse is empty.
 - Hireable escorts, detours via 길 찾기
 
 M4 narrative can start; livelihood should keep running beside it. Do not
-advertise M3 as done until shops or a second trade loop (smuggling) exist.
+advertise M3 as done until shops or a fuller heat/reputation loop exist.
+Binding add-on: D-048 (thin smuggle).
