@@ -1,8 +1,11 @@
 package engine
 
 import (
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/pjhwa/yeomyeong/internal/content"
 	"github.com/pjhwa/yeomyeong/internal/skill"
 	"github.com/pjhwa/yeomyeong/internal/text"
 	yworld "github.com/pjhwa/yeomyeong/internal/world"
@@ -191,4 +194,100 @@ func TestHideFailAllowsRetry(t *testing.T) {
 	if len(drain(out)) == 0 {
 		t.Fatal("look still works after fail")
 	}
+}
+
+
+func TestDawnScentSoftHookCheongramAndMarket(t *testing.T) {
+	l, out := startDalbitgol(t)
+	l.Submit(EnterWorld{
+		ConnID: "a", AccountID: "1", Username: "갑", Session: "s",
+		Sheet: yworld.Sheet{Flags: map[string]int{
+			yworld.DawnScentFlag:       1,
+			yworld.FirstMarketSaleFlag: 1,
+		}},
+	})
+	_ = mustSnapshot(t, l)
+	drain(out)
+	for _, dir := range []string{"north", "north", "north", "north", "north", "east", "east"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap := mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:market" {
+		t.Fatalf("want market, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Look{ConnID: "a"})
+	_ = mustSnapshot(t, l)
+	marketEvs := drain(out)
+	card := findRoom(marketEvs)
+	if card == nil || !strings.Contains(card.Description, "잉크 묻은 손") || !strings.Contains(card.Description, "새벽 전에") {
+		t.Fatalf("market dawn_scent description: %+v", card)
+	}
+	assertNoSecrets(t, marketEvs)
+
+	for _, dir := range []string{"south", "south", "south", "east"} {
+		l.Submit(Move{ConnID: "a", Dir: dir})
+	}
+	snap = mustSnapshot(t, l)
+	if snap.Players[0].RoomID != "dalbitgol:school" {
+		t.Fatalf("want school, at %s", snap.Players[0].RoomID)
+	}
+	drain(out)
+	l.Submit(Talk{ConnID: "a", NPC: "청람"})
+	_ = mustSnapshot(t, l)
+	talk := drain(out)
+	if !hasTextContains(talk, "잉크 냄새가 옷에") || !hasTextContains(talk, "새벽이") {
+		t.Fatalf("cheongram dawn_scent talk: %#v", talk)
+	}
+	if hasTextContains(talk, "처음 보는 얼굴이군") || hasTextContains(talk, "다방에도 물어보게") {
+		t.Fatalf("wrong talk line under dawn_scent: %#v", talk)
+	}
+	assertNoSecrets(t, talk)
+}
+
+func TestHideFailFine(t *testing.T) {
+	l := idleLivelihood(t)
+	out := make(chan Event, 16)
+	l.outbound["a"] = out
+	p := Player{ConnID: "a", Username: "갑", RoomID: "test:shop", Nyang: SmuggleFineNyang + 1, Flags: map[string]int{}}
+	l.applyHideFail(&p, "leaflet")
+	if p.Nyang != 1 {
+		t.Fatalf("fine nyang=%d want 1", p.Nyang)
+	}
+	if !hasBodyContains(drain(out), "벌금") {
+		t.Fatal("fine line")
+	}
+}
+
+func TestHideFailAmbientWhenBroke(t *testing.T) {
+	l := idleLivelihood(t)
+	out := make(chan Event, 16)
+	l.outbound["a"] = out
+	p := Player{ConnID: "a", Username: "갑", RoomID: "test:shop", Flags: map[string]int{}}
+	l.applyHideFail(&p, "leaflet")
+	if p.Nyang != 0 {
+		t.Fatalf("nyang=%d", p.Nyang)
+	}
+	if !hasBodyContains(drain(out), "다행히") {
+		t.Fatal("ambient when broke")
+	}
+}
+
+func idleLivelihood(t *testing.T) *Loop {
+	t.Helper()
+	root := filepath.Join("..", "content", "testdata", "valid")
+	w, err := content.LoadWorld(root, "test:start")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cat, err := skill.Load(filepath.Join("..", "..", "content", "skills"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	liv, err := content.LoadLivelihood(root, w.Rooms, w.Items, cat)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return NewWithWorld(discardLog(), w.Rooms, w.Items, w.Ground, nil).
+		WithSkills(cat).WithCraft(liv.Craft).WithMarkets(liv.Markets).WithRand(skill.Never)
 }

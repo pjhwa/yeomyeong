@@ -395,14 +395,16 @@ func (l *Loop) hide(c Hide) {
 		l.world.roster[c.ConnID] = p
 		return
 	}
-	// Fail: confiscate one contraband, else nyang fine.
+	l.applyHideFail(&p, itemID)
+	l.world.roster[c.ConnID] = p
+}
+
+func (l *Loop) applyHideFail(p *Player, itemID string) {
 	if bag, ok := yworld.TakeStack(p.Bag, itemID, 1); ok {
 		p.Bag = bag
-		l.world.roster[c.ConnID] = p
 		name := l.itemName(itemID)
 		l.sysf(p.ConnID, text.HideFailTake, name, text.EulReul(name))
-		l.applyGain(&p, "stealth", false)
-		l.world.roster[c.ConnID] = p
+		l.applyGain(p, "stealth", false)
 		return
 	}
 	fine := SmuggleFineNyang
@@ -411,14 +413,11 @@ func (l *Loop) hide(c Hide) {
 	}
 	if fine > 0 && p.Nyang >= fine {
 		p.Nyang -= fine
-		l.world.roster[c.ConnID] = p
 		l.sysf(p.ConnID, text.HideFailFine, fine)
 	} else {
-		l.world.roster[c.ConnID] = p
 		l.emit(Text{ConnID: p.ConnID, Channel: ChannelSys, Body: "검문이 눈치를 채더니 가방을 한참 뒤졌어요. 다행히 집을 빼앗기진 않았어요."})
 	}
-	l.applyGain(&p, "stealth", false)
-	l.world.roster[c.ConnID] = p
+	l.applyGain(p, "stealth", false)
 }
 
 func (l *Loop) smuggleChance(p Player) float64 {
